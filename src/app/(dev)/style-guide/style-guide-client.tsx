@@ -57,6 +57,7 @@ import { useHydrated } from "@/hooks/useHydrated";
 import { cn } from "@/lib/utils";
 import { RouteProgress } from "@/components/states/RouteProgress";
 import { LayoutKitDemos } from "./kit-demos";
+import { MotionDemos } from "./motion-demos";
 import { RuleChecker } from "./rule-checker";
 import { StateKitDemos } from "./state-demos";
 
@@ -73,6 +74,7 @@ const SECTIONS = [
   ["elevation", "Elevation & surfaces"],
   ["layout-kit", "Layout kit & shared blocks"],
   ["state-kit", "State kit"],
+  ["motion", "Motion"],
 ] as const;
 
 type Swatch = { token: string; group: string; text?: boolean };
@@ -721,6 +723,15 @@ export function StyleGuideClient() {
             description="Skeletons, empty/error states, banners, slow hint and route progress (Step 3.2)."
           >
             <StateKitDemos />
+          </Section>
+
+          <Section
+            id="motion"
+            index={++n}
+            title="Motion"
+            description="Reveal, CountUp, AnimatedBar, Stagger, PressableScale (Step 3.3). Press Replay."
+          >
+            <MotionDemos />
           </Section>
 
           <RuleChecker />

@@ -11,6 +11,8 @@ export default defineConfig({
   testDir: "./tests",
   testMatch: ["e2e/**/*.spec.ts", "ui/**/*.spec.ts"],
   fullyParallel: true,
+  // The dev server compiles routes on demand; under 4 parallel workers hydration can exceed 5 s.
+  expect: { timeout: 15_000 },
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: [["list"], ["html", { open: "never" }]],
