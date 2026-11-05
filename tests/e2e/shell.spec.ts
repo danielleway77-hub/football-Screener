@@ -6,7 +6,7 @@ import { expect, test, type Page } from "@playwright/test";
 async function openShell(page: Page) {
   await page.goto("/style-guide/shell");
   await expect(page.getByTestId("navbar")).toBeVisible();
-  await page.waitForLoadState("networkidle"); // wait for hydration before interacting
+  await expect(page.getByTestId("navbar")).toHaveAttribute("data-hydrated", "true"); // handlers attached
 }
 
 const isMobile = (page: Page) => (page.viewportSize()?.width ?? 0) < 768;

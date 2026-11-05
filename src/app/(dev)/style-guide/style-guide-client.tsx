@@ -53,9 +53,12 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useHydrated } from "@/hooks/useHydrated";
 import { cn } from "@/lib/utils";
+import { RouteProgress } from "@/components/states/RouteProgress";
 import { LayoutKitDemos } from "./kit-demos";
 import { RuleChecker } from "./rule-checker";
+import { StateKitDemos } from "./state-demos";
 
 const SECTIONS = [
   ["colours", "Colours"],
@@ -69,6 +72,7 @@ const SECTIONS = [
   ["tabs-table", "Tabs & table"],
   ["elevation", "Elevation & surfaces"],
   ["layout-kit", "Layout kit & shared blocks"],
+  ["state-kit", "State kit"],
 ] as const;
 
 type Swatch = { token: string; group: string; text?: boolean };
@@ -247,6 +251,7 @@ function BreakpointBadge() {
 }
 
 export function StyleGuideClient() {
+  const hydrated = useHydrated();
   const [active, setActive] = React.useState<string>(SECTIONS[0][0]);
   React.useEffect(() => {
     const observer = new IntersectionObserver(
@@ -269,7 +274,8 @@ export function StyleGuideClient() {
   let n = 0;
 
   return (
-    <div className="container-wide pb-24" data-testid="style-guide">
+    <div className="container-wide pb-24" data-testid="style-guide" data-hydrated={hydrated}>
+      <RouteProgress />
       <BreakpointBadge />
       <header className="py-10">
         <p className="text-overline text-primary">Dev only</p>
@@ -706,6 +712,15 @@ export function StyleGuideClient() {
             description="Logo, header, back link, shell, confirm dialog, copy button, helper text, external link (Step 3.1)."
           >
             <LayoutKitDemos />
+          </Section>
+
+          <Section
+            id="state-kit"
+            index={++n}
+            title="State kit"
+            description="Skeletons, empty/error states, banners, slow hint and route progress (Step 3.2)."
+          >
+            <StateKitDemos />
           </Section>
 
           <RuleChecker />

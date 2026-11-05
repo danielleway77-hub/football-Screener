@@ -11,7 +11,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto("/style-guide#feedback");
   await expect(page.getByTestId("style-guide")).toBeVisible();
   // Interactions before React hydrates are silently lost; wait until the page is idle.
-  await page.waitForLoadState("networkidle");
+  await expect(page.locator('[data-testid="style-guide"][data-hydrated="true"]')).toBeVisible();
 });
 
 test("select popup is dark (surface-raised) with a visible option list", async ({ page }) => {

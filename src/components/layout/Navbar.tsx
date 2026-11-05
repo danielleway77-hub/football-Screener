@@ -6,11 +6,13 @@ import { LogoutButton } from "@/components/layout/LogoutButton";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { NavLinks, NavLinksFallback } from "@/components/layout/NavLinks";
 import { Logo } from "@/components/shared/Logo";
+import { useHydrated } from "@/hooks/useHydrated";
 import { cn } from "@/lib/utils";
 
 /** The ONE navbar: sticky 64px glass bar (UI_BLUEPRINT §2). Inline links ≥ 768px, sheet below. */
 export function Navbar({ className }: { className?: string }) {
   const [scrolled, setScrolled] = React.useState(false);
+  const hydrated = useHydrated();
 
   React.useEffect(() => {
     const update = () => setScrolled(window.scrollY > 8);
@@ -25,6 +27,7 @@ export function Navbar({ className }: { className?: string }) {
   return (
     <header
       data-testid="navbar"
+      data-hydrated={hydrated}
       data-scrolled={scrolled || undefined}
       className={cn(
         "glass sticky top-0 z-40 h-16 transition-shadow duration-200",
