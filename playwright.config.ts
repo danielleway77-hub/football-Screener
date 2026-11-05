@@ -30,7 +30,9 @@ export default defineConfig({
   ],
   webServer: {
     command: useProd ? `pnpm build && pnpm start --port ${PORT}` : `pnpm dev --port ${PORT}`,
-    url: baseURL,
+    // Dev server: poll a heavy route so it is compiled BEFORE the 4 parallel workers start
+    // (cold-compile timeouts caused flaky first runs). Production: the home page.
+    url: useProd ? baseURL : `${baseURL}/style-guide`,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
   },
