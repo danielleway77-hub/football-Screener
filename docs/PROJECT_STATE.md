@@ -52,8 +52,8 @@ Status values: `todo` · `in-progress` · `done` · `blocked`. A step is `done` 
 | 0 | Accounts, tools, data-access recon | **done (non-deployment parts)** — 0.2 ✅ 0.4 ✅ 0.8 ✅ 0.9 ✅; 0.3 GitHub & 0.6 Vercel skipped by owner; 0.1 client message + 0.7 PrediGoal recon still manual/pending | ✅ see TEST_LOG | n/a | owner approval needed before 0.5 |
 | 0.5 | Install & scaffold | **done** (2026-11-05, owner approved) — 0.5.1 packages ✅ · 0.5.2 versions recorded (§5b) ✅ · 0.5.3 tooling/env/lint boundaries/folder skeleton ✅. Project at `football-screener/`, local git (3 commits, no remote) | ✅ 12 unit tests, 4 e2e, lint, typecheck, build, mutation checks (see TEST_LOG) | ✅ (1 bug found by tests and fixed) | **Step 1 NOT started — waiting for the owner's permission** |
 | 1 | Agent context & docs in repo | **done** 2026-11-05 (1.1 docs in repo, commit d19edce; 1.2 context summary below + TEST_LOG, pending owner confirmation) | ✅ secret scan, format, lint | ✅ 8 contradictions logged (TEST_LOG, Step 1) | Step 2 NOT started — waiting for owner |
-| 2 | Design tokens & global styles | todo | | | |
-| 2.3 | Depth system & sleek surfaces | todo | | | |
+| 2 | Design tokens, depth system, contrast script (2.1–2.3) | **done** 2026-11-05 | ✅ 21 unit, 76 e2e, contrast 24/24, build, prod 404 | ✅ 4 bugs fixed + 7 mutations | **Step 3 NOT started — waiting for owner** |
+| 2.3 | Depth system & sleek surfaces | **done** (part of Step 2) | ✅ | ✅ | |
 | 3 | Shared components, state kit, motion kit | todo | | | |
 | 3.4 | Signature interaction kit (spotlight, segmented, sticky, scroll fade) | todo | | | |
 | 3.5 | Brand & illustration kit | todo | | | |
@@ -93,6 +93,7 @@ Status values: `todo` · `in-progress` · `done` · `blocked`. A step is `done` 
 | Testing | vitest **5.1.0** · @testing-library/react 16.3.3 · jest-dom 7.0.1 · user-event 14.6.8 · msw **3.0.3** · @playwright/test **1.64.1** (+ chromium installed) · @axe-core/playwright 4.14.0 · jsdom 30.1.3 | `@types/node` raised to **24.19.2** (vitest peer) |
 | Quality | prettier 3.9.10 · prettier-plugin-tailwindcss 0.8.1 · eslint 9.39.5 + eslint-config-next 16.4.5 + eslint-config-prettier 10.1.8 · tsx 4.23.15 · cross-env 10.1.0 | |
 | pnpm policy | `pnpm-workspace.yaml` `allowBuilds`: esbuild ✓, @prisma/engines ✓, prisma ✓; sharp ✗, unrs-resolver ✗, workerd ✗ | pnpm 12 blocks install scripts until approved; "agent skills awaiting approval: prisma" is left unapproved on purpose |
+| Theme implementation notes (Step 2) | Tailwind colour tokens: `bg-canvas` (page, NOT `base`: collides with `text-base`), `bg-subtle`, `bg-surface(-raised/-overlay)`, `border-hairline(-strong)`, `border-border-control`, `text-faint`, `bg-primary-soft`, `text-positive/negative/warning/info/violet`. Fonts self-hosted (Fontsource variable) via next/font/local. `--text-faint` = #7C8E87. Radius ladder via `rounded-sm/md/lg/xl/2xl` = 8/12/16/20/24 and `rounded-4xl` = pill. Button sizes: default 44 · sm 36 · lg 52. Dev style guide at `/style-guide` (404 in production) with a built-in rule checker | |
 | Known harmless warning | `unmet peer effect` (from @effect/sql-* inside Prisma's optional tooling) | ignore |
 
 ## 6. Currently working on

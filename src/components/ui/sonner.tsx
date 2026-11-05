@@ -1,6 +1,6 @@
 "use client";
 
-import { useTheme } from "next-themes";
+import * as React from "react";
 import { Toaster as Sonner, type ToasterProps } from "sonner";
 import {
   CircleCheckIcon,
@@ -10,26 +10,44 @@ import {
   Loader2Icon,
 } from "lucide-react";
 
+/** Dark-only app (no theme provider). Top-centre below the navbar on phones, bottom-right otherwise. */
+function useIsMobile() {
+  const [mobile, setMobile] = React.useState(false);
+  React.useEffect(() => {
+    const query = window.matchMedia("(max-width: 767px)");
+    const update = () => setMobile(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+  return mobile;
+}
+
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme();
+  const mobile = useIsMobile();
 
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
+      theme="dark"
+      position={mobile ? "top-center" : "bottom-right"}
+      offset={16}
+      mobileOffset={{ top: 72, left: 16, right: 16 }}
+      visibleToasts={3}
       className="toaster group"
       icons={{
-        success: <CircleCheckIcon className="size-4" />,
-        info: <InfoIcon className="size-4" />,
-        warning: <TriangleAlertIcon className="size-4" />,
-        error: <OctagonXIcon className="size-4" />,
+        success: <CircleCheckIcon className="size-4 text-positive" />,
+        info: <InfoIcon className="size-4 text-info" />,
+        warning: <TriangleAlertIcon className="size-4 text-warning" />,
+        error: <OctagonXIcon className="size-4 text-negative" />,
         loading: <Loader2Icon className="size-4 animate-spin" />,
       }}
       style={
         {
-          "--normal-bg": "var(--popover)",
-          "--normal-text": "var(--popover-foreground)",
-          "--normal-border": "var(--border)",
-          "--border-radius": "var(--radius)",
+          "--normal-bg": "var(--surface-overlay)",
+          "--normal-text": "var(--text)",
+          "--normal-border": "var(--hairline-strong)",
+          "--border-radius": "var(--radius-md)",
+          zIndex: "var(--z-toast)",
         } as React.CSSProperties
       }
       toastOptions={{

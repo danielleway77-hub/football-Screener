@@ -52,7 +52,7 @@
 | `--border-control` | `#55695F` | **input/checkbox/switch outlines** (≥ 3:1 per WCAG 1.4.11) |
 | `--text` | `#F2F7F4` | primary text |
 | `--text-muted` | `#9AABA4` | secondary text |
-| `--text-faint` | `#7B8D86` | tertiary/meta (≥ 4.5:1 on all surfaces) |
+| `--text-faint` | `#7C8E87` | tertiary/meta (≥ 4.5:1 on all surfaces) |
 | `--text-disabled` | `#566761` | disabled only (exempt from contrast, always paired with disabled styling) |
 | `--text-on-accent` | `#0A1000` | text on lime |
 
@@ -97,6 +97,13 @@ Mapping rule: **lime = qualifies/primary**; **emerald = a "W" result**; they're 
 ### 2.4c Depth tokens ("quiet precision" — see `UI_BLUEPRINT.md` Part 2, §20–§21)
 `--hairline: rgba(255,255,255,.08)` (default 1px outline on dark surfaces) · `--hairline-strong: rgba(255,255,255,.14)` (hover/raised) · `--inner-highlight: inset 0 1px 0 rgba(255,255,255,.04)` · `--glass-bg: color-mix(in srgb, var(--bg-base) 78%, transparent)` · `--spotlight: radial-gradient(240px circle at var(--mx) var(--my), rgba(200,245,46,.10), transparent 60%)`. Utility classes: `.surface-1` (cards), `.surface-2` (tiles/popovers), `.surface-3` (dialogs/sheets), `.glass` (navbar, sticky bars, sheets headers), `.num` (tabular numerals: `font-variant-numeric: tabular-nums slashed-zero`). **Rule:** borders (hairlines) define surfaces; shadows only on floating layers. Lime budget < 3% of a screen's pixels. Radius ladder 8 · 12 · 16 · 20 · 24 · 999 only. Dense UI text 14px, controls 15px, prose 16px, mobile inputs 16px.
 
+### 2.4d Implementation notes (verified in Step 2)
+- **Tailwind names:** page colour is `bg-canvas` (never `base`: it collides with the `text-base` font-size utility). Others: `bg-subtle`, `bg-surface`, `bg-surface-raised`, `bg-surface-overlay`, `border-hairline`, `border-hairline-strong`, `border-border-control`, `text-faint`, `bg-primary-soft`, `border-primary-border`, `bg-track`, `bg-skeleton`.
+- **Fonts** are self-hosted Fontsource variable fonts loaded with `next/font/local` (no Google dependency): families appear as `spaceGrotesk`, `inter`, `jetbrains` in computed styles.
+- **Focus:** a global `:focus-visible` outline (2px `--primary`, offset 2px; white on lime buttons). Components must NOT use `outline-none`.
+- **Button sizes:** default 44 · sm 36 · lg 52 (xs 32, icons 32–52). Checkbox 20px (8px radius); slider thumb 20px lime.
+- **`pnpm contrast`** checks 24 pairs from these tokens; `--text-faint` is `#7C8E87` (4.56:1 on `--surface-overlay`).
+
 ### 2.5 Gradients and effects
 - `--grad-hero`: `radial-gradient(60% 50% at 18% 0%, rgba(200,245,46,.09), transparent 70%), radial-gradient(45% 40% at 92% 8%, rgba(46,229,157,.06), transparent 70%)`
 - `--grad-card`: `linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,0) 60%)`
@@ -110,7 +117,7 @@ Mapping rule: **lime = qualifies/primary**; **emerald = a "W" result**; they're 
 |---|---|---|
 | text on bg / surface / raised | 18.4 / 17.1 / 15.9 | AAA |
 | text-muted on bg / surface / raised | 8.3 / 7.7 / 7.2 | AAA |
-| text-faint (`#7B8D86`) on bg / surface / raised / overlay | 5.7 / 5.3 / 4.9 / 4.5 | AA (adjusted from `#73857E` = 4.40 ✗; do not use faint text on anything lighter than overlay) |
+| text-faint (`#7C8E87`) on bg / surface / raised / overlay | 5.75 / 5.35 / 4.97 / 4.56 | AA — verified by `pnpm contrast` (history: `#73857E` = 4.40 ✗, `#7B8D86` = 4.498 ✗ on overlay; do not use faint text on anything lighter than overlay) |
 | primary on bg / surface | 15.7 / 14.6 | AAA |
 | text-on-accent on primary | 15.2 | AAA |
 | negative on surface | 6.7 | AA |
@@ -244,7 +251,7 @@ Wordmark "SCREENER" (Space Grotesk 700, tracking 0.12em) + glyph: a minimal pitc
   color-scheme: dark;
   --bg-base:#070A09; --bg-subtle:#0B100E; --surface:#0E1513; --surface-raised:#151D1A; --surface-overlay:#1B2521;
   --scrim:rgba(4,6,5,.72); --border:#1F2A26; --border-strong:#2C3B35; --border-control:#55695F;
-  --text:#F2F7F4; --text-muted:#9AABA4; --text-faint:#7B8D86; --text-disabled:#566761; --text-on-accent:#0A1000;
+  --text:#F2F7F4; --text-muted:#9AABA4; --text-faint:#7C8E87; --text-disabled:#566761; --text-on-accent:#0A1000;
   --primary:#C8F52E; --primary-hover:#D9FF55; --primary-active:#A9D61A;
   --primary-soft:rgba(200,245,46,.12); --primary-border:rgba(200,245,46,.38); --primary-glow:rgba(200,245,46,.28);
   --secondary:#18221E; --secondary-hover:#212E29;

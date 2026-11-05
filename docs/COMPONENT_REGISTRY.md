@@ -15,7 +15,7 @@
 | Toaster | `components/shared/Toaster.tsx` | sonner themed | – | success/error/info | 2.1 | planned |
 
 ## UI primitives (shadcn, themed — never restyle per page)
-Button (variants primary/secondary/ghost/destructive/link; sizes sm/md/lg; `loading`) · Card · Input · Label · Textarea · Select · Switch · Slider · Tabs · Badge · Dialog · Sheet · Tooltip · Skeleton · DropdownMenu · Separator · Table · Form · Checkbox · Progress · ScrollArea · Sonner — `components/ui/*` — Step 2.1 — planned.
+**DONE (Step 2):** Button (variants default=primary lime/secondary/outline/ghost/destructive/link; sizes default 44/sm 36/lg 52/xs/icons; `loading`) · Card (`interactive`) · Input · Label · Textarea · Select · Switch · Slider · Tabs · Badge · Dialog · Sheet · Tooltip · Skeleton · DropdownMenu · Separator · Table · Form · Checkbox · Progress · ScrollArea · Sonner — `components/ui/*` — Step 2.1/2.3 — **done** (themed with tokens; Badge variants primary/positive/negative/warning/info/neutral; Sonner dark-only).
 
 ## Sleek interaction kit & dashboard summary (UI_BLUEPRINT Part 2)
 | Component | Path | Purpose | Key props | States | Built in | Status |
