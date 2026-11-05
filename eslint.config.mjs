@@ -10,7 +10,14 @@ import prettier from "eslint-config-prettier/flat";
  */
 const prismaPatterns = [
   {
-    group: ["@prisma/*", "@/lib/db", "@/lib/db/*", "@/generated/*", "**/generated/prisma", "**/generated/prisma/*"],
+    group: [
+      "@prisma/*",
+      "@/lib/db",
+      "@/lib/db/*",
+      "@/generated/*",
+      "**/generated/prisma",
+      "**/generated/prisma/*",
+    ],
     message: "Only src/server/repositories (and src/lib/db.ts) may use Prisma.",
   },
 ];
@@ -89,7 +96,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "coverage/**",
-    "playwright-report/**",`n    "src/generated/**",
+    "playwright-report/**",
+    "src/generated/**",
     "test-results/**",
     "next-env.d.ts",
   ]),
