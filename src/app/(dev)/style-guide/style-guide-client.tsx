@@ -54,6 +54,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { LayoutKitDemos } from "./kit-demos";
 import { RuleChecker } from "./rule-checker";
 
 const SECTIONS = [
@@ -67,6 +68,7 @@ const SECTIONS = [
   ["skeletons", "Skeletons"],
   ["tabs-table", "Tabs & table"],
   ["elevation", "Elevation & surfaces"],
+  ["layout-kit", "Layout kit & shared blocks"],
 ] as const;
 
 type Swatch = { token: string; group: string; text?: boolean };
@@ -695,6 +697,15 @@ export function StyleGuideClient() {
                 </div>
               </div>
             </div>
+          </Section>
+
+          <Section
+            id="layout-kit"
+            index={++n}
+            title="Layout kit & shared blocks"
+            description="Logo, header, back link, shell, confirm dialog, copy button, helper text, external link (Step 3.1)."
+          >
+            <LayoutKitDemos />
           </Section>
 
           <RuleChecker />
