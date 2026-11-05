@@ -51,7 +51,7 @@ Status values: `todo` · `in-progress` · `done` · `blocked`. A step is `done` 
 |---|---|---|---|---|---|
 | 0 | Accounts, tools, data-access recon | **done (non-deployment parts)** — 0.2 ✅ 0.4 ✅ 0.8 ✅ 0.9 ✅; 0.3 GitHub & 0.6 Vercel skipped by owner; 0.1 client message + 0.7 PrediGoal recon still manual/pending | ✅ see TEST_LOG | n/a | owner approval needed before 0.5 |
 | 0.5 | Install & scaffold | **done** (2026-11-05, owner approved) — 0.5.1 packages ✅ · 0.5.2 versions recorded (§5b) ✅ · 0.5.3 tooling/env/lint boundaries/folder skeleton ✅. Project at `football-screener/`, local git (3 commits, no remote) | ✅ 12 unit tests, 4 e2e, lint, typecheck, build, mutation checks (see TEST_LOG) | ✅ (1 bug found by tests and fixed) | **Step 1 NOT started — waiting for the owner's permission** |
-| 1 | Agent context & docs in repo | todo | | | |
+| 1 | Agent context & docs in repo | **done** 2026-11-05 (1.1 docs in repo, commit d19edce; 1.2 context summary below + TEST_LOG, pending owner confirmation) | ✅ secret scan, format, lint | ✅ 8 contradictions logged (TEST_LOG, Step 1) | Step 2 NOT started — waiting for owner |
 | 2 | Design tokens & global styles | todo | | | |
 | 2.3 | Depth system & sleek surfaces | todo | | | |
 | 3 | Shared components, state kit, motion kit | todo | | | |

@@ -54,3 +54,17 @@ Manual checks: fail-fast — with SESSION_SECRET="too-short" the dev server prin
 Git hygiene: `.env.local` and `.env.test.local` ignored and untracked; `.env.example` contains no real secrets; Playwright output folders added to `.gitignore` (they were staged by mistake and unstaged before committing).
 Deviations from the guide (all recorded in PROJECT_STATE §5b): shadcn 4.23 asks for a component base and preset → `-b radix -p nova` (style `radix-nova`, neutral, Lucide); its `cn()` now comes from the official `cn` package; the `form` component no longer exists → react-hook-form + @hookform/resolvers installed manually; pnpm 12 requires `allowBuilds` approvals (esbuild, @prisma/engines, prisma allowed; sharp, unrs-resolver, workerd denied); `prisma` CLI pinned to 7.10.1 because npm `latest` is 8.0.0-rc.30 (client is 7.10.1); `@types/node` raised to 24 for vitest; `vitest.config.mts` (ESM) to avoid a Vite loader warning; `pnpm lint` runs `eslint .`; docs/ NOT copied into the repo (that is Step 1, not started); no GitHub push.
 Risks carried forward: Node v26.12 is not on Prisma's supported list (20.19+/22.12+/24+) — CLI works, re-test in Step 5 and install Node 24 LTS if anything misbehaves · Next 16 has `cacheComponents` + `partialPrefetching` enabled → read the Next 16 docs (local: node_modules/next/dist/docs) before building pages, and check whether `middleware` is now `proxy` · single Neon database → tests use schema `test` (mechanism validated in Step 5) · DB password was pasted in chat → rotate at handover.
+
+### Step 1 — Agent context and documentation in the repo (1.1, 1.2) — 2026-11-05 — Claude (Sonnet 5.5)
+Commit: local `main` @ d19edce (no remote).
+1.1: 12 docs copied to `football-screener/docs/` (everything except MASTER_GUIDE.md); `docs/reference/` holds client-image-1.png, client-image-2.jpeg, mira-brief.pdf; root `AGENTS.md` = Next.js block kept + project rules appended; `CLAUDE.md` = same content. Secret scan of docs/AGENTS/CLAUDE: only the Neon role name `neondb_owner` (not a secret). format:check, lint green.
+1.2 (context load, no code written) — contradictions/ambiguities found in the docs vs reality:
+  C1 Prisma 7: ARCHITECTURE §4 shows `generator client { provider = "prisma-client-js" }`; Prisma 7 uses `prisma-client` with an explicit output path, `prisma.config.ts` and a driver adapter (decide in Step 5 from the v7 docs).
+  C2 Neon: TEST_CATALOG/TESTING_STANDARDS/Steps 0.4, 5.1, 17 assume production/dev/test BRANCHES; the real setup is ONE database → tests use schema `test`; production = a separate database/project later.
+  C3 Next 16: `middleware` may now be `proxy`; `cacheComponents` is ON, so dynamic reads (cookies, DB) need Suspense/`use cache` rules — Steps 4/6/10 must follow node_modules/next/dist/docs.
+  C4 Zod 4 / shadcn 4 / msw 3 / vitest 5 API differences vs the guide's examples (`form` component gone; `cn` from the `cn` package).
+  C5 UI_BLUEPRINT §4 still draws a StatsStrip; §22 Bento summary supersedes it (noted in the file).
+  C6 ThemeGuideline §6.5/Step 10.1 describe a 5-tile grid in places; the final design is compact 3+2 pair tiles on cards and ProbabilityPanel on detail (image #2).
+  C7 Node 26 is outside Prisma's supported range (Step 5 risk).
+  C8 Probability order: PrediGoal shows Home·Away·Draw; we use Home·Draw·Away (D13).
+Owner action needed before Step 8.3: PrediGoal written permission (D17).
