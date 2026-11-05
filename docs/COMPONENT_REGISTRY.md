@@ -2,6 +2,9 @@
 
 **Rules:** (1) Check this file before creating any component; reuse or extend. (2) Update it in the same commit as the component. (3) `Status`: planned → in-progress → done (Step N). (4) Every component listed must have all states it can have (see "States") and appear in `/style-guide` (dev-only).
 
+## BUILT IN STEP 3 (status update 2026-11-06 — rows below still say "planned" for historical reasons; this list is authoritative)
+Layout: AppShell, Navbar, NavLinks, MobileNav, LogoutButton, Footer, PageContainer, SectionHeader, BackLink · Shared: Logo/LogoGlyph, ConfirmDialog, CopyButton, HelperText, ExternalLink, SegmentedControl, StickyBar, ScrollFade · States: RouteProgress, Skeletons (PageSkeleton, HeaderSkeleton, StatSkeleton, CardSkeleton, MatchCardSkeleton, TableSkeleton, FormSkeleton), EmptyState, ErrorState, Banner, OfflineBanner, StaleBanner, SlowHint, AppErrorBoundary · Motion: Reveal, Stagger/StaggerItem, PageTransition, CountUp, AnimatedBar, PressableScale, SpotlightCard (+ lib/motion.ts) · Illustrations: Radar, PlugPulse, DocumentUpload, Funnel, FunnelSearch, SignalLost, NotFound, Illustration frame, illustrationFor() · Hooks: useOnlineStatus, useSlowRequest, useHoverCapable, useHydrated, useAnimateOnMount · Lib: fetcher.ts, format.ts, nav.ts · match/dimensions.ts (card height constants). NOT yet built: FreshnessPill, DayGroup, BentoSummary, NextKickoff, FilterBar, all match/runs/settings/import components.
+
 ## Layout & shell
 | Component | Path | Purpose | Key props | States | Built in | Status |
 |---|---|---|---|---|---|---|

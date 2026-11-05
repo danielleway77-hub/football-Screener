@@ -54,9 +54,9 @@ Status values: `todo` · `in-progress` · `done` · `blocked`. A step is `done` 
 | 1 | Agent context & docs in repo | **done** 2026-11-05 (1.1 docs in repo, commit d19edce; 1.2 context summary below + TEST_LOG, pending owner confirmation) | ✅ secret scan, format, lint | ✅ 8 contradictions logged (TEST_LOG, Step 1) | Step 2 NOT started — waiting for owner |
 | 2 | Design tokens, depth system, contrast script (2.1–2.3) | **done** 2026-11-05 | ✅ 21 unit, 76 e2e, contrast 24/24, build, prod 404 | ✅ 4 bugs fixed + 7 mutations | **Step 3 NOT started — waiting for owner** |
 | 2.3 | Depth system & sleek surfaces | **done** (part of Step 2) | ✅ | ✅ | |
-| 3 | Shared components, state kit, motion kit | todo | | | |
-| 3.4 | Signature interaction kit (spotlight, segmented, sticky, scroll fade) | todo | | | |
-| 3.5 | Brand & illustration kit | todo | | | |
+| 3 | Shared kits: layout, state, motion, interactions, brand (3.1–3.5) | **done** 2026-11-06 | ✅ 156 unit/component, 264 e2e ×3 cold, 41/41 mutations | ✅ 10+ bugs fixed | **Step 4 NOT started — waiting for owner** |
+| 3.4 | Signature interaction kit (spotlight, segmented, sticky, scroll fade) | **done** (part of Step 3) | ✅ | ✅ | |
+| 3.5 | Brand & illustration kit | **done** (part of Step 3) | ✅ | ✅ | |
 | 4 | App shell & routing skeleton | todo | | | |
 | 5 | Database | todo | | | |
 | 6 | Auth | todo | | | |
@@ -94,6 +94,7 @@ Status values: `todo` · `in-progress` · `done` · `blocked`. A step is `done` 
 | Quality | prettier 3.9.10 · prettier-plugin-tailwindcss 0.8.1 · eslint 9.39.5 + eslint-config-next 16.4.5 + eslint-config-prettier 10.1.8 · tsx 4.23.15 · cross-env 10.1.0 | |
 | pnpm policy | `pnpm-workspace.yaml` `allowBuilds`: esbuild ✓, @prisma/engines ✓, prisma ✓; sharp ✗, unrs-resolver ✗, workerd ✗ | pnpm 12 blocks install scripts until approved; "agent skills awaiting approval: prisma" is left unapproved on purpose |
 | Theme implementation notes (Step 2) | Tailwind colour tokens: `bg-canvas` (page, NOT `base`: collides with `text-base`), `bg-subtle`, `bg-surface(-raised/-overlay)`, `border-hairline(-strong)`, `border-border-control`, `text-faint`, `bg-primary-soft`, `text-positive/negative/warning/info/violet`. Fonts self-hosted (Fontsource variable) via next/font/local. `--text-faint` = #7C8E87. Radius ladder via `rounded-sm/md/lg/xl/2xl` = 8/12/16/20/24 and `rounded-4xl` = pill. Button sizes: default 44 · sm 36 · lg 52. Dev style guide at `/style-guide` (404 in production) with a built-in rule checker | |
+| Step 3 implementation notes | (1) Hooks: `useHydrated` (marker only), `useAnimateOnMount` (decided once at mount: first server paint is never animated/hidden), `useOnlineStatus`, `useSlowRequest`, `useHoverCapable`. (2) Key client roots expose `data-hydrated` (Navbar, style guide) — browser tests wait for it. (3) `lib/fetcher.ts` = only client fetch path (15 s timeout, GET-only retries, 401 handler). (4) Every new page/component must pass the overflow guard (`tests/e2e/overflow.spec.ts`, add new routes to its list). (5) Next 16: `usePathname` lives inside `<Suspense>`; no `new Date()` in server components. (6) Production start requires `APP_PASSWORD_HASH` (Step 6) — for earlier local production checks pass a throwaway bcrypt-shaped value via the process environment only. (7) Dev-only routes: `/style-guide`, `/style-guide/shell`, `/style-guide/sticky` (404 in production) | |
 | Known harmless warning | `unmet peer effect` (from @effect/sql-* inside Prisma's optional tooling) | ignore |
 
 ## 6. Currently working on

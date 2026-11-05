@@ -56,6 +56,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useHydrated } from "@/hooks/useHydrated";
 import { cn } from "@/lib/utils";
 import { RouteProgress } from "@/components/states/RouteProgress";
+import { BrandDemos } from "./brand-demos";
 import { InteractionDemos } from "./interaction-demos";
 import { LayoutKitDemos } from "./kit-demos";
 import { MotionDemos } from "./motion-demos";
@@ -77,6 +78,7 @@ const SECTIONS = [
   ["state-kit", "State kit"],
   ["motion", "Motion"],
   ["interactions", "Interactions"],
+  ["brand", "Brand & illustrations"],
 ] as const;
 
 type Swatch = { token: string; group: string; text?: boolean };
@@ -743,6 +745,15 @@ export function StyleGuideClient() {
             description="SpotlightCard, SegmentedControl, ScrollFade, StickyBar (Step 3.4)."
           >
             <InteractionDemos />
+          </Section>
+
+          <Section
+            id="brand"
+            index={++n}
+            title="Brand & illustrations"
+            description="Logo, generated app icons and the seven line illustrations (Step 3.5)."
+          >
+            <BrandDemos />
           </Section>
 
           <RuleChecker />
