@@ -56,6 +56,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useHydrated } from "@/hooks/useHydrated";
 import { cn } from "@/lib/utils";
 import { RouteProgress } from "@/components/states/RouteProgress";
+import { InteractionDemos } from "./interaction-demos";
 import { LayoutKitDemos } from "./kit-demos";
 import { MotionDemos } from "./motion-demos";
 import { RuleChecker } from "./rule-checker";
@@ -75,6 +76,7 @@ const SECTIONS = [
   ["layout-kit", "Layout kit & shared blocks"],
   ["state-kit", "State kit"],
   ["motion", "Motion"],
+  ["interactions", "Interactions"],
 ] as const;
 
 type Swatch = { token: string; group: string; text?: boolean };
@@ -732,6 +734,15 @@ export function StyleGuideClient() {
             description="Reveal, CountUp, AnimatedBar, Stagger, PressableScale (Step 3.3). Press Replay."
           >
             <MotionDemos />
+          </Section>
+
+          <Section
+            id="interactions"
+            index={++n}
+            title="Interactions"
+            description="SpotlightCard, SegmentedControl, ScrollFade, StickyBar (Step 3.4)."
+          >
+            <InteractionDemos />
           </Section>
 
           <RuleChecker />

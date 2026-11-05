@@ -173,6 +173,7 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 8px 24px -10px rgba(200, 245, 46, 0.55);
   --shadow-field: inset 0 1px 2px rgba(0, 0, 0, 0.35);
   --sheen: rgba(255, 255, 255, 0.35);
+  --mask-on: #000; /* opaque stop for CSS masks (alpha only; never rendered as a colour) */
   --glow-accent: 0 0 0 1px var(--primary-border), 0 0 36px -8px var(--primary-glow);
 
   /* z-index scale */
