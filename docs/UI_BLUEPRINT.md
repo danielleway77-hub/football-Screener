@@ -75,7 +75,7 @@ MOBILE 360                         DESKTOP 1280
 │ │ 42 scanned · 3 qualify   │ │
 │ │ [ Update data  → ] 44h   │ │ primary full-width
 │ └──────────────────────────┘ │
-│ ┌─────────┐ ┌─────────┐      │ StatsStrip 2×2 grid, gap 12
+│ ┌─────────┐ ┌─────────┐      │ BentoSummary mobile (see §22)    
 │ │ 42      │ │ 3       │      │  stat-xl mono + overline label
 │ │ SCANNED │ │ QUALIFY │      │
 │ ├─────────┤ ├─────────┤      │
@@ -99,7 +99,7 @@ MOBILE 360                         DESKTOP 1280
 │ Form above 75% vs below 35%                │ 42 scanned · 3 qual │   │ aligned right of header
 │                                            │ [ Run now ]         │   │
 │                                            └─────────────────────┘   │
-│ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐   StatsStrip 4 cols       │
+│ ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐   BentoSummary desktop (§22)│
 │ │  42    │ │   3    │ │   3    │ │ 06:58  │                           │
 │ └────────┘ └────────┘ └────────┘ └────────┘                           │
 │ [Upcoming][Today][Tomorrow][Day after]        [🔍 league…][Sort ▾]    │

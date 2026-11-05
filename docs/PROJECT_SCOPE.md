@@ -20,7 +20,7 @@ Pricing/time chatter is out of scope for the build.
 *How the owner's day changes:* before — open each match on PrediGoal, read form % for both teams, write down the rare qualifying ones, then read probabilities. After — open the dashboard (mode A) or press the helper once (modes B/C), read the qualifying cards.
 **Success measures (acceptance):**
 1. Daily time to get the list drops from hours to < 2 minutes (open dashboard / one click in B/C modes).
-2. 100% of values shown (form %, 5 probabilities) match PrediGoal for 10 sampled matches.
+2. 100% of values shown (form %, win/draw/win, BTTS, over/under 2.5, predicted score) match PrediGoal for 10 sampled matches.
 3. Qualifying list equals the owner's manual result on 3 consecutive days (or differences are explained by the boundary rule).
 4. Zero P0/P1 defects at delivery.
 

@@ -1,7 +1,7 @@
 # TESTING_STANDARDS.md (v2)
 
 ## 1. Tools
-Vitest (unit/integration) · React Testing Library + `@testing-library/user-event` · MSW (network mocking) · Playwright (e2e, responsive, state emulation) · `@axe-core/playwright` (a11y) · Lighthouse (manual/CI) · Neon `test` branch for DB tests.
+Vitest (unit/integration) · React Testing Library + `@testing-library/user-event` · MSW (network mocking) · Playwright (e2e, responsive, state emulation) · `@axe-core/playwright` (a11y) · Lighthouse (manual/CI) · an isolated `test` schema (same Neon database) for DB tests.
 
 ## 2. Test pyramid and coverage gates
 | Layer | What | Gate |
@@ -81,13 +81,13 @@ loading skeleton · section skeleton · empty (no data / none qualify / filtered
 Also store sanitized PrediGoal HTML/JSON samples in `tests/fixtures/predigoal/` for the provider mapping test (no personal data, no tokens).
 
 ## 5b. Test infrastructure rules
-- **Database isolation:** integration/e2e use `DATABASE_URL_TEST` (Neon branch `test`), never dev/prod. Each suite resets with `TRUNCATE … RESTART IDENTITY CASCADE` in `beforeAll`/`beforeEach`, then seeds from fixtures. Tests must be order-independent and parallel-safe (Vitest `--pool=forks`, one DB-using worker, or a schema-per-worker).
+- **Database isolation:** integration/e2e use `DATABASE_URL_TEST` (isolated schema `test` in the Neon database; the suite refuses to run unless the URL has `schema=test`), never the `public` schema or production. Each suite resets with `TRUNCATE … RESTART IDENTITY CASCADE` in `beforeAll`/`beforeEach`, then seeds from fixtures. Tests must be order-independent and parallel-safe (Vitest `--pool=forks`, one DB-using worker, or a schema-per-worker).
 - **Time:** inject a clock (`now` parameter) in domain/services; never rely on the real date in tests. Use fixed dates around DST (e.g. 2026-03-29 and 2026-10-25 for Europe/London).
 - **Auth in e2e:** a Playwright `globalSetup` logs in once via `POST /api/auth/login` using a test-only password hash env, saves `storageState`, and reuses it. Login-flow tests run without storage state.
 - **E2E server:** run against `pnpm build && pnpm start` in CI/final audits (not `next dev`) so results match production (dev mode inflates warnings and timings).
 - **Network emulation:** Playwright `context.setOffline`, `route.fulfill` (500/401/429), delayed routes (> 3s, > 15s). MSW only for unit/component tests.
 - **Flakiness policy:** no `waitForTimeout` — wait on locators/network; a test that fails once then passes is a bug to fix, not retry (allow `retries: 1` only in CI and log it).
-- **CI (optional but recommended):** GitHub Actions on PR: install → lint → typecheck → unit/integration (Neon test branch secret) → build → Playwright (Chromium; WebKit/Firefox nightly or at final audit). Never print env secrets in logs.
+- **CI (optional but recommended):** GitHub Actions on PR: install → lint → typecheck → unit/integration (test database URL secret) → build → Playwright (Chromium; WebKit/Firefox nightly or at final audit). Never print env secrets in logs.
 - **Cross-browser:** final audit runs Chromium + WebKit (Safari proxy) + Firefox smoke on login/dashboard/settings.
 - **Security tests:** unauthenticated access to every route/API → 401/redirect; tampered JWT; expired JWT; revoked token; wrong `Origin`; oversized body; SQL-ish/HTML payload strings stored and rendered inert; open-redirect `next` values (`//evil.com`, `https://evil.com`, `/\evil.com`).
 
@@ -110,4 +110,4 @@ P0 wrong data/security/crash/data loss · P1 broken flow/missing required state 
 Automated green · manual checklist done · matrices done · bug hunt = 0 open P0–P2 · docs updated · committed on the step branch.
 
 ## 10. Final acceptance tests (production, real data)
-Compare 10 sampled matches with PrediGoal (form + 5 probabilities identical) · 3 days of qualifying list vs owner's manual result · owner completes the daily flow on her phone in < 2 min · cron/ingest run visible in `/runs` · stale banner appears after 27h without data (simulate) · logout/login works on her devices.
+Compare 10 sampled matches with PrediGoal (form %, win/draw/win, BTTS, over/under 2.5 and predicted score identical) · 3 days of qualifying list vs owner's manual result · owner completes the daily flow on her phone in < 2 min · cron/ingest run visible in `/runs` · stale banner appears after 27h without data (simulate) · logout/login works on her devices.

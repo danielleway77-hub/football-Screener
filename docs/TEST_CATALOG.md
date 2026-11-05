@@ -1,7 +1,7 @@
 # TEST_CATALOG.md — exact tests to write, per master-guide step
 
 > **How agents use this file:** each step's Master Prompt says "implement EVERY test listed under §<step id>". Create test files whose test names match (or clearly paraphrase) the items below, run them, and paste the evidence into `docs/TEST_LOG.md`. Add more tests if you find more risks — never fewer. Tests are written **first or together with** the code (domain/services: test-first).
-> Conventions: **U** = unit (Vitest, node) · **C** = component (RTL, jsdom) · **I** = integration (Vitest + Neon *test* branch) · **E** = e2e (Playwright) · **A** = a11y (axe) · **M** = manual script · **MUT** = mutation check (make the deliberate change, confirm the named test FAILS, revert).
+> Conventions: **U** = unit (Vitest, node) · **C** = component (RTL, jsdom) · **I** = integration (Vitest + isolated `test` schema) · **E** = e2e (Playwright) · **A** = a11y (axe) · **M** = manual script · **MUT** = mutation check (make the deliberate change, confirm the named test FAILS, revert).
 > Fixed clock for all time tests: `2026-11-03T12:00:00Z`. Owner timezone `Europe/London`. Golden fixture = "image #2 match": Sporting Cristal vs FC Cajamarca, form 80/7, win 76 · draw 16 · away 8, BTTS Yes 54, Over 70, predicted 3–1.
 
 ## 0.5.3 Tooling and env

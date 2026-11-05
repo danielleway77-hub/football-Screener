@@ -72,7 +72,7 @@ Button (variants primary/secondary/ghost/destructive/link; sizes sm/md/lg; `load
 ## Runs
 | RunStatusChip | `components/runs/RunStatusChip.tsx` | RUNNING/SUCCESS/PARTIAL/FAILED/SKIPPED/STALE chip | status | pulse | 10.2 | planned |
 | RunStatusPanel | `…/RunStatusPanel.tsx` | last run summary + primary action by mode | run, mode | none/running/success/partial/failed/stale | 10.2 | planned |
-| StatsStrip | `…/StatsStrip.tsx` | Scanned / Qualifying / Last update | stats | skeleton | 10.2 | planned |
+| ~~StatsStrip~~ | — | **removed: replaced by BentoSummary / BentoHero / BentoTile (see the Sleek section above)** | — | — | — | removed |
 | RunsTable | `…/RunsTable.tsx` | table → stacked cards < 768 | runs | empty, error | 12.1 | planned |
 | RunDetailDialog | `…/RunDetailDialog.tsx` | error + failed items | run | – | 12.1 | planned |
 

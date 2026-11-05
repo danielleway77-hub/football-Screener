@@ -45,3 +45,6 @@ next-env.d.ts
 /test-results/
 /blob-report/
 *.tsbuildinfo
+
+# generated Prisma client (Prisma 7)
+/src/generated/

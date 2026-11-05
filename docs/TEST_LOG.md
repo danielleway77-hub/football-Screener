@@ -68,3 +68,6 @@ Commit: local `main` @ d19edce (no remote).
   C7 Node 26 is outside Prisma's supported range (Step 5 risk).
   C8 Probability order: PrediGoal shows Home·Away·Draw; we use Home·Draw·Away (D13).
 Owner action needed before Step 8.3: PrediGoal written permission (D17).
+
+### Step 1 follow-up — contradictions C1–C8 fixed in docs — 2026-11-05
+C1 ARCHITECTURE generator -> prisma-client + output (verify in Step 5); lint rule + .gitignore cover src/generated. C2 single-DB wording: tests use schema test (guarded), production = separate project (AGENTS, MASTER_GUIDE, ARCHITECTURE, TESTING_STANDARDS, TEST_CATALOG). C3 CONFIRMED from installed docs: middleware renamed proxy (src/proxy.ts, Node runtime) — all docs updated, Edge wording removed. C4 CODING_STANDARDS 12b lists verified API differences. C5 StatsStrip removed (BentoSummary). C6 5-tile/5-probability wording replaced. C7 Node gate added to Step 5.1. C8 recorded as decision D13 (Home, Draw, Away).

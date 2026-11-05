@@ -68,7 +68,7 @@ football-screener/
 │  ├─ lib/ db.ts env.ts utils.ts time.ts constants.ts fetcher.ts motion.ts logger.ts
 │  ├─ hooks/ useOnlineStatus.ts useSlowRequest.ts useRunPolling.ts
 │  ├─ types/
-│  └─ middleware.ts   (proxy.ts if the installed Next version renamed it)
+│  └─ proxy.ts        (Next 16 renamed `middleware` to `proxy`; Node.js runtime by default)
 ├─ tests/ unit/ integration/ e2e/ fixtures/ (matches.json, predigoal/…)
 ├─ .env.example · .gitignore · vercel.json · next.config.ts · components.json
 └─ README.md
@@ -76,7 +76,7 @@ football-screener/
 
 ## 4. Database (Prisma, Neon Postgres)
 ```prisma
-generator client { provider = "prisma-client-js" }
+generator client { provider = "prisma-client"  output = "../src/generated/prisma" }   // Prisma 7 style (verify in the installed v7 docs in Step 5.1; the generated folder is git-ignored and ONLY repositories/lib/db may import it)
 datasource db { provider = "postgresql"; url = env("DATABASE_URL"); directUrl = env("DIRECT_URL") }
 // NOTE: follow the installed Prisma version's current docs (v7 uses prisma.config.ts and driver adapters,
 // e.g. @prisma/adapter-neon). Runtime = pooled URL; migrations = direct URL.
@@ -258,13 +258,13 @@ CORS: `/api/ingest` only, allow-list from `INGEST_ALLOWED_ORIGINS` (exact-match 
 | `NEXT_PUBLIC_APP_URL` | yes | public | canonical URL |
 | `INGEST_ALLOWED_ORIGINS` | yes | server | comma list; default `https://predigoal.com` |
 | `PROVIDER_API_BASE` / `PROVIDER_API_KEY` | mode A only | server | only if official access granted |
-| `DATABASE_URL_TEST` | tests | local/CI | Neon branch `test` |
+| `DATABASE_URL_TEST` | tests | local/CI | same Neon DB, isolated schema `test` (`&schema=test`) |
 | `LOG_LEVEL` | no | server | `info` default |
 Never prefix secrets with `NEXT_PUBLIC_`.
 
 ## 9. Security architecture
 Session: JWT (HS256, `jose`) in an httpOnly, SameSite=Lax, Path=/ cookie, 30 days; claims `{ v: sessionVersion, iat, exp }`. Cookie name = `__Host-session` **in production** (requires Secure) and plain `session` in local dev (`http://localhost` can't set `__Host-`/Secure cookies in all browsers, e.g. Safari) — pick via `NODE_ENV`.
-**Two-tier verification (important):** `middleware.ts` runs on the Edge runtime (no Prisma, no bcrypt, no DB). It therefore only checks JWT **signature + expiry** (via `jose`) and redirects unauthenticated users. The **`sessionVersion` check requires the DB**, so it runs in Node: in `(app)/layout.tsx` via `requireSession()` (server/auth/guard.ts) and in every session-protected route handler. A version mismatch clears the cookie and redirects to `/login`. This is what makes "change password logs out other sessions" actually work. Middleware `matcher` excludes `_next/static`, `_next/image`, `favicon`, `robots`, public assets and the public API routes listed in FR8. Passwords bcrypt cost 12. Rate limits: login 5/15min/IP; ingest 30/hour/token (RateLimit table). Timing-safe comparisons for secrets. CSRF: SameSite=Lax + JSON-only mutating endpoints + Origin check on mutating session routes. Headers (`next.config`): `Content-Security-Policy` (default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' (tighten with nonces if feasible); connect-src 'self'; frame-ancestors 'none'), `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`, HSTS (Vercel). `robots` noindex. Logs never contain tokens/passwords/payload bodies.
+**Two-tier verification (important):** `proxy.ts` (Next 16's renamed middleware; it runs on the **Node.js** runtime, but Next recommends keeping it a thin, stateless network-boundary check and not relying on shared modules/globals, and it may be deployed to a CDN) therefore only checks JWT **signature + expiry** (via `jose`) and redirects unauthenticated users. The **`sessionVersion` check requires the DB**, so it runs in Node: in `(app)/layout.tsx` via `requireSession()` (server/auth/guard.ts) and in every session-protected route handler. A version mismatch clears the cookie and redirects to `/login`. This is what makes "change password logs out other sessions" actually work. The proxy `matcher` excludes `_next/static`, `_next/image`, `favicon`, `robots`, public assets and the public API routes listed in FR8. Passwords bcrypt cost 12. Rate limits: login 5/15min/IP; ingest 30/hour/token (RateLimit table). Timing-safe comparisons for secrets. CSRF: SameSite=Lax + JSON-only mutating endpoints + Origin check on mutating session routes. Headers (`next.config`): `Content-Security-Policy` (default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' (tighten with nonces if feasible); connect-src 'self'; frame-ancestors 'none'), `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy`, HSTS (Vercel). `robots` noindex. Logs never contain tokens/passwords/payload bodies.
 
 ## 10. Caching, performance, images
 Authenticated pages are dynamic (no shared cache); `Cache-Control: private, no-store` on API responses with user data. Settings cached per-request. Dashboard query uses `(qualifies, kickoffAt)` index; cap 200 rows. `next/image` with `remotePatterns` for team-logo hosts discovered in recon (fallback initials). Dynamic-import GSAP. Fonts via `next/font` (self-hosted).
@@ -277,7 +277,7 @@ Authenticated pages are dynamic (no shared cache); `Cache-Control: private, no-s
 ```json
 { "crons": [{ "path": "/api/cron/daily", "schedule": "0 6 * * *" }] }
 ```
-Hobby = one cron/day, ±1h. Previews use a separate Neon branch. Migrations: `prisma migrate deploy` run manually (or in a build command if desired). Production seed: Setting row only.
+Hobby = one cron/day, ±1h. Previews must never use the production database (use the development database or a separate project). Migrations: `prisma migrate deploy` run manually (or in a build command if desired). Production seed: Setting row only.
 
 ## 13. Testing architecture
-Unit (domain, normalizers, auth utils) · integration (repositories/services against Neon `test` branch, reset per suite) · component (RTL) · e2e (Playwright: 4 projects mobile/tablet/desktop/wide) · a11y (axe) · network-state tests (MSW/offline/slow) · contract tests for `/api/ingest`. Coverage gates: domain ≥ 95%, services ≥ 85%.
+Unit (domain, normalizers, auth utils) · integration (repositories/services against the isolated `test` schema, reset per suite) · component (RTL) · e2e (Playwright: 4 projects mobile/tablet/desktop/wide) · a11y (axe) · network-state tests (MSW/offline/slow) · contract tests for `/api/ingest`. Coverage gates: domain ≥ 95%, services ≥ 85%.

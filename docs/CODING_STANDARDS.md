@@ -69,8 +69,16 @@ Domain ≥ 95% coverage, services ≥ 85%; every bug fix gets a regression test;
 ## 12. Git and docs
 - Branch per step (`step-07-screening-engine`), small commits, Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`, `test:`, `refactor:`), merge only when the step's tests + bug-hunt pass.
 - No TODO/FIXME without a `PROJECT_STATE.md` entry. No commented-out code. No `console.log` in app code (use `lib/logger.ts`); CLI scripts under `scripts/` and tests may print.
-- **Verify library APIs against the installed version, not memory.** Next.js, Tailwind, Prisma, shadcn, `date-fns-tz`, Framer Motion and Auth-adjacent libs have had breaking changes (e.g. Next `middleware`→`proxy` rename, Tailwind v4 `@theme`, Prisma 7 config/adapters, `date-fns-tz` v3 `toZonedTime`/`fromZonedTime`). Read the installed `package.json` versions and the official docs for those versions before coding against them.
+- **Verify library APIs against the installed version, not memory.** Next.js, Tailwind, Prisma, shadcn, `date-fns-tz`, Framer Motion and Auth-adjacent libs have had breaking changes (e.g. Next 16 `middleware`→`proxy` rename (already applied in these docs), Tailwind v4 `@theme`, Prisma 7 config/adapters, `date-fns-tz` v3 `toZonedTime`/`fromZonedTime`). Read the installed `package.json` versions and the official docs for those versions before coding against them.
 - After each step update `PROJECT_STATE.md` and `COMPONENT_REGISTRY.md`; update `ARCHITECTURE.md` when structure/schema/API changes; update `ThemeGuideline.md` first when adding a token.
+
+## 12b. Known API differences in the INSTALLED versions (verified Nov 2026; re-verify if versions change)
+- **Next 16:** file convention is `proxy.ts` (was `middleware.ts`), Node.js runtime; `cacheComponents` and `partialPrefetching` are on → read dynamic data (cookies, headers, DB) inside `<Suspense>` boundaries or use `'use cache'` deliberately; docs ship in `node_modules/next/dist/docs`.
+- **shadcn 4 (radix-nova):** `cn()` comes from the `cn` package via `src/lib/utils.ts`; the `form` component no longer exists (use react-hook-form + @hookform/resolvers directly).
+- **Zod 4:** top-level formats such as `z.url()`; error text is passed as the second argument or `{ error }`; check the Zod 4 docs before using v3 idioms.
+- **Vitest 5:** multiple environments use `test.projects` with `extends: true` (see `vitest.config.mts`, ESM config). **MSW 3** and **@testing-library/jest-dom 7** (import `@testing-library/jest-dom/vitest`) — check their docs for handler/API changes.
+- **date-fns-tz 3:** `toZonedTime` / `fromZonedTime` (not `utcToZonedTime`).
+- **Prisma 7:** `prisma.config.ts`, generator `prisma-client` with an explicit `output`, driver adapter at runtime; CLI and client pinned to 7.10.1 (do not use the 8.0 release candidate).
 
 ## 13. Review checklist (agent self-review before "done")
 [ ] Matches ApplicationFlow/Scope [ ] Uses tokens only [ ] No duplicate component [ ] States covered (loading/skeleton/empty/error/offline/slow/disabled/success) [ ] Responsive 360→1920 [ ] A11y keyboard + labels [ ] Zod at boundaries [ ] Tests added & green [ ] No secrets/logs leaking [ ] Docs updated

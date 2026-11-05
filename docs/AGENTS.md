@@ -42,7 +42,7 @@ If two docs conflict or something is ambiguous: **stop and ask**; do not invent 
 ## Environment notes
 - Developer machine is **Windows 11 + PowerShell** (also Git Bash). Give PowerShell-compatible commands (no `&&` in Windows PowerShell 5.1; use `;` or separate lines). Paths in docs use `/`; scripts must work cross-platform (use `cross-env`/Node scripts, not bash-only syntax).
 - Use **pnpm**. Verify installed versions (`package.json`) and consult the official docs for those versions before using Next/Tailwind/Prisma/shadcn APIs — do not rely on memory (see `CODING_STANDARDS.md` §12).
-- Database: Neon has three branches — **dev** (local development), **test** (automated tests, may be wiped), **production** (default branch, Vercel Production only). **Never run migrations/seeds/destructive scripts against production** unless the master guide step says so and the user confirms. Tests must assert they are not connected to dev/production.
+- Database: Neon is ONE database for development (schema `public`); automated tests use the isolated schema `test` and may wipe it; production will be a SEPARATE database/project created at deployment/handover. **Never run migrations/seeds/destructive scripts against production** unless the master guide step says so and the user confirms. Tests must assert they are not connected to dev/production.
 
 ## Always
 1. Follow `ThemeGuideline.md` for **all** UI (tokens only; fonts, colours, spacing, radii, motion) and build to the wireframes, sizes and copy in `UI_BLUEPRINT.md` (read the section for the screen/component first). Add missing tokens to the theme file first; deviations from the blueprint need the owner's approval. After any UI work, produce screenshots at 360/768/1280/1920 and score the screen with the blueprint's §17 rubric.
@@ -67,7 +67,7 @@ If two docs conflict or something is ambiguous: **stop and ask**; do not invent 
 ## Product invariants (do not break)
 - Rule: `qualifies = (home > high && away < low) || (away > high && home < low)`; defaults 75/35; strict inequalities.
 - Missing data is `null` and shows "Unavailable" — never 0. Ambiguous input (naive timestamps, bare fractions, wrong form scope) is **rejected with a reason**, never guessed.
-- `middleware` only verifies the JWT signature/expiry (Edge, no DB); the session-version check happens in Node (`requireSession()`).
+- `proxy.ts` (Next 16 name for middleware) only verifies the JWT signature/expiry — keep it thin and stateless, no DB; the session-version check happens in Node (`requireSession()`).
 - Dashboard shows qualifying matches with `kickoffAt >= now`; the 1–2 day window only governs what is fetched/screened.
 - Failed runs never alter stored data; ingestion is idempotent; only one RUNNING run at a time.
 - Times stored in UTC, displayed in the owner's timezone; "tomorrow" is computed in that timezone.
