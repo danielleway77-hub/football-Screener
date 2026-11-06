@@ -47,8 +47,10 @@ export function normalizePayload(payload: unknown): NormalizedPayload {
     byKey.set(key, { item: parsed.value, index });
   });
 
+  const ordered = [...byKey.values()].sort((a, b) => a.index - b.index);
   return {
-    valid: [...byKey.values()].sort((a, b) => a.index - b.index).map((e) => e.item),
+    valid: ordered.map((e) => e.item),
+    validIndexes: ordered.map((e) => e.index),
     invalid,
     duplicates,
   };

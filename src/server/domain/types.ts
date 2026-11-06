@@ -61,6 +61,8 @@ export type InvalidItem = { index: number; id?: string; reason: string };
 
 export type NormalizedPayload = {
   valid: RawMatchInput[];
+  /** Position in the original payload of each item in `valid` (same order). */
+  validIndexes: number[];
   invalid: InvalidItem[];
   /** Earlier items dropped because a later item had the same provider + id. */
   duplicates: number;
