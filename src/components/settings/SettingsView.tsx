@@ -287,7 +287,7 @@ export function SettingsView({
                         { value: "1", label: "Tomorrow only" },
                         { value: "2", label: "Tomorrow + day after" },
                       ]}
-                      className="w-full sm:w-auto"
+                      className="w-full sm:w-auto [&_button]:h-auto [&_button]:px-3 [&_button]:py-1.5 [&_button]:leading-tight [&_button]:whitespace-normal"
                     />
                   )}
                 />

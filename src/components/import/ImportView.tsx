@@ -322,11 +322,17 @@ export function ImportView({
       className="max-w-[880px]"
     >
       <Tabs value={tab} onValueChange={setTab} className="gap-6">
-        <TabsList className="h-auto w-full p-1 sm:w-fit">
-          <TabsTrigger value="helper" className="h-11 flex-1 gap-2 px-4 sm:flex-none">
+        <TabsList className="grid h-auto w-full grid-cols-2 p-1 sm:inline-flex sm:w-fit">
+          <TabsTrigger
+            value="helper"
+            className="min-h-11 flex-1 flex-col gap-1 px-3 py-1.5 sm:flex-none sm:flex-row sm:gap-2 sm:px-4"
+          >
             Assisted helper {recommended === "helper" ? chip : null}
           </TabsTrigger>
-          <TabsTrigger value="paste" className="h-11 flex-1 gap-2 px-4 sm:flex-none">
+          <TabsTrigger
+            value="paste"
+            className="min-h-11 flex-1 flex-col gap-1 px-3 py-1.5 sm:flex-none sm:flex-row sm:gap-2 sm:px-4"
+          >
             Paste / upload {recommended === "paste" ? chip : null}
           </TabsTrigger>
         </TabsList>
