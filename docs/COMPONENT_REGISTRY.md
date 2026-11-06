@@ -62,15 +62,18 @@ Layout: AppShell, Navbar, NavLinks, MobileNav, LogoutButton, Footer, PageContain
 | FormBadges | `…/FormBadges.tsx` | W/D/L last results (letters + colour) | results | empty | 10.1 | planned |
 | ProbabilityGrid (compact) | `…/ProbabilityGrid.tsx` | Used INSIDE MatchCard at all widths: row 1 = 3 tiles (Home win · Draw · Away win), row 2 = 2 **PairTiles** (Both teams score Yes/No · Over/Under 2.5) (UI_BLUEPRINT §5) | probs | null → Unavailable, highest 1X2 lime (not on ties), larger of each pair lime | 10.1 | planned |
 | PairTile | `…/PairTile.tsx` | two labelled values side by side (Yes/No, Over/Under); larger = lime; complements derived 100 − x | label, aLabel, aValue, bLabel, bValue | null, tie | 10.1 | planned |
-| ProbabilityPanel | `…/ProbabilityPanel.tsx` | Detail page "EXACT PROBABILITIES": predicted-score hero + 3 bar rows (Home · Draw · Away) + BTTS Yes/No tiles + Over/Under tiles, mirrors client image #2 (UI_BLUEPRINT §7) | probs, predictedScore, teams | null rows, no predicted score | 11.1 | planned |
+| ProbabilityPanel | `…/ProbabilityPanel.tsx` | Detail page "EXACT PROBABILITIES": predicted-score hero + 3 bar rows (Home · Draw · Away) + BTTS Yes/No tiles + Over/Under tiles, mirrors client image #2 (UI_BLUEPRINT §7) | probs, predictedScore, teams | null rows, no predicted score | 11.1 | built |
 | PredictedScore | `…/PredictedScore.tsx` | "3 – 1" + AI chip; compact (card row B) and hero variants; hidden when absent | home, away, variant | absent | 10.1 | planned |
 | QualifiesChip | `…/QualifiesChip.tsx` | "QUALIFIES" / "No longer qualifies" | state | – | 10.1 | planned |
 | TeamLogo | `…/TeamLogo.tsx` | next/image + initials fallback | name, src | loading, error | 10.1 | planned |
 | MatchCard | `…/MatchCard.tsx` | qualifying match summary card (link) | match, thresholds | default, hover, focus, qualifying glow | 10.1 | planned |
 | MatchCardSkeleton | `components/states/…` | same dimensions as MatchCard | – | – | 10.1 | planned |
 | MatchFilters | `…/MatchFilters.tsx` | day tabs (Upcoming/Today/Tomorrow/Day after), league search (debounced 300ms), sort → URL params | value | pending, hidden Day-after when windowDays=1 | 10.2 | planned |
-| MatchHero | `…/MatchHero.tsx` | detail header | match | – | 11.1 | planned |
-| MatchPager | `…/MatchPager.tsx` | prev/next qualifying | ids | disabled ends | 11.1 | planned |
+| MatchHero | `…/MatchHero.tsx` | detail header | match | – | 11.1 | built |
+| MatchPager | `…/MatchPager.tsx` | prev/next qualifying | ids | disabled ends | 11.1 | built |
+| FormCard | `…/FormCard.tsx` | Detail RECENT FORM card: large FormBars (uses FormBar/FormBadges/TeamLogo), form-gap tile, qualification sentence | teams, thresholds | no lastResults | 11.1 | built |
+| MatchDetailView + MatchDetailModel | `…/MatchDetailView.tsx` | Detail page grid (back link + pager row, hero, 7/5 cards, meta row); takes an already-formatted model built by `lib/match-detail-model.ts` | model | – | 11.1 | built |
+| PtsCount | `…/PtsCount.tsx` | CountUp with the "pts" formatter (client wrapper) | value | – | 11.1 | built |
 
 ## Runs
 | RunStatusChip | `components/runs/RunStatusChip.tsx` | RUNNING/SUCCESS/PARTIAL/FAILED/SKIPPED/STALE chip | status | pulse | 10.2 | planned |

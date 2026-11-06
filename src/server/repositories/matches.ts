@@ -61,9 +61,13 @@ export async function findById(id: string): Promise<MatchRecord | null> {
   return getDb().match.findUnique({ where: { id } });
 }
 
-/** Previous/next qualifying match by kickoff (detail-page navigation). */
+/**
+ * Previous/next qualifying match by kickoff (detail-page navigation). `upcomingFrom` limits both sides to
+ * matches that have not kicked off yet (the dashboard's set), so the pager never walks into the past.
+ */
 export async function findNeighbors(
   id: string,
+  upcomingFrom?: Date,
 ): Promise<{ previous: MatchRecord | null; next: MatchRecord | null }> {
   const db = getDb();
   const current = await db.match.findUnique({ where: { id } });
@@ -72,6 +76,7 @@ export async function findNeighbors(
     db.match.findFirst({
       where: {
         qualifies: true,
+        ...(upcomingFrom ? { kickoffAt: { gte: upcomingFrom } } : {}),
         OR: [
           { kickoffAt: { lt: current.kickoffAt } },
           { kickoffAt: current.kickoffAt, id: { lt: current.id } },
@@ -82,6 +87,7 @@ export async function findNeighbors(
     db.match.findFirst({
       where: {
         qualifies: true,
+        ...(upcomingFrom ? { kickoffAt: { gte: upcomingFrom } } : {}),
         OR: [
           { kickoffAt: { gt: current.kickoffAt } },
           { kickoffAt: current.kickoffAt, id: { gt: current.id } },

@@ -155,10 +155,10 @@ export function PageSkeleton({ variant, className }: PageSkeletonProps) {
       {variant === "detail" ? (
         <>
           <Skeleton className="h-11 w-48" />
-          <Skeleton className="h-40 w-full rounded-xl md:h-52" />
+          <Skeleton className="h-[26rem] w-full rounded-xl lg:h-72" />
           <div className="grid gap-4 lg:grid-cols-12 lg:gap-6">
-            <Skeleton className="h-80 rounded-lg lg:col-span-7" />
-            <Skeleton className="h-80 rounded-lg lg:col-span-5" />
+            <Skeleton className="h-[34rem] rounded-lg lg:col-span-7" />
+            <Skeleton className="h-[40rem] rounded-lg lg:col-span-5" />
           </div>
         </>
       ) : null}

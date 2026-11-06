@@ -35,12 +35,14 @@ export async function getDashboard(
   });
 }
 
+/** One match with its previous/next qualifying neighbours; with `now`, neighbours are limited to upcoming matches. */
 export async function getMatch(
   id: string,
+  now?: Date,
 ): Promise<{ match: MatchRecord; previous: MatchRecord | null; next: MatchRecord | null } | null> {
   const match = await matches.findById(id);
   if (!match) return null;
-  const { previous, next } = await matches.findNeighbors(id);
+  const { previous, next } = await matches.findNeighbors(id, now);
   return { match, previous, next };
 }
 
