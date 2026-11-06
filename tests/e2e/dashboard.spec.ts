@@ -39,7 +39,9 @@ test.describe("dashboard with seeded data", () => {
     await ready(page);
     await expect(cards(page)).toHaveCount(3);
     await expect(page.getByTestId("bento-count").locator(".sr-only")).toHaveText("3");
-    await expect(page.getByTestId("results-caption")).toHaveText("Showing 3 matches");
+    await expect(page.getByTestId("results-caption").and(page.locator(":visible"))).toHaveText(
+      "Showing 3 matches",
+    );
     await expect(page.getByTestId("bento-showing")).toContainText("of 3");
     await expect(page.getByTestId("next-kickoff")).toContainText("Next kickoff");
   });
@@ -49,7 +51,9 @@ test.describe("dashboard with seeded data", () => {
     await page.getByRole("tab", { name: /^Tomorrow/ }).click();
     await expect(page).toHaveURL(/day=tomorrow/);
     await expect(cards(page)).toHaveCount(1);
-    await expect(page.getByTestId("results-caption")).toHaveText("Showing 1 match");
+    await expect(page.getByTestId("results-caption").and(page.locator(":visible"))).toHaveText(
+      "Showing 1 match",
+    );
     await page.reload();
     await expect(page.getByRole("tab", { name: /^Tomorrow/ })).toHaveAttribute(
       "aria-selected",

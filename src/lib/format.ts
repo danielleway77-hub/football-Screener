@@ -58,3 +58,13 @@ export function formatCountdown(ms: number): string {
   if (h > 0) return `in ${h} h ${m} m`;
   return `in ${m} m`;
 }
+
+/** Compact age for the navbar pill: "just now", "12 m ago", "2 h ago", "3 d ago". */
+export function formatAgo(ms: number): string {
+  if (!Number.isFinite(ms) || ms < 60_000) return "just now";
+  const min = Math.floor(ms / 60_000);
+  if (min < 60) return `${min} m ago`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `${h} h ago`;
+  return `${Math.floor(h / 24)} d ago`;
+}

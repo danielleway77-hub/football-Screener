@@ -52,6 +52,29 @@ export function DashboardNavProvider({
 export function ResultsRegion({ children }: { children: React.ReactNode }) {
   const { pending } = useDashboardNav();
   const [slow, setSlow] = React.useState(false);
+  const regionRef = React.useRef<HTMLDivElement>(null);
+  const wasPending = React.useRef(false);
+
+  // When a filter change finishes while the filter bar is stuck, bring the top of the results just
+  // under the bar; when it is not stuck, never scroll.
+  React.useEffect(() => {
+    if (pending) {
+      wasPending.current = true;
+      return;
+    }
+    if (!wasPending.current) return;
+    wasPending.current = false;
+    const bar = document.querySelector<HTMLElement>(
+      '[data-testid="sticky-bar"][data-stuck="true"]',
+    );
+    const region = regionRef.current;
+    if (!bar || !region) return;
+    const target = region.getBoundingClientRect().top + window.scrollY - 64 - bar.offsetHeight - 16;
+    if (window.scrollY > target) {
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      window.scrollTo({ top: Math.max(target, 0), behavior: reduce ? "auto" : "smooth" });
+    }
+  }, [pending]);
 
   React.useEffect(() => {
     if (!pending) {
@@ -64,6 +87,7 @@ export function ResultsRegion({ children }: { children: React.ReactNode }) {
 
   return (
     <div
+      ref={regionRef}
       data-testid="results-region"
       data-pending={pending || undefined}
       aria-busy={pending || undefined}

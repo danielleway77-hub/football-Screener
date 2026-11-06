@@ -3,7 +3,7 @@ import { formatInTimeZone } from "date-fns-tz";
 import { throwIfForced } from "@/lib/dev-error";
 import { BentoSummary } from "@/components/dashboard/BentoSummary";
 import { DashboardNavProvider, ResultsRegion } from "@/components/dashboard/DashboardNav";
-import { MatchFilters } from "@/components/dashboard/MatchFilters";
+import { FilterBar } from "@/components/dashboard/MatchFilters";
 import { RunAction } from "@/components/dashboard/RunAction";
 import { ResultsError } from "@/components/dashboard/ResultsError";
 import { RunStatusPanel } from "@/components/dashboard/RunStatusPanel";
@@ -216,25 +216,17 @@ export async function DashboardContent({ searchParams }: { searchParams: Search 
       </div>
 
       <DashboardNavProvider params={params}>
-        <div className="mt-6">
-          <MatchFilters
-            counts={{
-              upcoming: summary.total,
-              today: summary.perDay.today,
-              tomorrow: summary.perDay.tomorrow,
-              dayafter: summary.perDay.dayafter,
-            }}
-            windowDays={settings.windowDays}
-          />
-        </div>
+        <FilterBar
+          counts={{
+            upcoming: summary.total,
+            today: summary.perDay.today,
+            tomorrow: summary.perDay.tomorrow,
+            dayafter: summary.perDay.dayafter,
+          }}
+          windowDays={settings.windowDays}
+          caption={matches ? `Showing ${showing} ${showing === 1 ? "match" : "matches"}` : ""}
+        />
         <div role="tabpanel" id="results-panel" aria-labelledby={`day-tab-${params.day}`}>
-          <p
-            aria-live="polite"
-            data-testid="results-caption"
-            className="text-caption num mt-3 text-muted-foreground"
-          >
-            {matches ? `Showing ${showing} ${showing === 1 ? "match" : "matches"}` : ""}
-          </p>
           <h2 className="sr-only">Matches</h2>
           <div className="mt-4">
             <ResultsRegion>

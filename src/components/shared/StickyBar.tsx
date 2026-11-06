@@ -43,7 +43,7 @@ export function StickyBar({ top = 64, className, children }: StickyBarProps) {
         data-testid="sticky-bar"
         data-stuck={stuck}
         className={cn(
-          "sticky z-[39] -mt-px py-2 transition-[background-color,border-color,backdrop-filter] duration-150",
+          "sticky z-[39] -mt-px py-2 transition-[background-color,border-color,backdrop-filter] duration-150 motion-reduce:transition-none",
           stuck ? "glass" : "border-b border-transparent bg-transparent",
           className,
         )}
