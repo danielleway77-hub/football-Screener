@@ -4,3 +4,5 @@
 *.jpeg binary
 *.ico binary
 *.woff2 binary
+prisma/migrations/**/*.sql text eol=lf
+*.sql text eol=lf

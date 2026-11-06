@@ -34,7 +34,9 @@ describe("matches", () => {
   it("unique (provider, providerMatchId) prevents duplicates", async () => {
     const [first] = loadFixtureMatches();
     await matches.upsertMany([first!], null);
-    await expect(getDb().match.create({ data: { ...first!, firstRunId: null } })).rejects.toThrow();
+    await expect(
+      getDb().match.create({ data: { ...first!, firstRunId: null } }),
+    ).rejects.toMatchObject({ code: "P2002" });
     expect(await getDb().match.count()).toBe(1);
   });
 
@@ -211,6 +213,60 @@ describe("runs", () => {
   });
 });
 
+describe("review fixes", () => {
+  it("finish refuses to overwrite a run that was already expired (returns null)", async () => {
+    const old = await getDb().screeningRun.create({
+      data: {
+        trigger: "CRON",
+        provider: "t",
+        status: "RUNNING",
+        startedAt: new Date(FIXTURE_NOW.getTime() - 11 * 60_000),
+      },
+    });
+    await runs.expireAbandoned(10, FIXTURE_NOW);
+    const result = await runs.finish(old.id, { status: "SUCCESS", finishedAt: FIXTURE_NOW });
+    expect(result).toBeNull();
+    expect((await runs.getById(old.id))?.status).toBe("FAILED");
+    expect(await runs.getLatestUsable()).toBeNull();
+  });
+
+  it("findNeighbors reaches every match in a group sharing one kickoff time", async () => {
+    const base = loadFixtureMatches()[0]!;
+    const same = ["a", "b", "c"].map((k) => ({
+      ...base,
+      providerMatchId: "tie-" + k,
+      homeName: "Tie " + k,
+      kickoffAt: new Date("2026-11-04T15:00:00Z"),
+    }));
+    const saved = await matches.upsertMany(same, null);
+    const order = [...saved].sort((x, y) => x.id.localeCompare(y.id));
+    const walked: string[] = [order[0]!.id];
+    let cursor = order[0]!.id;
+    for (let i = 0; i < 5; i++) {
+      const { next } = await matches.findNeighbors(cursor);
+      if (!next) break;
+      walked.push(next.id);
+      cursor = next.id;
+    }
+    expect(walked).toEqual(order.map((m) => m.id));
+    expect((await matches.findNeighbors(order[1]!.id)).previous?.id).toBe(order[0]!.id);
+  });
+
+  it("revoking twice keeps the original revokedAt; unknown id gives null", async () => {
+    const t = await tokens.create("helper", "d".repeat(64));
+    await tokens.revoke(t.id, new Date("2026-11-03T12:00:00Z"));
+    const again = await tokens.revoke(t.id, new Date("2026-11-09T12:00:00Z"));
+    expect(again?.revokedAt?.toISOString()).toBe("2026-11-03T12:00:00.000Z");
+    expect(await tokens.revoke("missing", FIXTURE_NOW)).toBeNull();
+  });
+
+  it("getSettings reads without writing (updatedAt unchanged)", async () => {
+    const created = await settings.ensureSettings();
+    const read = await settings.getSettings();
+    expect(read.updatedAt.getTime()).toBe(created.updatedAt.getTime());
+  });
+});
+
 describe("settings", () => {
   it("ensureSettings creates the singleton with defaults and is idempotent", async () => {
     const a = await settings.ensureSettings();
@@ -257,17 +313,19 @@ describe("settings", () => {
 describe("tokens, credentials, attempts, rate limits", () => {
   it("token hash is unique and only the hash is stored", async () => {
     const t = await tokens.create("helper", "a".repeat(64));
-    await expect(tokens.create("other", "a".repeat(64))).rejects.toThrow();
+    await expect(tokens.create("other", "a".repeat(64))).rejects.toMatchObject({ code: "P2002" });
     expect((await tokens.findByHash("a".repeat(64)))?.id).toBe(t.id);
     expect(await tokens.findByHash("b".repeat(64))).toBeNull();
-    expect(Object.keys(t)).not.toContain("token");
+    const raw = await getDb().ingestToken.findUniqueOrThrow({ where: { id: t.id } });
+    expect(raw.tokenHash).toBe("a".repeat(64));
+    expect(raw.tokenHash).toHaveLength(64);
   });
 
   it("touch and revoke update the token", async () => {
     const t = await tokens.create("helper", "c".repeat(64));
     await tokens.touch(t.id, FIXTURE_NOW);
     const revoked = await tokens.revoke(t.id, FIXTURE_NOW);
-    expect(revoked.revokedAt?.toISOString()).toBe(FIXTURE_NOW.toISOString());
+    expect(revoked?.revokedAt?.toISOString()).toBe(FIXTURE_NOW.toISOString());
     expect((await tokens.list())[0]!.lastUsedAt?.toISOString()).toBe(FIXTURE_NOW.toISOString());
   });
 

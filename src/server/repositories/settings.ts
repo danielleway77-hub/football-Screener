@@ -6,8 +6,9 @@ export async function ensureSettings(): Promise<SettingRecord> {
   return getDb().setting.upsert({ where: { id: 1 }, update: {}, create: { id: 1 } });
 }
 
+/** Read-only: returns the row, or defaults-by-creation only if it does not exist yet. */
 export async function getSettings(): Promise<SettingRecord> {
-  return ensureSettings();
+  return (await getDb().setting.findUnique({ where: { id: 1 } })) ?? ensureSettings();
 }
 
 export async function updateSettings(patch: SettingUpdate): Promise<SettingRecord> {

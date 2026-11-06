@@ -16,7 +16,8 @@ for (const f of [".env.local", ".env"]) {
 async function main() {
   await ensureSettings();
   let matches = 0;
-  if (process.env.NODE_ENV !== "production") {
+  // Fixtures need an explicit opt-in AND a non-production NODE_ENV (.env.local may point at a real database).
+  if (process.env.NODE_ENV !== "production" && process.env.SEED_FIXTURES === "1") {
     matches = (await upsertMany(loadFixtureMatches(), null)).length;
   }
   const db = getDb();

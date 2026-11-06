@@ -18,6 +18,9 @@ export async function list(): Promise<TokenRecord[]> {
   return getDb().ingestToken.findMany({ orderBy: { createdAt: "desc" } });
 }
 
-export async function revoke(id: string, at: Date): Promise<TokenRecord> {
-  return getDb().ingestToken.update({ where: { id }, data: { revokedAt: at } });
+/** Revokes once; revoking again keeps the original revokedAt. Returns null for an unknown id. */
+export async function revoke(id: string, at: Date): Promise<TokenRecord | null> {
+  const db = getDb();
+  await db.ingestToken.updateMany({ where: { id, revokedAt: null }, data: { revokedAt: at } });
+  return db.ingestToken.findUnique({ where: { id } });
 }

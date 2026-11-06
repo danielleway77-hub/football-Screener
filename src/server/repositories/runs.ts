@@ -15,29 +15,37 @@ export async function createRunning(input: {
   windowTo?: Date | null;
 }): Promise<{ run: RunRecord; created: boolean }> {
   const db = getDb();
-  try {
-    const run = await db.screeningRun.create({
-      data: {
-        trigger: input.trigger,
-        provider: input.provider,
-        status: "RUNNING",
-        windowFrom: input.windowFrom ?? null,
-        windowTo: input.windowTo ?? null,
-      },
-    });
-    return { run, created: true };
-  } catch (e) {
-    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === UNIQUE_VIOLATION) {
+  // The RUNNING run may finish between our failed insert and the lookup; retry instead of surfacing P2002.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const run = await db.screeningRun.create({
+        data: {
+          trigger: input.trigger,
+          provider: input.provider,
+          status: "RUNNING",
+          windowFrom: input.windowFrom ?? null,
+          windowTo: input.windowTo ?? null,
+        },
+      });
+      return { run, created: true };
+    } catch (e) {
+      if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === UNIQUE_VIOLATION))
+        throw e;
       const existing = await db.screeningRun.findFirst({ where: { status: "RUNNING" } });
       if (existing) return { run: existing, created: false };
     }
-    throw e;
   }
+  throw new Error("Could not start or find a running run");
 }
 
-export async function finish(id: string, result: RunFinish): Promise<RunRecord> {
-  return getDb().screeningRun.update({
-    where: { id },
+/**
+ * Finishes a run that is still RUNNING. Returns null (and changes nothing) if it was already finished or
+ * expired, so a slow run can never overwrite a FAILED/expired status.
+ */
+export async function finish(id: string, result: RunFinish): Promise<RunRecord | null> {
+  const db = getDb();
+  const r = await db.screeningRun.updateMany({
+    where: { id, status: "RUNNING" },
     data: {
       status: result.status,
       finishedAt: result.finishedAt,
@@ -48,6 +56,7 @@ export async function finish(id: string, result: RunFinish): Promise<RunRecord> 
       ...(result.details !== undefined ? { details: result.details as Prisma.InputJsonValue } : {}),
     },
   });
+  return r.count === 1 ? db.screeningRun.findUnique({ where: { id } }) : null;
 }
 
 /** Marks RUNNING rows older than `olderThanMinutes` (relative to `now`) as FAILED. Returns how many. */

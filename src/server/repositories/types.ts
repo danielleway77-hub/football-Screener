@@ -20,7 +20,7 @@ export type SettingRecord = {
   updatedAt: Date;
 };
 
-export type SettingUpdate = Partial<Omit<SettingRecord, "id" | "updatedAt">>;
+export type SettingUpdate = Partial<Omit<SettingRecord, "id" | "updatedAt" | "sessionVersion">>;
 
 export type MatchRecord = {
   id: string;

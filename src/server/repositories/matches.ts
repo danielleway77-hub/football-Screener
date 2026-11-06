@@ -28,7 +28,7 @@ export async function upsertMany(
         }
       }
     },
-    { timeout: 30_000 },
+    { timeout: 60_000 },
   );
   return out;
 }
@@ -51,8 +51,8 @@ export async function findQualifyingUpcoming(q: QualifyingQuery): Promise<MatchR
     },
     orderBy:
       q.sort === "gap"
-        ? [{ formGap: "desc" }, { kickoffAt: "asc" }]
-        : [{ kickoffAt: "asc" }, { formGap: "desc" }],
+        ? [{ formGap: "desc" }, { kickoffAt: "asc" }, { id: "asc" }]
+        : [{ kickoffAt: "asc" }, { formGap: "desc" }, { id: "asc" }],
     take: Math.min(Math.max(q.limit ?? 200, 1), 200),
   });
 }
@@ -70,12 +70,24 @@ export async function findNeighbors(
   if (!current) return { previous: null, next: null };
   const [previous, next] = await Promise.all([
     db.match.findFirst({
-      where: { qualifies: true, kickoffAt: { lt: current.kickoffAt } },
-      orderBy: { kickoffAt: "desc" },
+      where: {
+        qualifies: true,
+        OR: [
+          { kickoffAt: { lt: current.kickoffAt } },
+          { kickoffAt: current.kickoffAt, id: { lt: current.id } },
+        ],
+      },
+      orderBy: [{ kickoffAt: "desc" }, { id: "desc" }],
     }),
     db.match.findFirst({
-      where: { qualifies: true, kickoffAt: { gt: current.kickoffAt } },
-      orderBy: { kickoffAt: "asc" },
+      where: {
+        qualifies: true,
+        OR: [
+          { kickoffAt: { gt: current.kickoffAt } },
+          { kickoffAt: current.kickoffAt, id: { gt: current.id } },
+        ],
+      },
+      orderBy: [{ kickoffAt: "asc" }, { id: "asc" }],
     }),
   ]);
   return { previous, next };
