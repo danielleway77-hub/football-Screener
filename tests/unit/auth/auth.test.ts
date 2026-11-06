@@ -112,9 +112,16 @@ describe("rate limit", () => {
     expect(evaluateRateLimit([ago(15), ago(4), ago(3), ago(2), ago(1)], NOW).allowed).toBe(true);
   });
 
-  it("uses the first x-forwarded-for hop, then x-real-ip, then unknown", () => {
-    expect(getClientIp(new Headers({ "x-forwarded-for": " 1.2.3.4 , 5.6.7.8" }))).toBe("1.2.3.4");
-    expect(getClientIp(new Headers({ "x-real-ip": "9.9.9.9" }))).toBe("9.9.9.9");
+  it("ignores spoofed leading x-forwarded-for hops (uses the right-most), platform headers win", () => {
+    expect(getClientIp(new Headers({ "x-forwarded-for": "6.6.6.6, 1.2.3.4" }))).toBe("1.2.3.4");
+    expect(getClientIp(new Headers({ "x-forwarded-for": "6.6.6.6", "x-real-ip": "9.9.9.9" }))).toBe(
+      "9.9.9.9",
+    );
+    expect(
+      getClientIp(
+        new Headers({ "x-forwarded-for": "6.6.6.6", "x-vercel-forwarded-for": "7.7.7.7" }),
+      ),
+    ).toBe("7.7.7.7");
     expect(getClientIp(new Headers())).toBe("unknown");
   });
 });
@@ -167,6 +174,12 @@ describe("proxy", () => {
       "/api/ingest",
     ]) {
       expect((await run(p)).status, p).toBe(200);
+    }
+  });
+
+  it("lookalike paths are NOT public", async () => {
+    for (const p of ["/api/authx", "/api/ingestX", "/loginx", "/style-guidex", "/api/cronx"]) {
+      expect((await run(p)).status, p).not.toBe(200);
     }
   });
 

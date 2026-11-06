@@ -21,13 +21,32 @@ export function evaluateRateLimit(failures: Date[], now: Date): RateLimitResult 
 }
 
 export async function checkLoginRateLimit(ip: string, now: Date): Promise<RateLimitResult> {
-  const failures = await loginAttempts.recentFailureTimes(ip, new Date(now.getTime() - WINDOW_MS));
-  return evaluateRateLimit(failures, now);
+  const since = new Date(now.getTime() - WINDOW_MS);
+  const failures = await loginAttempts.recentFailureTimes(ip, since);
+  const perIp = evaluateRateLimit(failures, now);
+  if (!perIp.allowed) return perIp;
+  if ((await loginAttempts.countAllRecentFailures(since)) >= GLOBAL_MAX_FAILURES) {
+    return { allowed: false, retryAfterSeconds: 60 };
+  }
+  return perIp;
 }
 
-/** First hop of x-forwarded-for (set by the platform), then x-real-ip, else "unknown". */
+/**
+ * Client IP for rate limiting. Platform-set headers win (x-vercel-forwarded-for, x-real-ip); otherwise the
+ * RIGHT-most x-forwarded-for hop, which is the one our own proxy appended: a client can prepend fake hops
+ * but cannot control the last one. Falls back to "unknown".
+ */
 export function getClientIp(headers: Headers): string {
-  const forwarded = headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  const candidate = forwarded || headers.get("x-real-ip")?.trim() || "unknown";
+  const platform = headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim();
+  const real = headers.get("x-real-ip")?.trim();
+  const hops = headers
+    .get("x-forwarded-for")
+    ?.split(",")
+    .map((h) => h.trim())
+    .filter(Boolean);
+  const candidate = platform || real || hops?.[hops.length - 1] || "unknown";
   return candidate.slice(0, 45);
 }
+
+/** Backstop against IP rotation: failures across ALL addresses in one window. */
+export const GLOBAL_MAX_FAILURES = 300;

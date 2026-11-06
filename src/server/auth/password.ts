@@ -7,6 +7,9 @@ const getDummyHash = () => (dummyHash ??= bcrypt.hash(crypto.randomUUID(), 12));
 
 export const BCRYPT_COST = 12;
 
+// Warm the dummy hash at startup so the first "no hash configured" request is not slower than the rest.
+void getDummyHash();
+
 /** Pure: compare a plaintext password with a hash (or run a dummy compare when there is none). */
 export async function verifyPasswordAgainst(
   plain: string,

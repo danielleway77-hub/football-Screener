@@ -9,10 +9,14 @@ import { sessionCookieName, verifySessionToken } from "@/server/auth/jwt";
  */
 const PUBLIC_PAGES = ["/login"];
 // Dev-only demo routes (they return 404 in production builds) are public so they can be inspected.
-const PUBLIC_PREFIXES = ["/api/auth/", "/api/health", "/api/cron/", "/api/ingest", "/style-guide"];
+const PUBLIC_ROOTS = ["/api/auth", "/api/health", "/api/cron", "/api/ingest", "/style-guide"];
 
+/** Exact root or a real sub-path: "/api/ingest" and "/api/ingest/x" match, "/api/ingestX" does not. */
 function isPublic(pathname: string): boolean {
-  return PUBLIC_PAGES.includes(pathname) || PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));
+  return (
+    PUBLIC_PAGES.includes(pathname) ||
+    PUBLIC_ROOTS.some((root) => pathname === root || pathname.startsWith(root + "/"))
+  );
 }
 
 export async function proxy(request: NextRequest) {

@@ -19,6 +19,11 @@ export async function recentFailureTimes(ip: string, since: Date): Promise<Date[
   return rows.map((r) => r.at);
 }
 
+/** Failed attempts from any address at or after `since` (global backstop). */
+export async function countAllRecentFailures(since: Date): Promise<number> {
+  return getDb().loginAttempt.count({ where: { success: false, at: { gte: since } } });
+}
+
 export async function purge(olderThan: Date): Promise<number> {
   const r = await getDb().loginAttempt.deleteMany({ where: { at: { lt: olderThan } } });
   return r.count;
