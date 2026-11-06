@@ -81,7 +81,7 @@ test.describe("forced-colors: active", () => {
         await page.keyboard.press("Tab");
         const info = await page.evaluate(() => {
           const el = document.activeElement as HTMLElement | null;
-          if (!el || el === document.body) return null;
+          if (!el || el === document.body || el.tagName === "NEXTJS-PORTAL") return null; // dev overlay
           const cs = getComputedStyle(el);
           return {
             label: `${el.tagName} ${el.getAttribute("aria-label") ?? el.textContent?.slice(0, 20) ?? ""}`,
@@ -96,7 +96,6 @@ test.describe("forced-colors: active", () => {
 
   test("status text survives: the qualifies chip keeps its label and icon", async ({ page }) => {
     await emulate(page, { forcedColors: "active" });
-    await seedBaseline();
     await page.goto("/");
     await expect(page.getByText("Qualifies").first()).toBeVisible();
     await expect(page.getByTestId("match-card").first().locator("svg").first()).toBeVisible();
@@ -127,7 +126,6 @@ test.describe("forced-colors: active", () => {
 
 test.describe("prefers-contrast: more", () => {
   test("hairlines and borders get stronger, muted text brightens", async ({ page }) => {
-    await seedBaseline();
     await page.goto("/");
     const normal = await page.evaluate(() =>
       getComputedStyle(document.documentElement).getPropertyValue("--hairline").trim(),

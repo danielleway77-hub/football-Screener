@@ -834,13 +834,15 @@
     border: 1px solid CanvasText;
     box-shadow: none;
   }
+  .glow-accent {
+    box-shadow: none;
+  }
   .glass {
     background: Canvas;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
     border-bottom: 1px solid CanvasText;
   }
-  .glow-accent,
   .btn-sheen::after,
   .noise::before,
   .card-sheen,
