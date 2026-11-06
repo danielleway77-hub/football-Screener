@@ -27,6 +27,7 @@
     "hash-password": "tsx scripts/hash-password.ts",
     "run:daily": "tsx scripts/run-daily.ts",
     "contrast": "node scripts/contrast.mjs",
+    "secret-scan": "node scripts/secret-scan.mjs",
     "make-icons": "node scripts/make-icons.mjs",
     "make-og": "node scripts/make-og.mjs"
   },
