@@ -53,9 +53,10 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text-summary", "html"],
-      include: ["src/server/domain/**/*.ts"], // Step 8 adds src/server/services (>= 85%)
+      include: ["src/server/domain/**/*.ts", "src/server/services/**/*.ts"],
       thresholds: {
         "src/server/domain/**/*.ts": { lines: 95, branches: 95, functions: 95, statements: 95 },
+        "src/server/services/**/*.ts": { lines: 85, branches: 80, functions: 85, statements: 85 },
       },
       // Thresholds are switched on in Step 7 (domain >= 95%) and Step 8 (services >= 85%),
       // when those folders contain code; enforcing them on empty folders would be meaningless.
