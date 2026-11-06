@@ -157,7 +157,7 @@ export function RunsList({ rows: serverRows, timezone, nowIso }: Props) {
             <colgroup>
               <col style={{ width: "22%" }} />
               <col style={{ width: "10%" }} />
-              <col style={{ width: "14%" }} />
+              <col style={{ width: "14%" }} className="max-lg:hidden" />
               <col style={{ width: "14%" }} />
               <col style={{ width: "9%" }} />
               <col style={{ width: "9%" }} />
@@ -166,14 +166,14 @@ export function RunsList({ rows: serverRows, timezone, nowIso }: Props) {
               <col style={{ width: "6%" }} />
             </colgroup>
             <thead>
-              <tr className="text-overline h-11 border-b border-hairline bg-subtle text-faint">
+              <tr className="text-overline h-11 border-b border-hairline bg-subtle text-faint max-lg:text-[10px] max-lg:tracking-[0.02em]">
                 <th scope="col" className="px-4 text-left font-semibold">
                   Started
                 </th>
                 <th scope="col" className="px-2 text-left font-semibold">
                   Trigger
                 </th>
-                <th scope="col" className="px-2 text-left font-semibold">
+                <th scope="col" className="px-2 text-left font-semibold max-lg:hidden">
                   Mode
                 </th>
                 <th scope="col" className="px-2 text-left font-semibold">
@@ -225,7 +225,7 @@ export function RunsList({ rows: serverRows, timezone, nowIso }: Props) {
                     <td className="px-2">
                       <TriggerChip trigger={run.trigger} />
                     </td>
-                    <td className="text-caption truncate px-2 text-muted-foreground">
+                    <td className="text-caption truncate px-2 text-muted-foreground max-lg:hidden">
                       {modeLabel(run.provider)}
                     </td>
                     <td className="px-2">

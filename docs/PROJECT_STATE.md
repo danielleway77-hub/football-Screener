@@ -70,7 +70,7 @@ Status values: `todo` · `in-progress` · `done` · `blocked`. A step is `done` 
 | 10.3 | Sticky filter bar & list polish | todo | | | |
 | 10.4 | Day groups & navbar freshness pill | todo | | | |
 | 11 | Match detail (11.1) + FormDuel (11.2) | todo | | | |
-| 12 | Runs history | todo | | | |
+| 12 | Runs history (12.1) | **built, review pending** 2026-11-06 (branch step-12-runs) | unit 7, integration 3, e2e 14 (desktop+mobile), mutations 2 | A2 18/20 | not merged; /api/runs/[id] unchanged |
 | 13 | Settings & Import UI | todo | | | |
 | 14 | Resilience (offline/slow/errors) | todo | | | |
 | 15 | Premium animation pass | todo | | | |
