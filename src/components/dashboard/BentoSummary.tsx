@@ -112,7 +112,7 @@ export function BentoSummary(p: BentoProps) {
                       <li key={c.day}>
                         <Link
                           href={dashboardHref({ day: c.day, q: p.q, sort: p.sort })}
-                          className="num inline-flex h-7 items-center gap-1.5 rounded-4xl border border-hairline-strong bg-surface-raised px-2.5 text-xs text-foreground transition-colors hover:border-primary-border hover:text-primary"
+                          className="num inline-flex h-11 items-center gap-1.5 rounded-4xl border border-hairline-strong bg-surface-raised px-2.5 text-xs text-foreground transition-colors hover:border-primary-border hover:text-primary"
                         >
                           <span className="font-sans text-muted-foreground">{c.label}</span>
                           {p.perDay[c.day]}

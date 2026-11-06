@@ -91,7 +91,7 @@ function DayTabs({ counts, windowDays }: { counts: DayCounts; windowDays: number
                 tabIndex={selected ? 0 : -1}
                 onClick={() => navigate({ day })}
                 className={cn(
-                  "relative inline-flex h-10 shrink-0 items-center gap-2 rounded-4xl px-3.5 text-[0.9375rem] font-medium whitespace-nowrap transition-colors motion-reduce:transition-none",
+                  "relative inline-flex h-11 shrink-0 items-center gap-2 rounded-4xl px-3.5 text-[0.9375rem] font-medium whitespace-nowrap transition-colors motion-reduce:transition-none",
                   selected ? "text-primary" : "text-muted-foreground hover:text-foreground",
                 )}
               >

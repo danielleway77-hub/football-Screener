@@ -47,7 +47,7 @@ export function RunsToolbar({ status, showSkipped }: Props) {
         <SelectTrigger
           aria-label="Status"
           data-testid="status-filter"
-          className="h-11 w-full md:w-48"
+          className="h-11 w-full data-[size=default]:h-11 md:w-48"
         >
           <SelectValue />
         </SelectTrigger>

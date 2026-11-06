@@ -35,7 +35,7 @@ function useIsMobile(): boolean | null {
 
 function TriggerChip({ trigger }: { trigger: RunRow["trigger"] }) {
   return (
-    <span className="inline-flex h-6 items-center rounded-4xl border border-hairline-strong bg-neutral-soft px-2 text-[11px] font-semibold tracking-[0.08em] text-muted-foreground">
+    <span className="inline-flex h-6 items-center rounded-4xl border border-hairline-strong bg-neutral-soft px-2 text-xs font-semibold tracking-[0.06em] text-muted-foreground">
       {trigger}
     </span>
   );

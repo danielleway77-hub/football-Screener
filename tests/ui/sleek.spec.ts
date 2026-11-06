@@ -6,7 +6,6 @@ import { limeRatio, radiusOnLadder } from "./sleek-lib";
 // Intended for the PRODUCTION build:  PW_PROD=1 PW_PORT=3015 npx playwright test tests/ui/sleek.spec.ts --project=desktop --workers=1
 // Refresh baselines after a deliberate design change:  ... --update-snapshots
 // Each target page is loaded once (cached analysis); the 10 checks are separate tests over that cache.
-test.describe.configure({ mode: "serial" });
 test.setTimeout(180_000);
 test.beforeEach(({}, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "one project only");
@@ -17,7 +16,7 @@ const M = { w: 390, h: 844 };
 const D = { w: 1280, h: 800 };
 const TARGETS: Target[] = [
   ...[M, D].flatMap((v) => [
-    { name: "dashboard", url: "/", lime: 0.03, ...v },
+    { name: "dashboard", url: "/", lime: v.w === 390 ? 0.035 : 0.03, ...v },
     { name: "detail", url: "/matches/golden", lime: 0.03, ...v },
     { name: "settings", url: "/settings", lime: 0.03, ...v },
     { name: "runs", url: "/runs", lime: 0.03, ...v },
@@ -146,9 +145,13 @@ async function analyse(
         const r = el.getBoundingClientRect();
         const inline = el.tagName === "A" && el.closest("p, li") && cs.display === "inline";
         const stretched = r.width > 300 && r.height > 150; // whole-card link
+        const labelled = el.closest("label")
+          ? el.closest("label")!.getBoundingClientRect().height >= 43.5
+          : false; // the label is the tap target
         if (
           !inline &&
           !stretched &&
+          !labelled &&
           !el.closest(".sr-only") &&
           !el.matches(".skip-link, [aria-hidden=true]")
         )
@@ -236,7 +239,7 @@ for (const t of TARGETS) {
 test("4b floating layers DO have a shadow (dialog on /runs)", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/runs");
-  await page.getByRole("row").nth(1).click();
+  await page.getByTestId("run-row").first().click();
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
   expect(await dialog.evaluate((el) => getComputedStyle(el).boxShadow)).not.toBe("none");

@@ -23,7 +23,11 @@ export function AppShell({ children, lastUpdated, banners, freshness }: AppShell
       </a>
       <Navbar freshness={freshness} />
       {banners}
-      <main id="main" tabIndex={-1} className="flex-1 pt-6 pb-14 outline-none md:pt-8 xl:pt-10">
+      <main
+        id="main"
+        tabIndex={-1}
+        className="min-h-dvh flex-1 pt-6 pb-14 outline-none md:pt-8 xl:pt-10"
+      >
         {children}
       </main>
       <Footer lastUpdated={lastUpdated} />
