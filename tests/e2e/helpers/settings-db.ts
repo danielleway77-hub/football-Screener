@@ -50,3 +50,13 @@ export async function qualifiesById(): Promise<Record<string, boolean>> {
     );
   });
 }
+
+export async function countRuns(trigger: "IMPORT" | "INGEST" | "MANUAL" | "CRON"): Promise<number> {
+  return withClient(async (c) => {
+    const r = await c.query(
+      'SELECT count(*)::int AS n FROM "ScreeningRun" WHERE "trigger" = $1::"RunTrigger"',
+      [trigger],
+    );
+    return r.rows[0].n as number;
+  });
+}

@@ -102,6 +102,13 @@ export function DualThresholdSlider({
             onValueChange={([l, h]) => {
               if (l === undefined || h === undefined) return;
               setDraft({ low: null, high: null });
+              // Radix sorts the pair, so a thumb dragged past the other one changes BOTH values.
+              // Thumbs must never swap: stop the moving thumb one step short of its neighbour.
+              if (l !== low && h !== high) {
+                if (h > high) onChange({ low: Math.max(0, high - 1), high });
+                else onChange({ low, high: Math.min(100, low + 1) });
+                return;
+              }
               onChange({ low: l, high: h });
             }}
             disabled={disabled}
@@ -121,12 +128,7 @@ export function DualThresholdSlider({
                 className="absolute inset-0 rounded-full border border-hairline-strong"
               />
             </SliderPrimitive.Track>
-            {(
-              [
-                ["Poor form threshold", low],
-                ["Strong form threshold", high],
-              ] as const
-            ).map(([label, value]) => (
+            {["Poor form threshold", "Strong form threshold"].map((label) => (
               <SliderPrimitive.Thumb
                 key={label}
                 aria-label={label}
@@ -136,7 +138,6 @@ export function DualThresholdSlider({
                   "after:absolute after:-inset-2 after:content-['']",
                   "hover:ring-3 hover:ring-ring/40 focus-visible:ring-3 focus-visible:ring-ring/60",
                 )}
-                aria-valuenow={value}
               />
             ))}
           </SliderPrimitive.Root>

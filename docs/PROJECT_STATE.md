@@ -77,7 +77,8 @@ Status values: `todo` · `in-progress` · `done` · `blocked`. A step is `done` 
 | 10.4 | Day groups & navbar freshness pill | todo | | | |
 | 11 | Match detail (11.1) + FormDuel (11.2) | todo | | | |
 | 12 | Runs history | todo | | | |
-| 13 | Settings & Import UI | todo | | | |
+| 13.1 | Settings page | **built, review pending** 2026-11-06 (branch step-13-settings, worktree football-screener-step13) | see TEST_LOG | see TEST_LOG | A2 self-score in TEST_LOG; A.12 review pending |
+| 13.2 | Import page (file + smart paste C-lite) | **built, review pending** 2026-11-06 (same branch) | see TEST_LOG | see TEST_LOG | helper 8.3 NOT built (D17) |
 | 14 | Resilience (offline/slow/errors) | todo | | | |
 | 15 | Premium animation pass | todo | | | |
 | 15.2–15.3 | Design critique; real-device check | todo | | | |
@@ -151,3 +152,6 @@ None.
 Step 5 notes: Prisma 7.10.1 works on Node 26 (validate/generate). Prisma schema engine gets P1001 to Neon on this machine → migrations applied by scripts/db-migrate.ts (pg). Tests use DIRECT_URL_TEST with search_path=test. Adapter: @prisma/adapter-pg.
 
 Step 6 notes: APP_PASSWORD_HASH in .env.local must escape every $ as backslash-$ (Next dotenv expansion). Dev/e2e password lives in git-ignored .env.test.local (E2E_PASSWORD). Session cookie: session (dev) / __Host-session (prod). Version-mismatch redirect -> /login?expired=1.
+
+
+Step 13 notes: Settings and Import share one isolated e2e/integration schema per worktree (here `test_settings`; run specs with `--workers=1`). PUT /api/settings re-screens the stored matches when thresholds changed (answer: `rescreen {changed, qualifying}` or `rescreenSkipped` when an update is running); POST /api/settings/password rate-limits wrong current passwords under the key `pw:<ip>`, writes the Credential hash and bumps sessionVersion in ONE transaction, then re-issues this device's cookie. Max 5 active ingest tokens (service-level, 422). /api/import and /api/ingest answers now carry `reasons[]` (first 200 skipped items with index + sentence), also on 422. Import runs a client-side preview with the server's own `normalizePayload`; the smart-paste parser (`server/domain/parse-page-text.ts`) never guesses (missing form % => blocked). Sample files are generated at click time so their kickoffs are always tomorrow (UTC). Known: dev logs "Route /settings … new Date() while prerendering" from `verifySessionToken` (Step 6 code, default parameter) and shows the Next dev "1 Issue" badge on every (app) route in dev only — to be fixed in Step 14/16.

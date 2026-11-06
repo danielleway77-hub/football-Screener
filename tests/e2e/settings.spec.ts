@@ -92,19 +92,25 @@ test("dual slider keeps low < high; numeric inputs inputmode numeric", async ({ 
   await lowInput(page).press("ArrowUp");
   await expect(lowInput(page)).toHaveValue("41");
 
-  // The slider thumbs cannot cross either: with low at 74, ArrowRight on the low thumb stays at 74.
+  // The slider thumbs cannot cross: with low at 74 and high at 75, ArrowRight on the low thumb stays at 74.
   await lowInput(page).fill("74");
   await lowInput(page).blur();
-  await page.getByRole("slider", { name: "Poor form threshold" }).focus();
+  const lowThumb = page.getByRole("slider", { name: "Poor form threshold" });
+  const highThumb = page.getByRole("slider", { name: "Strong form threshold" });
+  await lowThumb.focus();
   await page.keyboard.press("ArrowRight");
+  await expect(lowThumb).toHaveAttribute("aria-valuenow", "74");
+  await expect(highThumb).toHaveAttribute("aria-valuenow", "75");
+  // Home moves the lower thumb to 0 and End the upper thumb to 100; the order is always kept.
+  await page.keyboard.press("Home");
+  await expect(lowInput(page)).toHaveValue("0");
   await page.keyboard.press("End");
-  await expect(lowInput(page)).toHaveValue("74");
-  await expect(page.getByRole("slider", { name: "Strong form threshold" })).toHaveAttribute(
-    "aria-valuenow",
-    "75",
-  );
+  await expect(highInput(page)).toHaveValue("100");
   await expect(page.getByTestId("threshold-sentence")).toHaveText(
-    "Qualifies when one team is above 75% and the other is below 74%.",
+    "Qualifies when one team is above 100% and the other is below 0%.",
+  );
+  expect(Number(await lowThumb.getAttribute("aria-valuenow"))).toBeLessThan(
+    Number(await highThumb.getAttribute("aria-valuenow")),
   );
 });
 
