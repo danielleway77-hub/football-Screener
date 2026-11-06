@@ -1,3 +1,4 @@
+import { existsSync, readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 
 // A page wider than the screen makes phones zoom out and hides fixed/sticky bars. Guard every route.
@@ -12,6 +13,11 @@ const ROUTES = [
   "/import",
   "/settings",
   "/matches/1",
+  "/matches/no-such-match",
+  // Seeded detail pages (isolated e2e schema); `@key` is resolved to the real id at run time.
+  "/matches/@golden",
+  "/matches/@xss",
+  "/matches/@away-strong",
   "/nope",
   "/style-guide",
   "/style-guide/shell",
@@ -19,11 +25,24 @@ const ROUTES = [
 ];
 const WIDTHS = [360, 390];
 
+function detailId(key: string): string {
+  const ids = JSON.parse(readFileSync("tests/e2e/.auth/detail-ids.json", "utf8")) as Record<
+    string,
+    string
+  >;
+  return ids[key] ?? key;
+}
+
 for (const route of ROUTES) {
   for (const width of WIDTHS) {
     test(`no horizontal overflow: ${route} at ${width}px`, async ({ page }) => {
+      test.skip(
+        route.includes("@") && !existsSync("tests/e2e/.auth/detail-ids.json"),
+        "needs the isolated e2e database",
+      );
       await page.setViewportSize({ width, height: 800 });
-      await page.goto(route);
+      const path = route.replace(/@([a-z-]+)$/, (_, key: string) => detailId(key));
+      await page.goto(path);
       await page.waitForLoadState("domcontentloaded");
       await page.waitForTimeout(600); // let client components render
       const overflow = await page.evaluate(() => {

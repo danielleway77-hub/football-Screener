@@ -69,6 +69,12 @@ Status values: `todo` · `in-progress` · `done` · `blocked`. A step is `done` 
 | 10 | Dashboard (10.1 match components, 10.2 page, 10.3 sticky bar, 10.4 day groups + pill) | **built, review pending** 2026-11-06 (branch step-10-dashboard) | see TEST_LOG | 7+ bugs fixed | A.12 review pending |
 | 10.3 | Sticky filter bar & list polish | **built** (part of Step 10) | | | |
 | 10.4 | Day groups & navbar freshness pill | **built** (part of Step 10) | | | |
+
+| 10 | Dashboard | todo | | | |
+| 11.2 | FormDuel | **built, review pending** 2026-11-06 | ✅ 8 component + 7 e2e x4 | ✅ | A2 18/20; specimen at /style-guide/form-duel (dev only) |
+| 11.1 | Match detail | **built, review pending** 2026-11-06 (branch step-11-import, worktree football-screener-step11) | ✅ 29 unit/component + 1 integration + 19 e2e x4 viewports | ✅ see TEST_LOG | A2 18/20; 11.2 FormDuel NOT started (96px slot reserved in the hero) |
+| 10.3 | Sticky filter bar & list polish | todo | | | |
+| 10.4 | Day groups & navbar freshness pill | todo | | | |
 | 11 | Match detail (11.1) + FormDuel (11.2) | todo | | | |
 | 12 | Runs history | todo | | | |
 | 13 | Settings & Import UI | todo | | | |
@@ -101,7 +107,7 @@ Status values: `todo` · `in-progress` · `done` · `blocked`. A step is `done` 
 | Known harmless warning | `unmet peer effect` (from @effect/sql-* inside Prisma's optional tooling) | ignore |
 
 ## 6. Currently working on
-Step 9.1 (daily cron) built on branch step-09-cron; awaiting review/merge. Details in docs/TEST_LOG.md. Env: `CRON_SECRET` must exist on Vercel so the cron call carries the bearer; schedule `0 6 * * *` UTC (Hobby: once a day, up to 1 h late; owner-local 06:00 winter / 07:00 summer); `Setting.runHourLocal` is informational only. SKIPPED runs: use `runs.list({ excludeSkipped: true })` on the Runs page (Step 12).
+Step 11.1 (match detail) built on branch step-11-import; Step 10 components merged from step-10-dashboard. Pending: dashboard MatchCard should link with `?from=` (encoded dashboard query) so Back keeps filters; real HTTP 404 status for unknown ids (streaming sends 200 + noindex + branded 404 UI). Previous note: Step 9.1 (daily cron) built on branch step-09-cron; awaiting review/merge. Details in docs/TEST_LOG.md. Env: `CRON_SECRET` must exist on Vercel so the cron call carries the bearer; schedule `0 6 * * *` UTC (Hobby: once a day, up to 1 h late; owner-local 06:00 winter / 07:00 summer); `Setting.runHourLocal` is informational only. SKIPPED runs: use `runs.list({ excludeSkipped: true })` on the Runs page (Step 12).
 
 Step 10 notes: dashboard reads everything through services in `(app)/dashboard-content.tsx` (inside Suspense); the e2e dev server uses the isolated schema `test_dash` (playwright.config.ts) and e2e specs seed with raw SQL (`tests/e2e/helpers/dashboard-db.ts`, owner timezone = a fixed Etc/GMT zone whose local time is ~12:00 now); run the dashboard specs with `--workers=1` (shared schema). Tab counts ignore the league search. Logo images use `unoptimized` (hosts unknown until recon).
 

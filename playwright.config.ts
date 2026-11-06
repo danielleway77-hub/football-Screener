@@ -28,7 +28,7 @@ export default defineConfig({
   testDir: "./tests",
   testMatch: ["e2e/**/*.spec.ts", "ui/**/*.spec.ts"],
   fullyParallel: true,
-  globalSetup: "./tests/e2e/global-setup.ts",
+  globalSetup: ["./tests/e2e/global-setup.ts", "./tests/e2e/seed-detail.ts"],
   // The dev server compiles routes on demand; under 4 parallel workers hydration can exceed 5 s.
   expect: { timeout: 15_000 },
   forbidOnly: !!process.env.CI,
@@ -50,7 +50,9 @@ export default defineConfig({
     { name: "wide", use: { ...base, viewport: { width: 1920, height: 1080 } } },
   ],
   webServer: {
-    command: useProd ? `pnpm build && pnpm start --port ${PORT}` : `pnpm dev --port ${PORT}`,
+    command: useProd
+      ? `pnpm build && pnpm start --port ${PORT}`
+      : `pnpm exec tsx tests/e2e/prepare-db.ts && pnpm dev --port ${PORT}`,
     // Dev server: poll a heavy route so it is compiled BEFORE the 4 parallel workers start
     // (cold-compile timeouts caused flaky first runs). Production: the home page.
     url: useProd ? baseURL : `${baseURL}/style-guide`,
