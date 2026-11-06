@@ -218,7 +218,7 @@ export function RunsList({ rows: serverRows, timezone, nowIso }: Props) {
                         open(run.id);
                       }
                     }}
-                    className="h-14 cursor-pointer border-b border-hairline transition-colors outline-none last:border-0 hover:bg-white/[0.03] focus-visible:bg-white/[0.03] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                    className="row-cv h-14 cursor-pointer border-b border-hairline transition-colors outline-none last:border-0 hover:bg-white/[0.03] focus-visible:bg-white/[0.03] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                   >
                     <td className="px-4">
                       <div className="truncate font-medium">{label}</div>

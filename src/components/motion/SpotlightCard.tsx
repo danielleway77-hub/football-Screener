@@ -2,12 +2,17 @@
 
 import * as React from "react";
 import { useHoverCapable } from "@/hooks/useHoverCapable";
-import { useMotionPrefs } from "@/lib/motion";
+import { FEATURE_SPOTLIGHT, useMotionPrefs } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
-type SpotlightCardProps = {
+type SpotlightCardProps = Omit<React.HTMLAttributes<HTMLElement>, "className" | "children"> & {
   children: React.ReactNode;
   className?: string;
+  /** Classes for the content layer (padding/layout live here so overlays and links span the whole card). */
+  contentClassName?: string;
+  /** Element to render (default div); MatchCard uses "article". */
+  as?: "div" | "article";
+  [dataAttribute: `data-${string}`]: string | boolean | undefined;
 };
 
 /**
@@ -16,11 +21,17 @@ type SpotlightCardProps = {
  * under the content (z-0 vs z-10) so text stays crisp. Put it on cards that have a radius: the
  * overlay inherits it.
  */
-export function SpotlightCard({ children, className }: SpotlightCardProps) {
+export function SpotlightCard({
+  children,
+  className,
+  contentClassName,
+  as: Tag = "div",
+  ...rest
+}: SpotlightCardProps) {
   const capable = useHoverCapable();
   const { reduce } = useMotionPrefs();
-  const active = capable && !reduce;
-  const ref = React.useRef<HTMLDivElement>(null);
+  const active = FEATURE_SPOTLIGHT && capable && !reduce;
+  const ref = React.useRef<HTMLElement>(null);
   const [on, setOn] = React.useState(false);
 
   React.useEffect(() => {
@@ -56,7 +67,12 @@ export function SpotlightCard({ children, className }: SpotlightCardProps) {
   }, [active]);
 
   return (
-    <div ref={ref} data-spotlight={active ? "active" : "off"} className={cn("relative", className)}>
+    <Tag
+      {...rest}
+      ref={ref as React.Ref<HTMLDivElement>}
+      data-spotlight={active ? "active" : "off"}
+      className={cn("relative", className)}
+    >
       {active ? (
         <span
           aria-hidden="true"
@@ -65,7 +81,7 @@ export function SpotlightCard({ children, className }: SpotlightCardProps) {
           style={{ background: "var(--spotlight)", opacity: on ? 1 : 0 }}
         />
       ) : null}
-      <div className="relative z-10 h-full">{children}</div>
-    </div>
+      <div className={cn("relative z-10 h-full flex-1", contentClassName)}>{children}</div>
+    </Tag>
   );
 }

@@ -23,7 +23,10 @@ Layout: AppShell, Navbar, NavLinks, MobileNav, LogoutButton, Footer, PageContain
 ## Sleek interaction kit & dashboard summary (UI_BLUEPRINT Part 2)
 | Component | Path | Purpose | Key props | States | Built in | Status |
 |---|---|---|---|---|---|---|
-| SpotlightCard | `components/motion/SpotlightCard.tsx` | pointer-following soft lime glow on hover-capable devices only | children, className | off on touch / reduced motion | 3.4 | planned |
+| SpotlightCard | `components/motion/SpotlightCard.tsx` | pointer-following soft lime glow on hover-capable devices only; now also the MatchCard root (`as="article"`, `contentClassName`, data attrs forwarded); flag FEATURE_SPOTLIGHT | children, className, contentClassName, as | off on touch / reduced motion | 3.4 / 15.4 | built |
+| CardSheen | `components/motion/CardSheen.tsx` | conic highlight travelling the hairline of qualifying cards, 6s, only while on screen (IntersectionObserver), hidden under reduced motion; flag FEATURE_CARD_SHEEN | - | reduced motion hides | 15.1 | built |
+| LoginEntrance | `components/auth/LoginEntrance.tsx` + `lib/login-motion.ts` | the ONLY GSAP user (dynamic import): glow, logo, card, fields, glyph draw-on in 1.2s; skipped under reduced motion or if the chunk takes >600ms | children, className | final state in SSR | 15.1 | built |
+| brand constants | `lib/brand.ts`, `app/manifest.ts`, `app/opengraph-image.png` (+twitter), `scripts/make-og.mjs` | theme colour, manifest, OG image 1200x630 | - | - | 15.1 | built |
 | SegmentedControl | `components/shared/SegmentedControl.tsx` | accessible radiogroup with sliding indicator (Settings window/scope, tabs look) | options, value, onChange | disabled, counts | 3.4 | planned |
 | StickyBar | `components/shared/StickyBar.tsx` | sentinel-based sticky container; becomes glass when stuck | top, children(isStuck) | stuck / not stuck | 3.4 | planned |
 | ScrollFade | `components/shared/ScrollFade.tsx` | horizontal scroll with edge-fade masks, snap | children | overflow left/right | 3.4 | planned |
@@ -101,7 +104,7 @@ ThresholdForm · ScheduleForm · AccessModeForm · TokenManager · PasswordForm 
 All planned.
 
 ## Motion
-Reveal · Stagger/StaggerItem · PageTransition · CountUp · AnimatedBar · PressableScale · `lib/motion.ts` variants — `components/motion/*` — Step 3.3 — planned.
+Reveal · Stagger/StaggerItem · PageTransition · CountUp · AnimatedBar · PressableScale · CardSheen · `lib/motion.ts` (variants, FEATURE_* flags, `useMotionPrefs` is hydration-safe: false until hydrated) — `components/motion/*` — Step 3.3 / 15.
 
 ## Hooks & helpers
 `useOnlineStatus`, `useSlowRequest`, `useRunPolling`, `lib/fetcher.ts`, `lib/time.ts`, `lib/format.ts` (`formatPct`, `formatKickoff`) — planned.

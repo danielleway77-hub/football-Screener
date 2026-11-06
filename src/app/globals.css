@@ -617,3 +617,309 @@
     transform: translateX(300%);
   }
 }
+
+/* ---------------------------------------------------------------------------------------------
+   Step 15.1 — polish (transform/opacity only)
+   --------------------------------------------------------------------------------------------- */
+:root {
+  --sheen-accent: rgba(200, 245, 46, 0.5);
+  --vignette: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.25) 100%);
+}
+
+/* Login ambient glow: 480px lime blob at 8% opacity drifting ±24px over 14s. The wrapper is what GSAP
+   fades in; the inner blob only drifts (CSS), so the two never fight over `transform`. */
+.login-root {
+  overflow: clip;
+}
+.login-glow {
+  position: absolute;
+  top: -120px;
+  left: -120px;
+  width: 480px;
+  height: 480px;
+  pointer-events: none;
+}
+.login-glow-blob {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, var(--primary), transparent);
+  opacity: 0.08;
+  animation: login-drift 14s ease-in-out infinite alternate;
+}
+.login-root[data-tab-hidden="true"] .login-glow-blob {
+  animation-play-state: paused;
+}
+@keyframes login-drift {
+  from {
+    transform: translate3d(-24px, -24px, 0);
+  }
+  to {
+    transform: translate3d(24px, 24px, 0);
+  }
+}
+
+/* Qualifying-card border sheen: a conic highlight rotating behind a 1px mask ring (6s linear).
+   Paused unless the card is on screen (CardSheen toggles data-active); hidden for reduced motion. */
+.card-sheen {
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 200ms var(--ease-out);
+  -webkit-mask:
+    linear-gradient(var(--mask-on) 0 0) content-box,
+    linear-gradient(var(--mask-on) 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(var(--mask-on) 0 0) content-box exclude,
+    linear-gradient(var(--mask-on) 0 0);
+}
+.card-sheen[data-active="true"] {
+  opacity: 1;
+}
+.card-sheen-beam {
+  position: absolute;
+  inset: -100%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 250deg,
+    var(--sheen-accent) 340deg,
+    transparent 360deg
+  );
+  animation: card-sheen-spin 6s linear infinite;
+  animation-play-state: paused;
+}
+.card-sheen[data-active="true"] .card-sheen-beam {
+  animation-play-state: running;
+  will-change: transform;
+}
+@keyframes card-sheen-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card-sheen {
+    display: none;
+  }
+  .login-glow-blob {
+    animation: none;
+  }
+}
+
+/* Feedback timing (UI_BLUEPRINT §12): toasts enter/leave in 240ms (sonner defaults to 400ms). */
+[data-sonner-toast] {
+  transition:
+    transform 240ms var(--ease-out),
+    opacity 240ms var(--ease-out),
+    height 240ms var(--ease-out);
+}
+
+/* ---------------------------------------------------------------------------------------------
+   Step 15.6 — micro-details, contrast modes, large screens (numbers = UI_BLUEPRINT §30/§31/§35 rows)
+   --------------------------------------------------------------------------------------------- */
+
+/* §30 #28 long lists: rows paint lazily (explicit 56px = the row height, so no layout shift). */
+.row-cv {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 56px;
+}
+
+/* §30 #8 heading rendering */
+@layer base {
+  h1,
+  h2,
+  h3 {
+    text-rendering: optimizeLegibility;
+  }
+  /* §30 #21 link style: 1px underline at 4px offset, 2px on hover (colour comes from the component) */
+  a:where(:not([class])) {
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+  }
+  a:where(:not([class])):hover {
+    text-decoration-thickness: 2px;
+  }
+  /* §30 #20 cursors */
+  :where(button, [role="button"], summary, [role="tab"], [role="switch"], label[for]):not(
+    :disabled,
+    [aria-disabled="true"]
+  ) {
+    cursor: pointer;
+  }
+  :where(button, input, select, textarea):disabled {
+    cursor: not-allowed;
+  }
+  /* §30 #14 popups never chain-scroll the page */
+  [role="dialog"],
+  [role="listbox"],
+  [role="menu"] {
+    overscroll-behavior: contain;
+  }
+}
+
+/* §35 large screens: from 1920px a soft vignette frames the centred 1680px container (background only,
+   under the navbar and popups, never intercepts input). The page has no hero glow to re-anchor. */
+@media (min-width: 120rem) {
+  html::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background-image: var(--vignette);
+  }
+}
+
+/* §31 prefers-contrast: more — stronger hairlines/borders, brighter muted text, thicker focus, no glows */
+@media (prefers-contrast: more) {
+  :root {
+    --hairline: rgba(255, 255, 255, 0.3);
+    --hairline-strong: rgba(255, 255, 255, 0.45);
+    --border-control: #8fa79b;
+    --border-control-hover: #a9c0b4;
+    --text-muted: var(--text);
+    --text-faint: var(--text);
+  }
+  :where(
+    a,
+    button,
+    input,
+    select,
+    textarea,
+    summary,
+    [role="tab"],
+    [role="switch"],
+    [tabindex]
+  ):focus-visible {
+    outline-width: 3px;
+  }
+  .glow-accent {
+    box-shadow: none;
+  }
+  .card-sheen,
+  [data-testid="spotlight-overlay"],
+  .login-glow {
+    display: none;
+  }
+}
+
+/* §31 forced-colors: system colours only; borders/outlines instead of shadows and gradients */
+@media (forced-colors: active) {
+  :where(
+    a,
+    button,
+    input,
+    select,
+    textarea,
+    summary,
+    [role="tab"],
+    [role="switch"],
+    [tabindex]
+  ):focus-visible {
+    outline: 3px solid Highlight;
+    outline-offset: 2px;
+  }
+  .surface-1,
+  .surface-2,
+  .surface-3,
+  [data-slot="card"],
+  [data-slot="input"],
+  .skeleton-shimmer {
+    border: 1px solid CanvasText;
+    box-shadow: none;
+  }
+  .glass {
+    background: Canvas;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-bottom: 1px solid CanvasText;
+  }
+  .glow-accent,
+  .btn-sheen::after,
+  .noise::before,
+  .card-sheen,
+  .login-glow,
+  [data-testid="spotlight-overlay"] {
+    display: none;
+  }
+  .bg-grad-hero,
+  .bg-grad-card {
+    background-image: none;
+  }
+  [data-variant="default"] {
+    border: 1px solid ButtonText;
+  }
+  [role="tab"][aria-selected="true"],
+  [aria-pressed="true"],
+  [data-state="active"],
+  [data-active="true"] {
+    border: 2px solid Highlight;
+  }
+  /* FormBar: track GrayText, fill Highlight (the only place forced-color-adjust is turned off) */
+  [data-testid="form-track"] {
+    forced-color-adjust: none;
+    background: GrayText;
+  }
+  [data-testid="form-track"] > [data-motion] {
+    background: Highlight;
+  }
+  [data-testid="form-tick"] {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
+  /* probability "Highest" tile: Highlight border (the "Highest" label stays) */
+  [data-highest] {
+    border: 2px solid Highlight;
+  }
+  /* the lime scan line of the logo keeps its own visible stroke, in the Highlight colour */
+  svg g[stroke="var(--primary)"] {
+    forced-color-adjust: none;
+    stroke: Highlight;
+  }
+}
+
+/* §30 #29 print: minimal; hide chrome and controls, dark-on-white (system colours, no hex) */
+@media print {
+  :root {
+    color-scheme: light;
+  }
+  html,
+  body {
+    background: Canvas;
+    color: CanvasText;
+  }
+  header,
+  footer,
+  nav,
+  button,
+  .skip-link,
+  .glass,
+  [data-testid="route-progress"],
+  [role="status"] {
+    display: none !important;
+  }
+  .surface-1,
+  .surface-2,
+  .surface-3,
+  [data-slot="card"] {
+    background: none;
+    box-shadow: none;
+    border: 1px solid CanvasText;
+    color: CanvasText;
+  }
+  .glow-accent,
+  .noise::before,
+  .card-sheen {
+    display: none;
+  }
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

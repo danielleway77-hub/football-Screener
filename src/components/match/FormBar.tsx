@@ -68,7 +68,9 @@ export function FormBar({
           aria-hidden="true"
           data-testid="form-pill"
           className={cn(
-            "num shrink-0 rounded-4xl px-2.5 py-0.5 text-sm font-semibold",
+            "num shrink-0 rounded-4xl px-2.5 font-semibold",
+            // cards: the number is the largest text after the title (ThemeGuideline typography audit)
+            size === "lg" ? "py-0.5 text-sm" : "text-lg leading-7",
             PILL[strength],
           )}
         >

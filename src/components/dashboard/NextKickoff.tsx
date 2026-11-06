@@ -18,8 +18,10 @@ export function NextKickoff({ kickoffIso, nowIso, timezone }: NextKickoffProps) 
   return (
     <p data-testid="next-kickoff" className="text-caption num text-muted-foreground">
       <span className="font-sans text-faint">Next kickoff </span>
-      {formatInTimeZone(kickoff, timezone, "EEE HH:mm")} ·{" "}
-      {formatCountdown(kickoff.getTime() - now)}
+      <span className="whitespace-nowrap">
+        {formatInTimeZone(kickoff, timezone, "EEE HH:mm")} ·
+      </span>{" "}
+      <span className="whitespace-nowrap">{formatCountdown(kickoff.getTime() - now)}</span>
     </p>
   );
 }
