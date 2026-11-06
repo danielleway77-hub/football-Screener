@@ -2,9 +2,10 @@ import { act, fireEvent, render, renderHook, screen, waitFor } from "@testing-li
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const nav = vi.hoisted(() => ({ pathname: "/", search: "" }));
+const nav = vi.hoisted(() => ({ pathname: "/", search: "", refresh: vi.fn() }));
 vi.mock("next/navigation", () => ({
   usePathname: () => nav.pathname,
+  useRouter: () => ({ refresh: nav.refresh }),
   useSearchParams: () => new URLSearchParams(nav.search),
 }));
 
