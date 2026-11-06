@@ -101,7 +101,7 @@ export function MatchDetailView({ m }: { m: MatchDetailModel }) {
               data-testid="source-link"
               className="surface-2 min-h-11 justify-center rounded-md px-4 text-[0.9375rem] font-semibold text-foreground no-underline hover:border-border-strong"
             >
-              Open on PrediGoal
+              Open on {m.source}
             </ExternalLink>
           ) : null}
         </div>

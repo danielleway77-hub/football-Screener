@@ -259,7 +259,11 @@ export async function DashboardContent({ searchParams }: { searchParams: Search 
             dayafter: summary.perDay.dayafter,
           }}
           windowDays={settings.windowDays}
-          caption={matches ? `Showing ${showing} ${showing === 1 ? "match" : "matches"}` : ""}
+          caption={
+            matches
+              ? `Showing ${showing} ${showing === 1 ? "match" : "matches"}${showing >= 200 && summary.total > showing ? " (the first 200; narrow the filters to see the rest)" : ""}`
+              : ""
+          }
         />
         <div role="tabpanel" id="results-panel" aria-labelledby={`day-tab-${params.day}`}>
           {grouped ? null : <h2 className="sr-only">Matches</h2>}
