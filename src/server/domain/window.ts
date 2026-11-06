@@ -83,3 +83,13 @@ export function dayRangeFor(tab: Tab, now: Date, timezone: string): DateRange {
       return { fromUtc: now, toUtc: new Date(now.getTime() + UPCOMING_HORIZON_DAYS * 86_400_000) };
   }
 }
+
+/** The whole local calendar day containing `now` in `timezone` (DST-aware: 23 h / 25 h days). */
+export function localDayRange(now: Date, timezone: string): DateRange {
+  assertTimezone(timezone);
+  const today = localDate(now, timezone);
+  return {
+    fromUtc: startOfLocalDay(today, timezone),
+    toUtc: startOfLocalDay(addDays(today, 1), timezone),
+  };
+}

@@ -101,7 +101,7 @@ Status values: `todo` · `in-progress` · `done` · `blocked`. A step is `done` 
 | Known harmless warning | `unmet peer effect` (from @effect/sql-* inside Prisma's optional tooling) | ignore |
 
 ## 6. Currently working on
-— (none)
+Step 9.1 (daily cron) built on branch step-09-cron; awaiting review/merge. Details in docs/TEST_LOG.md. Env: `CRON_SECRET` must exist on Vercel so the cron call carries the bearer; schedule `0 6 * * *` UTC (Hobby: once a day, up to 1 h late; owner-local 06:00 winter / 07:00 summer); `Setting.runHourLocal` is informational only. SKIPPED runs: use `runs.list({ excludeSkipped: true })` on the Runs page (Step 12).
 
 ## 7. Next action
 Start Step 0.1: send the client message (change password, send image #2, confirm questions).

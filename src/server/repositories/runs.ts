@@ -81,18 +81,21 @@ export async function getLatestUsable(): Promise<RunRecord | null> {
 }
 
 export async function list(
-  opts: { page?: number; pageSize?: number } = {},
+  opts: { page?: number; pageSize?: number; excludeSkipped?: boolean } = {},
 ): Promise<{ items: RunRecord[]; total: number }> {
   const pageSize = Math.min(Math.max(opts.pageSize ?? 20, 1), 100);
   const page = Math.max(opts.page ?? 1, 1);
   const db = getDb();
+  // SKIPPED runs (push mode, nothing to do) are bookkeeping: the Runs page hides them unless asked.
+  const where = opts.excludeSkipped ? { status: { not: "SKIPPED" as const } } : {};
   const [items, total] = await Promise.all([
     db.screeningRun.findMany({
+      where,
       orderBy: { startedAt: "desc" },
       skip: (page - 1) * pageSize,
       take: pageSize,
     }),
-    db.screeningRun.count(),
+    db.screeningRun.count({ where }),
   ]);
   return { items, total };
 }
@@ -103,4 +106,51 @@ export async function hasRunning(): Promise<boolean> {
 
 export async function getById(id: string): Promise<RunRecord | null> {
   return getDb().screeningRun.findUnique({ where: { id } });
+}
+
+/** A run with this trigger that finished at or after `since` (newest first), or null. */
+export async function findFinishedSince(
+  trigger: RunTrigger,
+  since: Date,
+): Promise<RunRecord | null> {
+  return getDb().screeningRun.findFirst({
+    where: { trigger, finishedAt: { gte: since } },
+    orderBy: { finishedAt: "desc" },
+  });
+}
+
+/** True when any run started inside [from, to). */
+export async function existsStartedBetween(from: Date, to: Date): Promise<boolean> {
+  return (await getDb().screeningRun.count({ where: { startedAt: { gte: from, lt: to } } })) > 0;
+}
+
+/** Newest run with this trigger that started at or after `since`, or null. */
+export async function findStartedSince(
+  trigger: RunTrigger,
+  since: Date,
+): Promise<RunRecord | null> {
+  return getDb().screeningRun.findFirst({
+    where: { trigger, startedAt: { gte: since } },
+    orderBy: { startedAt: "desc" },
+  });
+}
+
+/** Records a run that ended immediately (SKIPPED, or a FAILED run for an error before any run started). */
+export async function createFinished(input: {
+  trigger: RunTrigger;
+  provider: string;
+  status: "SKIPPED" | "FAILED";
+  note: string;
+  at: Date;
+}): Promise<RunRecord> {
+  return getDb().screeningRun.create({
+    data: {
+      trigger: input.trigger,
+      provider: input.provider,
+      status: input.status,
+      startedAt: input.at,
+      finishedAt: input.at,
+      error: input.note,
+    },
+  });
 }

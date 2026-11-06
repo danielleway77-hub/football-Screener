@@ -37,6 +37,18 @@ a missing or invalid variable stops the app with a readable message (values are 
 | `pnpm db:generate` / `db:migrate` / `db:deploy` / `db:studio` / `db:seed` | Prisma (from Step 5) |
 | `pnpm hash-password` / `run:daily` / `contrast` | Added in Steps 6 / 9 / 2.2 |
 
+## Daily job (cron)
+
+`vercel.json` schedules `GET /api/cron/daily` at `0 6 * * *` (06:00 UTC). On the Hobby plan a cron runs
+at most once a day and may start up to an hour late, so for a UK owner it fires at about 06:00 (winter)
+or 07:00 (summer, BST) local time. `Setting.runHourLocal` is informational only; the schedule is not
+derived from it. Vercel sends `Authorization: Bearer $CRON_SECRET` automatically when the `CRON_SECRET`
+environment variable exists; the route rejects anything else with 401. Official-API mode pulls and
+screens the window; push modes only record a SKIPPED run (hidden on the Runs page by default). Every
+call also deletes matches over 90 days past kickoff, login attempts over 30 days and rate-limit rows
+over 2 days. Calling it again within 30 minutes of a finished cron run returns `{skipped: "recent"}`.
+Run it by hand with `pnpm run:daily` (set `BASE_URL` to target a deployment).
+
 ## Architecture rules (enforced by lint)
 
 `app/ → server/services → server/repositories → lib/db`. Components never touch the database;
