@@ -378,3 +378,57 @@ describe("minimal and blank optional fields", () => {
     });
   });
 });
+
+describe("calendar validation and ids", () => {
+  const kick = (kickoffAt: unknown) =>
+    parseRawMatch({
+      provider: "p",
+      providerMatchId: "1",
+      kickoffAt,
+      home: { name: "A", formPct: 80 },
+      away: { name: "B", formPct: 7 },
+      formScope: "league",
+    });
+  it.each([
+    "2026-02-30T10:00:00Z",
+    "2025-02-29T10:00:00Z",
+    "2026-02-31T10:00Z",
+    "2026-01-01T24:00:00Z",
+    "0000-01-01T10:00:00Z",
+    "2026-04-31T10:00:00Z",
+    "2026-00-10T10:00:00Z",
+    "2026-01-00T10:00:00Z",
+    "2026-01-01T10:60:00Z",
+    "2026-01-01T10:00:60Z",
+    "2101-01-01T10:00:00Z",
+  ])("rejects impossible kickoff %s", (value) => {
+    expect(kick(value)).toEqual({ ok: false, reason: "kickoff time is not a valid date" });
+  });
+  it("accepts a real leap day and end-of-month dates", () => {
+    expect(kick("2028-02-29T10:00:00Z").ok).toBe(true);
+    expect(kick("2026-04-30T23:59:59Z").ok).toBe(true);
+    expect(kick("2026-12-31T23:59:00+01:00").ok).toBe(true);
+  });
+  it("rejects NaN, Infinity and unsafe numbers as ids", () => {
+    for (const id of [Number.NaN, Infinity, 1e21, 1.5]) {
+      const r = parseRawMatch({
+        provider: "p",
+        providerMatchId: id,
+        kickoffAt: "2026-11-04T10:00:00Z",
+        home: { name: "A", formPct: 80 },
+        away: { name: "B", formPct: 7 },
+        formScope: "league",
+      });
+      expect(r.ok, String(id)).toBe(false);
+    }
+  });
+  it("__proto__ keys in input do not pollute or leak into the output", () => {
+    const raw = JSON.parse(
+      '{"provider":"p","providerMatchId":"1","kickoffAt":"2026-11-04T10:00:00Z","home":{"name":"A","formPct":80},"away":{"name":"B","formPct":7},"formScope":"league","__proto__":{"polluted":true}}',
+    );
+    const r = parseRawMatch(raw);
+    expect(r.ok).toBe(true);
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+    expect(r.ok && "polluted" in r.value).toBe(false);
+  });
+});

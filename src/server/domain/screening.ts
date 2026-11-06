@@ -3,6 +3,9 @@ import type { FormScope, Probabilities, ScreeningResult } from "./types";
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
 /**
+ * PRECONDITION: the thresholds passed `validateThresholds`. Form values are already rounded to 2 decimals
+ * by `normalizePercent`, so 75.004 is stored as 75 and does not qualify (documented decision).
+ *
  * The client's rule, with STRICT inequalities and either side allowed to be the strong one:
  *   (home > high AND away < low)  OR  (away > high AND home < low)
  * Both-high, both-low and middling pairs never qualify. `formGap` is always computed.

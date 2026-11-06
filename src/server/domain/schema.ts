@@ -28,6 +28,8 @@ const text = (label: string, max: number, required: boolean) =>
       return required
         ? { ok: false, reason: `${label} is missing` }
         : { ok: true, value: undefined };
+    if (typeof v === "number" && !Number.isSafeInteger(v))
+      return { ok: false, reason: `${label} is not text` };
     if (typeof v !== "string" && typeof v !== "number")
       return { ok: false, reason: `${label} is not text` };
     const s = String(v).trim();
@@ -58,15 +60,30 @@ const percent = (label: string, scale: PercentScale, required: boolean) =>
     return r.ok ? { ok: true, value: r.value } : { ok: false, reason: `${label} ${r.reason}` };
   });
 
-const KICKOFF = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})$/i;
+const KICKOFF =
+  /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})$/i;
 const kickoff = field<Date>((v) => {
   if (isBlank(v)) return { ok: false, reason: "kickoff time is missing" };
   if (typeof v !== "string") return { ok: false, reason: "kickoff time is not text" };
   const s = v.trim();
   if (!/(Z|[+-]\d{2}:?\d{2})$/i.test(s)) return { ok: false, reason: "kickoff has no timezone" };
-  const date = KICKOFF.test(s) ? new Date(s.replace(" ", "T")) : new Date(Number.NaN);
-  if (Number.isNaN(date.getTime()))
-    return { ok: false, reason: "kickoff time is not a valid date" };
+  const bad = { ok: false, reason: "kickoff time is not a valid date" } as const;
+  const m = KICKOFF.exec(s);
+  if (!m) return bad;
+  // V8 silently rolls impossible dates over (30 Feb -> 2 Mar, 24:00 -> next day): check the calendar ourselves.
+  const [y, mo, d, h, mi, sec] = [m[1], m[2], m[3], m[4], m[5], m[6] ?? "0"].map(Number) as [
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+  ];
+  const daysInMonth = new Date(Date.UTC(y, mo, 0)).getUTCDate();
+  if (y < 2000 || y > 2100 || mo < 1 || mo > 12 || d < 1 || d > daysInMonth) return bad;
+  if (h > 23 || mi > 59 || sec > 59) return bad;
+  const date = new Date(s.replace(" ", "T"));
+  if (Number.isNaN(date.getTime())) return bad;
   return { ok: true, value: date };
 });
 

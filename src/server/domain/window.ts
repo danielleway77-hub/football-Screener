@@ -32,7 +32,14 @@ function addDays(date: Ymd, days: number): Ymd {
 
 /** The UTC instant at which the local calendar day `date` starts in `timezone` (DST-aware: 23 h / 25 h days). */
 function startOfLocalDay(date: Ymd, timezone: string): Date {
-  return fromZonedTime(`${fmt(date)}T00:00:00`, timezone);
+  let instant = fromZonedTime(`${fmt(date)}T00:00:00`, timezone);
+  // Some zones skip local midnight on DST day (e.g. America/Sao_Paulo 2018-11-04, Asia/Beirut 2022-03-27):
+  // the conversion then lands in the PREVIOUS local day. Walk forward to the first instant of the target day.
+  const target = fmt(date);
+  for (let i = 0; i < 8 && fmt(localDate(instant, timezone)) !== target; i++) {
+    instant = new Date(instant.getTime() + 30 * 60_000);
+  }
+  return instant;
 }
 
 function assertTimezone(timezone: string) {
