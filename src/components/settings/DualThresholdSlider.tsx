@@ -114,11 +114,14 @@ export function DualThresholdSlider({
             disabled={disabled}
             className="relative flex h-7 w-full touch-none items-center select-none data-disabled:opacity-50"
           >
-            <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full">
+            <SliderPrimitive.Track className="relative h-2.5 w-full grow overflow-hidden rounded-full">
               <span aria-hidden="true" className="absolute inset-0 flex">
-                <span className="bg-negative-soft" style={{ width: `${low}%` }} />
                 <span
-                  className="bg-neutral-bar/40"
+                  className="bg-negative/35 transition-[width] duration-150 ease-out motion-reduce:transition-none"
+                  style={{ width: `${low}%` }}
+                />
+                <span
+                  className="bg-neutral-bar/40 transition-[width] duration-150 ease-out motion-reduce:transition-none"
                   style={{ width: `${Math.max(0, high - low)}%` }}
                 />
                 <span className="flex-1 bg-primary-soft" />
@@ -134,7 +137,8 @@ export function DualThresholdSlider({
                 aria-label={label}
                 data-testid={label.startsWith("Poor") ? "low-thumb" : "high-thumb"}
                 className={cn(
-                  "relative block size-7 rounded-full border-[3px] border-canvas bg-primary shadow-sm transition-shadow outline-none",
+                  "relative block size-7 cursor-grab rounded-full border-[3px] border-canvas bg-primary shadow-md transition-[box-shadow,transform] duration-150 outline-none motion-reduce:transition-none",
+                  "hover:scale-110 active:scale-125 active:cursor-grabbing motion-reduce:hover:scale-100 motion-reduce:active:scale-100",
                   "after:absolute after:-inset-2 after:content-['']",
                   "hover:ring-3 hover:ring-ring/40 focus-visible:ring-3 focus-visible:ring-ring/60",
                 )}
@@ -146,9 +150,9 @@ export function DualThresholdSlider({
           aria-hidden="true"
           className="mt-3 flex items-center justify-between gap-2 text-xs text-muted-foreground"
         >
-          <span>Poor form</span>
+          <span className="text-negative">Poor form</span>
           <span>Average</span>
-          <span>Strong form</span>
+          <span className="text-primary">Strong form</span>
         </div>
       </div>
 
