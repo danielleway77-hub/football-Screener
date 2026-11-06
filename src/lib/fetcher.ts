@@ -54,8 +54,10 @@ export type FetchOptions = {
 const DEFAULT_TIMEOUT_MS = 15_000;
 const RETRY_STATUSES = new Set([502, 503, 504]);
 
+let redirecting = false;
 let unauthorizedHandler: () => void = () => {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || redirecting) return; // several 401s at once redirect once
+  redirecting = true;
   const next = encodeURIComponent(window.location.pathname + window.location.search);
   // Intentional hard navigation: a full page load clears all client state after the session ends.
   // eslint-disable-next-line @next/next/no-location-assign-relative-destination
@@ -71,7 +73,19 @@ export function setUnauthorizedHandler(handler: () => void): () => void {
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-function friendlyMessage(code: ClientErrorCode, status?: number): string {
+/** "Try again in 3 minutes." from a Retry-After value in seconds (falls back to "in a few minutes"). */
+export function waitText(retryAfterSeconds?: number): string {
+  if (!retryAfterSeconds || retryAfterSeconds <= 0) return "in a few minutes";
+  if (retryAfterSeconds < 60) return `in ${Math.ceil(retryAfterSeconds)} seconds`;
+  const minutes = Math.ceil(retryAfterSeconds / 60);
+  return `in ${minutes} ${minutes === 1 ? "minute" : "minutes"}`;
+}
+
+function friendlyMessage(
+  code: ClientErrorCode,
+  status?: number,
+  retryAfterSeconds?: number,
+): string {
   switch (code) {
     case "OFFLINE":
       return "You're offline. Reconnect and try again.";
@@ -82,9 +96,13 @@ function friendlyMessage(code: ClientErrorCode, status?: number): string {
     case "UNAUTHORIZED":
       return "Your session has expired. Sign in again.";
     case "RATE_LIMITED":
-      return "Too many attempts. Try again in a few minutes.";
+      return `Too many attempts. Try again ${waitText(retryAfterSeconds)}.`;
     case "PAYLOAD_TOO_LARGE":
       return "That file is too large (max 1 MB).";
+    case "VALIDATION_FAILED":
+      return "Some details aren't valid. Check the highlighted fields and try again.";
+    case "NOT_FOUND":
+      return "That item no longer exists.";
     default:
       return status && status >= 500
         ? "Something went wrong on our side. Try again."
@@ -113,13 +131,16 @@ async function toError(res: Response): Promise<AppClientError> {
   else if (res.status === 413) code = "PAYLOAD_TOO_LARGE";
   else if (res.status === 404 && code === "INTERNAL") code = "NOT_FOUND";
   else if (res.status === 422 && code === "INTERNAL") code = "VALIDATION_FAILED";
-  const retryAfter = Number(res.headers.get("retry-after"));
+  const retryHeader = Number(res.headers.get("retry-after"));
+  const retryAfter = Number.isFinite(retryHeader) && retryHeader > 0 ? retryHeader : undefined;
+  // 429 always uses the readable wait time (the server's own wording may be generic).
+  const text = code === "RATE_LIMITED" ? friendlyMessage(code, res.status, retryAfter) : message;
   return new AppClientError(
     code,
-    message ?? friendlyMessage(code, res.status),
+    text ?? friendlyMessage(code, res.status, retryAfter),
     res.status,
     fieldErrors,
-    Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : undefined,
+    retryAfter,
   );
 }
 

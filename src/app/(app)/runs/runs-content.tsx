@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { HistoryIcon } from "lucide-react";
 import { RunsError } from "@/components/runs/RunsError";
+import { AppErrorBoundary } from "@/components/states/AppErrorBoundary";
 import { RunsList } from "@/components/runs/RunsList";
 import { RunsToolbar } from "@/components/runs/RunsToolbar";
 import { Pagination } from "@/components/shared/Pagination";
@@ -97,7 +98,9 @@ export async function RunsContent({ searchParams }: { searchParams: Search }) {
   return (
     <div className="space-y-6">
       {toolbar}
-      <RunsList rows={data.items.map(toRunRow)} timezone={timezone} nowIso={now.toISOString()} />
+      <AppErrorBoundary>
+        <RunsList rows={data.items.map(toRunRow)} timezone={timezone} nowIso={now.toISOString()} />
+      </AppErrorBoundary>
       <Pagination
         page={data.page}
         totalPages={data.totalPages}
