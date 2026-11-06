@@ -3,7 +3,8 @@ import { Suspense } from "react";
 import { ForceError } from "@/components/layout/ForceError";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { SectionHeader } from "@/components/layout/SectionHeader";
-import { CardSkeleton } from "@/components/states/Skeletons";
+import { FormSkeleton } from "@/components/states/Skeletons";
+import { SettingsContent } from "./settings-content";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -18,11 +19,9 @@ export default function SettingsPage({ searchParams }: PageProps<"/settings">) {
         title="Settings"
         description="Control the rule, schedule and access."
       />
-      <div className="space-y-4">
-        <CardSkeleton />
-        <CardSkeleton />
-        <CardSkeleton />
-      </div>
+      <Suspense fallback={<FormSkeleton />}>
+        <SettingsContent />
+      </Suspense>
     </PageContainer>
   );
 }

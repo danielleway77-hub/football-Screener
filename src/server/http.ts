@@ -75,6 +75,7 @@ export function runResponse(
     qualified: number;
     failed: number;
     error?: string | null;
+    reasons?: { index: number; id?: string; reason: string }[];
     alreadyRunning?: boolean;
   },
   headers: Record<string, string> = {},
@@ -88,6 +89,9 @@ export function runResponse(
         {
           error: { code: "VALIDATION_FAILED", message: result.error ?? "No valid matches." },
           runId: result.runId,
+          scanned: result.scanned,
+          failed: result.failed,
+          reasons: result.reasons ?? [],
         },
         422,
         headers,
@@ -102,6 +106,7 @@ export function runResponse(
       scanned: result.scanned,
       qualified: result.qualified,
       failed: result.failed,
+      reasons: result.reasons ?? [],
     },
     200,
     headers,

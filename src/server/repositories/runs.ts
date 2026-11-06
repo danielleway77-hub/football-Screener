@@ -159,3 +159,8 @@ export async function createFinished(input: {
     },
   });
 }
+
+/** Most recent run started by the helper (INGEST) — for the Import page status line. */
+export async function getLatestByTrigger(trigger: RunTrigger): Promise<RunRecord | null> {
+  return getDb().screeningRun.findFirst({ where: { trigger }, orderBy: { startedAt: "desc" } });
+}

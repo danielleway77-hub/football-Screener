@@ -9,6 +9,8 @@ type CopyButtonProps = {
   value: string;
   label?: string;
   className?: string;
+  /** Called after a successful copy. */
+  onCopied?: () => void;
 };
 
 type State = "idle" | "copied" | "failed";
@@ -31,7 +33,7 @@ function legacyCopy(value: string): boolean {
   }
 }
 
-export function CopyButton({ value, label = "Copy", className }: CopyButtonProps) {
+export function CopyButton({ value, label = "Copy", className, onCopied }: CopyButtonProps) {
   const [state, setState] = React.useState<State>("idle");
   const timer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -50,6 +52,7 @@ export function CopyButton({ value, label = "Copy", className }: CopyButtonProps
       ok = legacyCopy(value);
     }
     setState(ok ? "copied" : "failed");
+    if (ok) onCopied?.();
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => setState("idle"), 2000);
   }
