@@ -61,9 +61,9 @@ function TeamRow({
       leading={
         <>
           <TeamLogo name={team.name} src={team.logoUrl} size={28} />
-          <h4 title={team.name} className="text-h4 min-w-0 truncate">
+          <h3 title={team.name} className="text-h4 min-w-0 truncate">
             {team.name}
-          </h4>
+          </h3>
         </>
       }
     />

@@ -46,3 +46,15 @@ export function formatDuration(ms: number): string {
   if (m > 0) return s > 0 ? `${m}m ${s}s` : `${m}m`;
   return `${s}s`;
 }
+
+/** Time until `ms` from now as "in 5 h 12 m", "in 2 d 3 h", "in 12 m", "now" (< 1 min). */
+export function formatCountdown(ms: number): string {
+  if (!Number.isFinite(ms) || ms < 60_000) return "now";
+  const totalMin = Math.floor(ms / 60_000);
+  const d = Math.floor(totalMin / 1440);
+  const h = Math.floor((totalMin % 1440) / 60);
+  const m = totalMin % 60;
+  if (d > 0) return h > 0 ? `in ${d} d ${h} h` : `in ${d} d`;
+  if (h > 0) return `in ${h} h ${m} m`;
+  return `in ${m} m`;
+}

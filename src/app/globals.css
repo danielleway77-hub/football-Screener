@@ -607,3 +607,13 @@
     backdrop-filter: none;
   }
 }
+
+/* indeterminate 2px bar along the run panel's top edge (transform only) */
+@keyframes run-indeterminate {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}

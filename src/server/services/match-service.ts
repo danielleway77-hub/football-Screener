@@ -14,6 +14,8 @@ export type RunStats = {
   lastRun: RunRecord | null;
   /** When the last SUCCESS/PARTIAL run finished (the data's freshness). */
   lastUpdate: Date | null;
+  /** The latest SUCCESS/PARTIAL run (the data on screen comes from it). */
+  usable: RunRecord | null;
   scanned: number;
   qualified: number;
   stale: boolean;
@@ -35,6 +37,34 @@ export async function getDashboard(
   });
 }
 
+export type DashboardSummary = {
+  /** Qualifying matches that have not kicked off yet (all days, no filters). */
+  total: number;
+  perDay: Record<"today" | "tomorrow" | "dayafter", number>;
+  /** Kickoff of the soonest qualifying match, or null. */
+  nextKickoff: Date | null;
+};
+
+/** Counts behind the tab pills and the bento hero (4 COUNT queries + 1 row, no N+1). */
+export async function getDashboardSummary(
+  settings: SettingRecord,
+  now: Date,
+): Promise<DashboardSummary> {
+  const range = (tab: Tab) => dayRangeFor(tab, now, settings.timezone);
+  const [total, today, tomorrow, dayafter, next] = await Promise.all([
+    matches.countQualifying(now, range("upcoming").toUtc),
+    matches.countQualifying(now, range("today").toUtc),
+    matches.countQualifying(range("tomorrow").fromUtc, range("tomorrow").toUtc),
+    matches.countQualifying(range("dayafter").fromUtc, range("dayafter").toUtc),
+    matches.findQualifyingUpcoming({ from: now, to: range("upcoming").toUtc, limit: 1 }),
+  ]);
+  return {
+    total,
+    perDay: { today, tomorrow, dayafter },
+    nextKickoff: next[0]?.kickoffAt ?? null,
+  };
+}
+
 export async function getMatch(
   id: string,
 ): Promise<{ match: MatchRecord; previous: MatchRecord | null; next: MatchRecord | null } | null> {
@@ -50,6 +80,7 @@ export async function getRunStats(settings: SettingRecord, now: Date): Promise<R
   const staleMs = settings.staleAfterHrs * 3_600_000;
   return {
     lastRun: latest.items[0] ?? null,
+    usable,
     lastUpdate,
     scanned: usable?.scanned ?? 0,
     qualified: usable?.qualified ?? 0,

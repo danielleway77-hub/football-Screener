@@ -277,7 +277,7 @@ describe("MatchCard", () => {
 
   it("names the away team as strong in the away-strong case without reordering teams", () => {
     render(<MatchCard data={card("away-strong")} low={35} high={75} />);
-    const names = screen.getAllByRole("heading", { level: 4 }).map((h) => h.textContent);
+    const names = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
     expect(names).toEqual(["Home Weak FC", "Away Strong United"]);
     expect(screen.getByText("Strong: Away Strong United · League form")).toBeInTheDocument();
   });

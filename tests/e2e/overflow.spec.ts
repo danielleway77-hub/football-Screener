@@ -3,6 +3,10 @@ import { expect, test } from "@playwright/test";
 // A page wider than the screen makes phones zoom out and hides fixed/sticky bars. Guard every route.
 const ROUTES = [
   "/",
+  "/?day=tomorrow",
+  "/?q=zzz",
+  "/?sort=gap&day=today",
+  "/style-guide/match",
   "/login",
   "/runs",
   "/import",
