@@ -1,5 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
 
+import { existsSync } from "node:fs";
+if (existsSync(".env.test.local")) process.loadEnvFile(".env.test.local");
+
 const PORT = Number(process.env.PW_PORT ?? 3000);
 const baseURL = `http://localhost:${PORT}`;
 // PW_PROD=1 tests the production build (used for audits); otherwise the dev server.
@@ -37,6 +40,11 @@ export default defineConfig({
     // Dev server: poll a heavy route so it is compiled BEFORE the 4 parallel workers start
     // (cold-compile timeouts caused flaky first runs). Production: the home page.
     url: useProd ? baseURL : `${baseURL}/style-guide`,
+    // PW_ISOLATED_DB=1: the dev server reads the isolated test schema so e2e can seed runs deterministically.
+    env:
+      process.env.PW_ISOLATED_DB === "1" && process.env.DIRECT_URL_TEST
+        ? { DATABASE_URL: process.env.DIRECT_URL_TEST }
+        : {},
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
   },
