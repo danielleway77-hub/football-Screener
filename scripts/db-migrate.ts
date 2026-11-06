@@ -12,6 +12,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
 import { normalizeSsl } from "../src/lib/pg-url";
+import { schemaOf } from "../src/lib/pg-url";
 
 export async function applyMigrations(connectionString: string, schema: string) {
   const client = new pg.Client({ connectionString: normalizeSsl(connectionString) });
@@ -68,7 +69,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
   }
   const url = isTest ? process.env.DIRECT_URL_TEST : process.env.DIRECT_URL;
   if (!url) throw new Error("DIRECT_URL (or DIRECT_URL_TEST) is not set");
-  const schema = isTest ? "test" : "public";
+  const schema = isTest ? schemaOf(url) : "public";
   applyMigrations(url, schema).then(
     (a) => console.log(a.length ? `Applied: ${a.join(", ")}` : "No pending migrations."),
     (e) => {

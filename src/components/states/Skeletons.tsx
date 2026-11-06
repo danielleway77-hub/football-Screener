@@ -57,32 +57,38 @@ export function CardSkeleton({ className }: { className?: string }) {
   );
 }
 
-/** Same outer height as the real MatchCard (shared constant). */
+/** Same outer height as the real MatchCard (shared constants) and the same row structure. */
 export function MatchCardSkeleton({ className }: { className?: string }) {
   return (
     <SkeletonGroup>
       <div
         className={cn(
-          "surface-1 flex flex-col gap-3 rounded-lg p-4 md:p-5",
+          "surface-1 flex flex-col rounded-lg p-4 md:p-5",
           MATCH_CARD_MIN_HEIGHT_CLASS,
           className,
         )}
       >
-        <div className="flex items-center justify-between">
+        <div className="flex h-7 items-center justify-between">
           <Skeleton className="h-4 w-36" />
           <Skeleton className="h-7 w-28 rounded-full" />
         </div>
-        <Skeleton className="h-4 w-44" />
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-16 w-full" />
-        <div className="mt-auto grid grid-cols-3 gap-2">
+        <Skeleton className="mt-2 h-5 w-44" />
+        <div className="mt-3 flex flex-col gap-2">
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+        </div>
+        <div className="my-2 h-px" />
+        <div className="grid grid-cols-3 gap-2">
           <Skeleton className="h-16 rounded-md" />
           <Skeleton className="h-16 rounded-md" />
           <Skeleton className="h-16 rounded-md" />
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="mt-2 grid grid-cols-2 gap-2">
           <Skeleton className="h-16 rounded-md" />
           <Skeleton className="h-16 rounded-md" />
+        </div>
+        <div className="mt-auto pt-2.5">
+          <Skeleton className="h-5 w-52" />
         </div>
       </div>
     </SkeletonGroup>

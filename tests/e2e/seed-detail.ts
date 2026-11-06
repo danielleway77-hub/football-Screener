@@ -50,7 +50,7 @@ const base = {
 export default async function seedDetail() {
   if (existsSync(".env.test.local")) process.loadEnvFile(".env.test.local");
   const url = process.env.DIRECT_URL_TEST ?? "";
-  if (!/[?&]schema=test_[a-z0-9]+(&|$)/.test(url)) return; // not isolated: detail specs skip themselves
+  if (!/[?&]schema=test(_[a-z0-9]+)?(&|$)/.test(url)) return; // no isolated schema configured
   const now = Date.now();
   const at = (h: number) => new Date(now + h * HOUR);
   const rows = [
