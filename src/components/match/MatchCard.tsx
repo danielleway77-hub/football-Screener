@@ -38,6 +38,8 @@ type MatchCardProps = {
   /** Position in the list (stagger of the bar fills). */
   index?: number;
   className?: string;
+  /** Detail link; the dashboard passes one that carries `?from=` so Back keeps the filters. */
+  href?: string;
 };
 
 function TeamRow({
@@ -74,7 +76,7 @@ function TeamRow({
  * The signature card. ONE link (a stretched anchor); nothing else inside is interactive, so the
  * source link is never in here. Heights come from `dimensions.ts`, shared with the skeleton.
  */
-export function MatchCard({ data, low, high, index = 0, className }: MatchCardProps) {
+export function MatchCard({ data, low, high, index = 0, className, href }: MatchCardProps) {
   const strongTeam =
     data.strongSide === "HOME" ? data.home : data.strongSide === "AWAY" ? data.away : null;
   const scopeLabel = data.formScope === "league" ? "League form" : "Overall form";
@@ -145,7 +147,7 @@ export function MatchCard({ data, low, high, index = 0, className }: MatchCardPr
       </div>
 
       <Link
-        href={`/matches/${data.id}`}
+        href={href ?? `/matches/${data.id}`}
         className="absolute inset-0 rounded-[inherit] outline-none"
       >
         <span className="sr-only">{linkLabel}</span>

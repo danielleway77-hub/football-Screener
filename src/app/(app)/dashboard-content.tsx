@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { groupByLocalDate } from "@/lib/day-groups";
 import { derivePanelState } from "@/lib/dashboard-state";
 import { formatRelative, formatRunTime } from "@/lib/format";
+import { matchHref } from "@/lib/match-detail";
 import { parseDashboardParams } from "@/lib/schemas/dashboard";
 import { getProvider } from "@/server/providers";
 import type { MatchRecord, SettingRecord } from "@/server/repositories/types";
@@ -68,7 +69,9 @@ function Results({
   summary,
   now,
   grouped,
+  backHref,
 }: {
+  backHref: string;
   grouped: boolean;
   matches: MatchRecord[];
   settings: SettingRecord;
@@ -144,7 +147,13 @@ function Results({
   const grid = "grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 xl:gap-6 3xl:grid-cols-4";
   const card = (m: MatchRecord, i: number) => (
     <StaggerItem key={m.id} index={i}>
-      <MatchCard data={toCardData(m, timezone, now)} low={low} high={high} index={i} />
+      <MatchCard
+        data={toCardData(m, timezone, now)}
+        low={low}
+        high={high}
+        index={i}
+        href={matchHref(m.id, backHref)}
+      />
     </StaggerItem>
   );
 
@@ -173,6 +182,13 @@ export async function DashboardContent({ searchParams }: { searchParams: Search 
   const settings = await getSettings();
   const now = new Date(); // after the DB read: request time, never prerendered
   const params = parseDashboardParams(raw, settings.windowDays);
+  // The detail page's Back link returns to exactly these filters ("/?day=today&q=..." or "/").
+  const keep = new URLSearchParams();
+  for (const key of ["day", "q", "sort"] as const) {
+    const v = raw[key];
+    if (typeof v === "string" && v !== "") keep.set(key, v);
+  }
+  const backHref = keep.size > 0 ? `/?${keep.toString()}` : "/";
   const [stats, summary, matches] = await Promise.all([
     getRunStats(settings, now),
     getDashboardSummary(settings, now),
@@ -262,6 +278,7 @@ export async function DashboardContent({ searchParams }: { searchParams: Search 
                   summary={summary}
                   now={now}
                   grouped={grouped}
+                  backHref={backHref}
                 />
               ) : (
                 <ResultsError />
