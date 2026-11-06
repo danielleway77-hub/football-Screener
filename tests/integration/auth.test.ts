@@ -17,6 +17,10 @@ vi.mock("next/headers", () => ({
     set: vi.fn(),
   }),
 }));
+vi.mock("next/server", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/server")>()),
+  connection: async () => undefined, // outside a Next request scope in unit tests
+}));
 vi.mock("next/navigation", () => ({ redirect: (u: string) => redirect(u) }));
 
 setupTestDb();

@@ -104,7 +104,7 @@ export async function list(
   const [items, total] = await Promise.all([
     db.screeningRun.findMany({
       where,
-      orderBy: { startedAt: "desc" },
+      orderBy: [{ startedAt: "desc" }, { id: "desc" }],
       skip: (page - 1) * pageSize,
       take: pageSize,
     }),

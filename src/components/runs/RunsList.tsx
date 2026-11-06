@@ -96,8 +96,9 @@ export function RunsList({ rows: serverRows, timezone, nowIso }: Props) {
     const ids = runningKey.split(",");
     const controller = new AbortController();
     let busy = false;
+    let failures = 0;
     const timer = window.setInterval(async () => {
-      if (busy) return;
+      if (busy || document.visibilityState === "hidden") return;
       busy = true;
       setNow(new Date());
       try {
@@ -110,6 +111,9 @@ export function RunsList({ rows: serverRows, timezone, nowIso }: Props) {
           ),
         );
         if (controller.signal.aborted) return;
+        // 401/404/offline answer null: give up after 5 failed ticks in a row instead of polling forever.
+        failures = results.every((r) => r === null) ? failures + 1 : 0;
+        if (failures >= 5) window.clearInterval(timer);
         const finished = results.filter((r) => r && r.status !== "RUNNING");
         if (finished.length) {
           setOverrides((prev) => {

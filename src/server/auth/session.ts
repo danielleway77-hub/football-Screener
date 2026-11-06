@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import {
   SESSION_MAX_AGE_SECONDS,
   sessionCookieName,
@@ -31,5 +32,6 @@ export async function clearSession(): Promise<void> {
 
 export async function readSessionClaims(): Promise<{ v: number } | null> {
   const token = (await cookies()).get(cookieName())?.value;
-  return verifySessionToken(token, secret());
+  await connection(); // request-time work: the clock below must not be read while prerendering
+  return verifySessionToken(token, secret(), new Date());
 }
