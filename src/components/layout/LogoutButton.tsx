@@ -48,12 +48,19 @@ export function LogoutButton({ variant = "icon", onDone, className }: LogoutButt
         disabled={pending || !online}
         title={online ? undefined : "You're offline. Reconnect to log out."}
         className={cn(
-          "flex h-14 w-full items-center gap-3.5 rounded-md px-4 text-[1.0625rem] font-semibold text-negative transition-colors hover:bg-negative-soft disabled:opacity-60",
+          "flex min-h-14 w-full items-center gap-3.5 rounded-md px-4 py-2 text-[1.0625rem] font-semibold text-negative transition-colors hover:bg-negative-soft disabled:opacity-60",
           className,
         )}
       >
         <LogOutIcon className="size-[22px]" aria-hidden="true" />
-        Log out
+        <span className="flex flex-col items-start text-left leading-tight">
+          Log out
+          {online ? null : (
+            <span className="mt-0.5 text-xs font-normal text-muted-foreground">
+              You&apos;re offline. Reconnect to log out.
+            </span>
+          )}
+        </span>
       </button>
     );
   }

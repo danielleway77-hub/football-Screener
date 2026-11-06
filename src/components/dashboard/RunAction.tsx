@@ -14,5 +14,5 @@ export function RunAction({
   size?: "default" | "sm";
 }) {
   const run = useRunNow();
-  return <RunButton canPull={canPull} run={run} variant={variant} size={size} />;
+  return <RunButton canPull={canPull} run={run} variant={variant} size={size} hideOfflineReason />;
 }

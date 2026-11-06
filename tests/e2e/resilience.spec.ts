@@ -59,20 +59,26 @@ test.describe("offline", () => {
     await expect(page.getByRole("button", { name: "Run now" })).toBeEnabled();
   });
 
-  test("a run started while online is never replayed after reconnecting", async ({
+  test("a run started online and held is not replayed when the connection toggles", async ({
     page,
     context,
   }) => {
     await open(page, "/");
     let posts = 0;
-    await page.route("**/api/run", (route) => {
-      if (route.request().method() === "POST") posts++;
-      return route.abort();
+    await page.route("**/api/run", async (route) => {
+      posts++;
+      await new Promise((r) => setTimeout(r, 6000));
+      await route.abort().catch(() => undefined);
     });
+    await page.getByTestId("run-status-panel").getByRole("button", { name: "Run now" }).click();
+    await expect.poll(() => posts).toBe(1);
     await context.setOffline(true);
     await context.setOffline(false);
     await expect(page.getByTestId("banner").filter({ hasText: "Back online." })).toBeVisible();
-    expect(posts).toBe(0);
+    await expect(
+      page.getByTestId("run-status-panel").getByRole("button", { name: /Run now/ }),
+    ).toBeEnabled({ timeout: 15_000 });
+    expect(posts).toBe(1);
   });
 });
 
@@ -94,7 +100,9 @@ test.describe("slow, timeout, 500", () => {
     await expect(page.getByText("Still working…")).toHaveCount(0, { timeout: 10_000 });
   });
 
-  test("timeout (>15 s) reports a friendly message and Retry works", async ({ page }) => {
+  test("timeout (>15 s) on Run now says the check may already be running (no blind retry invite)", async ({
+    page,
+  }) => {
     await open(page, "/");
     let calls = 0;
     await page.route("**/api/run", async (route) => {
@@ -119,15 +127,12 @@ test.describe("slow, timeout, 500", () => {
     );
     const button = page.getByRole("button", { name: /^Run now$/ });
     await button.click();
-    await expect(
-      page.getByRole("alert").filter({ hasText: "taking longer than usual" }),
-    ).toBeVisible({
+    await expect(page.getByText("may already be running").first()).toBeVisible({
       timeout: 25_000,
     });
+    await expect(page.getByText(/taking longer than usual|try again/i)).toHaveCount(0);
+    expect(calls).toBe(1); // never replayed automatically
     await expect(button).toBeEnabled();
-    await button.click(); // Retry
-    await expect(page.getByText("2 qualifying matches found.")).toBeVisible();
-    expect(calls).toBe(2);
   });
 
   test("500 on Run now: readable message, no stack, button usable again, one request per click", async ({
@@ -145,12 +150,23 @@ test.describe("slow, timeout, 500", () => {
       });
     });
     await page.getByRole("button", { name: "Run now" }).dblclick();
-    await expect(
-      page.getByRole("alert").filter({ hasText: "went wrong on our side" }),
-    ).toBeVisible();
+    await expect(page.getByText("went wrong on our side").first()).toBeVisible();
     await expect(page.getByText(/at \w+ \(|Error:|node_modules/)).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Run now" })).toBeEnabled();
     expect(calls).toBe(1);
+  });
+
+  test("Run now double-click sends exactly one POST while pending", async ({ page }) => {
+    await open(page, "/");
+    let posts = 0;
+    await page.route("**/api/run", async (route) => {
+      posts++;
+      await new Promise((r) => setTimeout(r, 1500));
+      await route.fulfill({ status: 500, json: { error: { code: "INTERNAL", message: "x" } } });
+    });
+    await page.getByTestId("run-status-panel").getByRole("button", { name: "Run now" }).dblclick();
+    await expect(page.getByText("Something went wrong on our side").first()).toBeVisible();
+    expect(posts).toBe(1);
   });
 
   test("429 on Run now shows the wait time", async ({ page }) => {
@@ -163,9 +179,7 @@ test.describe("slow, timeout, 500", () => {
       }),
     );
     await page.getByRole("button", { name: "Run now" }).click();
-    await expect(
-      page.getByRole("alert").filter({ hasText: "Try again in 3 minutes." }),
-    ).toBeVisible();
+    await expect(page.getByText("Try again in 3 minutes.").first()).toBeVisible();
   });
 
   test("500 on data load (forced route error) shows ErrorState with a working Try again", async ({
@@ -215,6 +229,15 @@ test.describe("session expiry (401 mid-session)", () => {
     await page.locator("#password").fill(PASSWORD);
     await page.getByRole("button", { name: "Sign in" }).click();
     await expect(page).toHaveURL(/\/runs\?page=1$/);
+  });
+});
+
+test.describe("logout with an expired session", () => {
+  test("still lands on /login", async ({ page, context }) => {
+    await open(page, "/");
+    await context.clearCookies();
+    await page.getByRole("button", { name: "Log out" }).click();
+    await expect(page).toHaveURL(/\/login/);
   });
 });
 

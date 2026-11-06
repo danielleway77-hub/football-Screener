@@ -59,15 +59,22 @@ export function useRunNow(initialRunId: string | null = null): RunNowState {
       const res = await fetchJson<{ runId: string }>("/api/run", { method: "POST" });
       setRunId(res.runId);
     } catch (e) {
-      const message =
-        e instanceof AppClientError ? e.message : "The check didn't finish. Try again.";
+      // A timed-out POST may have reached the server (it de-duplicates a RUNNING run), so never
+      // invite a blind retry: say it may already be running and re-read the run state.
+      const timedOut = e instanceof AppClientError && e.code === "TIMEOUT";
+      const message = timedOut
+        ? "No answer yet. The check may already be running; refreshing the status."
+        : e instanceof AppClientError
+          ? e.message
+          : "The check didn't finish. Try again.";
+      if (timedOut) router.refresh();
       setError(message);
       toast.error(message, { duration: ERROR_TOAST_MS });
     } finally {
       inFlight.current = false;
       setStarting(false);
     }
-  }, []);
+  }, [router]);
 
   return {
     running: starting || runId !== null,

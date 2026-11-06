@@ -156,6 +156,7 @@ export async function fetchJson<T>(url: string, options: FetchOptions = {}): Pro
   }
 
   for (let attempt = 0; ; attempt++) {
+    if (options.signal?.aborted) throw new AppClientError("ABORTED", "The request was cancelled.");
     const controller = new AbortController();
     let timedOut = false;
     const timer = setTimeout(() => {

@@ -13,12 +13,12 @@ Tests: `R` = `tests/e2e/resilience.spec.ts`, `RC` = `tests/components/resilience
 | Offline | OK Sign in disabled + HelperText (R) | OK banner, Run now disabled + HelperText (R, RC, D) | OK banner (R) | OK banner, list stays (R) | STEP13 | STEP13 |
 | Back online + Refresh (GET only) | N/A | OK (R, RC) | OK (R) | OK (R) | – | – |
 | Slow >3 s | OK SlowHint under button (R) | OK SlowHint under Run now (R, RC) | N/A (server render, skeleton) | N/A (server render, skeleton) | STEP13 | STEP13 |
-| Timeout >15 s | N/A (browser default) | OK message + retry works (R) | N/A | N/A (polling retries on next tick) | STEP13 | STEP13 |
+| Timeout >15 s | N/A (browser default) | OK "may already be running" copy, one POST, status refreshed, no blind retry (R, RC) | N/A | N/A (polling retries on next tick) | STEP13 | STEP13 |
 | Stale | N/A | OK banner + pill (R, D) | OK stale flag | OK | – | – |
 | PARTIAL | N/A | OK panel counts + warning chip (R, D) | N/A | OK chip + row (RN) | – | – |
 | 401 mid-session | N/A | OK -> `/login?next=` and back (R) | OK via proxy (R cookie delete) | OK `/runs?page=1` returns after login (R) | STEP13 | STEP13 |
-| 429 | OK wait time in minutes + form disabled (R) | OK Run now shows wait time (R, RF) | N/A | N/A | STEP13 | STEP13 |
-| 500 | OK "Couldn't reach the server" (R keeps typed password) | OK helper alert + 8 s toast, no stack (R) | OK error.tsx | OK error.tsx (R) | STEP13 | STEP13 |
+| 429 | OK wait time in minutes + form disabled (R) | OK Run now shows wait time (R `429 on Run now`, RF) | N/A | N/A | STEP13 | STEP13 |
+| 500 | OK network failure shows "Couldn't reach the server" and keeps the typed password (R); a server 500 on login uses the same message | OK helper alert + 8 s toast, no stack (R) | OK error.tsx | OK error.tsx (R) | STEP13 | STEP13 |
 | 404 | N/A | N/A | OK `(app)/not-found.tsx` (R) | N/A | – | – |
 
 ## Client mutations
@@ -26,8 +26,8 @@ Tests: `R` = `tests/e2e/resilience.spec.ts`, `RC` = `tests/components/resilience
 | Mutation | Pending (disabled + spinner) | Offline (disabled + visible reason) | Slow hint | Errors (401/429/500, no stack) | No double fire |
 |---|---|---|---|---|---|
 | Login | OK | OK HelperText | OK | OK | OK (form disabled while submitting) |
-| Run now | OK | OK HelperText | OK | OK (toast 8 s) | OK in-flight ref + disabled (RC, R `dblclick` = 1 request) |
-| Logout | OK | OK disabled + tooltip/title | – (instant) | OK toast 8 s | OK busy ref |
+| Run now | OK | OK HelperText | OK | OK (toast 8 s) | OK in-flight ref + disabled (RC, R `Run now double-click sends exactly one POST`) |
+| Logout | OK | OK disabled + visible text on the mobile row, tooltip on desktop; expired-session logout still lands on /login (R) | – (instant) | OK toast 8 s | OK busy ref |
 | Import | STEP13 | STEP13 | STEP13 | STEP13 | STEP13 |
 | Settings save / token create+revoke / password change / re-screen | STEP13 | STEP13 | STEP13 | STEP13 | STEP13 |
 

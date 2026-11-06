@@ -84,3 +84,62 @@ describe("OfflineBanner recovery", () => {
     await waitFor(() => expect(screen.getByRole("status")).toHaveTextContent("Back online."));
   });
 });
+
+describe("OfflineBanner rapid toggling", () => {
+  it("a second 'Back online.' is not hidden early by the first timer", () => {
+    vi.useFakeTimers();
+    render(<OfflineBanner />);
+    act(() => setOnline(false));
+    act(() => setOnline(true)); // first timer: hides at t=3000
+    act(() => void vi.advanceTimersByTime(2000));
+    act(() => setOnline(false));
+    act(() => setOnline(true)); // second timer: hides at t=5000
+    act(() => void vi.advanceTimersByTime(1500)); // t=3500: first timer would have fired
+    expect(screen.getByRole("status")).toHaveTextContent("Back online.");
+    act(() => void vi.advanceTimersByTime(1600));
+    expect(screen.queryByRole("status")).toBeNull();
+  });
+});
+
+describe("401 redirect guard", () => {
+  it("concurrent 401s navigate to /login?next= exactly once", async () => {
+    const assign = vi.fn();
+    vi.stubGlobal("location", { pathname: "/runs", search: "?page=2", assign });
+    const real = await import("@/lib/fetcher");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(null, { status: 401 })),
+    );
+    const { fetchJson: realFetch } =
+      await vi.importActual<typeof import("@/lib/fetcher")>("@/lib/fetcher");
+    await Promise.allSettled([realFetch("/api/a"), realFetch("/api/b"), realFetch("/api/c")]);
+    vi.unstubAllGlobals();
+    expect(real).toBeTruthy();
+    expect(assign).toHaveBeenCalledTimes(1);
+    expect(assign).toHaveBeenCalledWith("/login?next=%2Fruns%3Fpage%3D2");
+  });
+});
+
+describe("Run now timeout copy", () => {
+  it("says the check may already be running and refreshes instead of inviting a retry", async () => {
+    const { AppClientError } = await import("@/lib/fetcher");
+    fetcher.fetchJson.mockRejectedValue(new AppClientError("TIMEOUT", "slow"));
+    render(<Harness />);
+    fireEvent.click(screen.getByRole("button", { name: /run now/i }));
+    expect(await screen.findByText(/may already be running/)).toBeInTheDocument();
+    expect(nav.refresh).toHaveBeenCalled();
+    expect(screen.queryByText(/try again/i)).toBeNull();
+  });
+});
+
+describe("Logout row offline reason", () => {
+  it("is visible text, not only a title", () => {
+    setOnline(false);
+    render(
+      <TooltipProvider>
+        <LogoutButton variant="row" />
+      </TooltipProvider>,
+    );
+    expect(screen.getByText("You're offline. Reconnect to log out.")).toBeVisible();
+  });
+});

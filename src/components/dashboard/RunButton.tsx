@@ -17,6 +17,8 @@ type RunButtonProps = {
   variant?: "default" | "secondary";
   size?: "default" | "sm";
   className?: string;
+  /** Compact placements (inside a banner) skip the helper: the offline banner already states it. */
+  hideOfflineReason?: boolean;
 };
 
 /** Primary action of the dashboard: Run now (mode A) or Update data (B/C). Disabled states say why. */
@@ -26,6 +28,7 @@ export function RunButton({
   variant = "default",
   size = "default",
   className,
+  hideOfflineReason = false,
 }: RunButtonProps) {
   const online = useOnlineStatus();
   const slow = useSlowRequest(run.running);
@@ -55,8 +58,10 @@ export function RunButton({
         {run.running ? "Running…" : "Run now"}
       </Button>
       <SlowHint active={slow} />
-      {!online ? <HelperText>You&apos;re offline. Reconnect to run a check.</HelperText> : null}
-      {run.error && online ? <HelperText role="alert">{run.error}</HelperText> : null}
+      {!online && !hideOfflineReason ? (
+        <HelperText>You&apos;re offline. Reconnect to run a check.</HelperText>
+      ) : null}
+      {run.error && online ? <HelperText>{run.error}</HelperText> : null}
     </div>
   );
 }

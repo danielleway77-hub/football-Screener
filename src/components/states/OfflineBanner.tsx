@@ -24,6 +24,7 @@ export function OfflineBanner() {
       setShowRecovered(false);
     };
     const onOnline = () => {
+      if (timer) clearTimeout(timer);
       if (!wasOffline.current) return;
       wasOffline.current = false;
       setShowRecovered(true);
