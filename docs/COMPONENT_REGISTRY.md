@@ -104,3 +104,6 @@ Reveal · Stagger/StaggerItem · PageTransition · CountUp · AnimatedBar · Pre
 `grep -rn "<nav" src` → only Navbar/MobileNav · `grep -rn "<footer" src` → only Footer · `grep -rEn "#[0-9A-Fa-f]{6}" src --include=*.tsx` → none · `grep -rn "@prisma/client" src` → only `lib/db.ts` + repositories/types.
 
 Step 4 additions: RouteError, NotFoundView, RouteFocus, ForceError, PasswordInput (shared).
+
+## Step 10.1 — Match components (done)
+`components/match/`: FormBar (pct, low, high, teamName, leading, index, size) · FormBadges · QualifiesChip · TeamLogo · PairTile · PredictedScore · ProbabilityGrid (compact) · MatchCard (data: MatchCardData) · PctCount · logic.ts (formStrength, highest1x2, pairLeader, derived, parseResults) · dimensions.ts · mock-data.ts (style guide/tests only). Specimen page: `/style-guide/match`.

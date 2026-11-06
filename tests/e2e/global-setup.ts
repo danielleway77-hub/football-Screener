@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { request, type FullConfig } from "@playwright/test";
 
@@ -8,6 +9,12 @@ export default async function globalSetup(config: FullConfig) {
   if (existsSync(".env.test.local")) process.loadEnvFile(".env.test.local");
   const password = process.env.E2E_PASSWORD;
   if (!password) throw new Error("E2E_PASSWORD is not set (see .env.test.local)");
+  // The dev server reads the isolated schema (see playwright.config.ts): make sure its tables exist.
+  execFileSync("npx", ["tsx", "scripts/db-migrate.ts"], {
+    env: { ...process.env, PRISMA_ENV: "test" },
+    stdio: "inherit",
+    shell: true,
+  });
   const baseURL = config.projects[0]!.use.baseURL!;
   const ctx = await request.newContext({ baseURL });
   const res = await ctx.post("/api/auth/login", {
