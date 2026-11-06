@@ -1,4 +1,21 @@
+import { existsSync } from "node:fs";
 import { defineConfig, devices } from "@playwright/test";
+
+if (existsSync(".env.test.local")) process.loadEnvFile(".env.test.local");
+
+/**
+ * The dev server always reads the isolated Postgres schema (DIRECT_URL_TEST, which must be a
+ * test_<name> schema) so specs can seed matches without touching the shared dev data in `public`.
+ */
+function isolatedDbEnv(): Record<string, string> {
+  const url = process.env.DIRECT_URL_TEST;
+  if (!url || !/[?&]schema=test(_[a-z0-9]+)?(&|$)/.test(url)) {
+    throw new Error(
+      "e2e needs DIRECT_URL_TEST (in .env.test.local) with schema=test or test_<name>",
+    );
+  }
+  return { DATABASE_URL: url };
+}
 
 const PORT = Number(process.env.PW_PORT ?? 3000);
 const baseURL = `http://localhost:${PORT}`;
@@ -37,6 +54,7 @@ export default defineConfig({
     // Dev server: poll a heavy route so it is compiled BEFORE the 4 parallel workers start
     // (cold-compile timeouts caused flaky first runs). Production: the home page.
     url: useProd ? baseURL : `${baseURL}/style-guide`,
+    env: { ...(process.env as Record<string, string>), ...isolatedDbEnv() },
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
   },

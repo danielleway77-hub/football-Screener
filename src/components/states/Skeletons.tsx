@@ -41,7 +41,7 @@ export function HeaderSkeleton() {
 export function StatSkeleton({ className }: { className?: string }) {
   return (
     <SkeletonGroup className={cn("grid grid-cols-3 gap-3 md:gap-4 xl:grid-cols-12", className)}>
-      <Skeleton className="col-span-3 h-28 rounded-lg md:h-32 xl:col-span-6" />
+      <Skeleton className="col-span-3 h-[222px] rounded-lg md:h-32 xl:col-span-6" />
       <Skeleton className="h-[88px] rounded-lg md:h-32 xl:col-span-2" />
       <Skeleton className="h-[88px] rounded-lg md:h-32 xl:col-span-2" />
       <Skeleton className="h-[88px] rounded-lg md:h-32 xl:col-span-2" />
@@ -57,32 +57,38 @@ export function CardSkeleton({ className }: { className?: string }) {
   );
 }
 
-/** Same outer height as the real MatchCard (shared constant). */
+/** Same outer height as the real MatchCard (shared constants) and the same row structure. */
 export function MatchCardSkeleton({ className }: { className?: string }) {
   return (
     <SkeletonGroup>
       <div
         className={cn(
-          "surface-1 flex flex-col gap-3 rounded-lg p-4 md:p-5",
+          "surface-1 flex flex-col rounded-lg p-4 md:p-5",
           MATCH_CARD_MIN_HEIGHT_CLASS,
           className,
         )}
       >
-        <div className="flex items-center justify-between">
+        <div className="flex h-7 items-center justify-between">
           <Skeleton className="h-4 w-36" />
           <Skeleton className="h-7 w-28 rounded-full" />
         </div>
-        <Skeleton className="h-4 w-44" />
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-16 w-full" />
-        <div className="mt-auto grid grid-cols-3 gap-2">
+        <Skeleton className="mt-2 h-5 w-44" />
+        <div className="mt-3 flex flex-col gap-2">
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+        </div>
+        <div className="my-2 h-px" />
+        <div className="grid grid-cols-3 gap-2">
           <Skeleton className="h-16 rounded-md" />
           <Skeleton className="h-16 rounded-md" />
           <Skeleton className="h-16 rounded-md" />
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="mt-2 grid grid-cols-2 gap-2">
           <Skeleton className="h-16 rounded-md" />
           <Skeleton className="h-16 rounded-md" />
+        </div>
+        <div className="mt-auto pt-2.5">
+          <Skeleton className="h-5 w-52" />
         </div>
       </div>
     </SkeletonGroup>
@@ -125,6 +131,40 @@ export function FormSkeleton({ className }: { className?: string }) {
   );
 }
 
+/** Mirrors DashboardContent block by block (same gaps and heights) so the swap shifts nothing. */
+export function DashboardSkeleton() {
+  return (
+    <div data-variant="dashboard">
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0 flex-1">
+          <HeaderSkeleton />
+        </div>
+        <Skeleton className="h-[177px] w-full rounded-lg md:h-40 lg:w-[400px] lg:shrink-0" />
+      </div>
+      <div className="mt-4">
+        <StatSkeleton />
+      </div>
+      <div className="mt-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex gap-2">
+          {Array.from({ length: 4 }, (_, i) => (
+            <Skeleton key={i} className="h-10 w-24 rounded-full" />
+          ))}
+        </div>
+        <div className="flex items-center gap-2 lg:gap-3">
+          <Skeleton className="h-11 flex-1 lg:w-[280px] lg:flex-none" />
+          <Skeleton className="size-11 md:h-11 md:w-[200px]" />
+        </div>
+      </div>
+      <Skeleton className="mt-3 h-[17px] w-32" />
+      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 xl:gap-6 3xl:grid-cols-4">
+        {Array.from({ length: 3 }, (_, i) => (
+          <MatchCardSkeleton key={i} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 type PageSkeletonProps = {
   variant: "dashboard" | "detail" | "table" | "form";
   className?: string;
@@ -134,24 +174,8 @@ type PageSkeletonProps = {
 export function PageSkeleton({ variant, className }: PageSkeletonProps) {
   return (
     <div className={cn("container-wide space-y-6", className)} data-variant={variant}>
-      <HeaderSkeleton />
-      {variant === "dashboard" ? (
-        <>
-          <Skeleton className="h-32 w-full rounded-lg lg:ml-auto lg:w-[400px]" />
-          <StatSkeleton />
-          <div className="flex gap-2">
-            {Array.from({ length: 4 }, (_, i) => (
-              <Skeleton key={i} className="h-10 w-24 rounded-full" />
-            ))}
-          </div>
-          <Skeleton className="h-11 w-full md:w-72" />
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 xl:gap-6 3xl:grid-cols-4">
-            {Array.from({ length: 3 }, (_, i) => (
-              <MatchCardSkeleton key={i} />
-            ))}
-          </div>
-        </>
-      ) : null}
+      {variant === "dashboard" ? null : <HeaderSkeleton />}
+      {variant === "dashboard" ? <DashboardSkeleton /> : null}
       {variant === "detail" ? (
         <>
           <Skeleton className="h-11 w-48" />

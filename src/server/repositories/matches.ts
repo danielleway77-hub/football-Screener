@@ -47,7 +47,14 @@ export async function findQualifyingUpcoming(q: QualifyingQuery): Promise<MatchR
     where: {
       qualifies: true,
       kickoffAt: { gte: q.from, lt: q.to },
-      ...(q.league ? { league: q.league } : {}),
+      ...(q.league
+        ? {
+            OR: [
+              { league: { contains: q.league, mode: "insensitive" as const } },
+              { country: { contains: q.league, mode: "insensitive" as const } },
+            ],
+          }
+        : {}),
     },
     orderBy:
       q.sort === "gap"
@@ -55,6 +62,11 @@ export async function findQualifyingUpcoming(q: QualifyingQuery): Promise<MatchR
         : [{ kickoffAt: "asc" }, { formGap: "desc" }, { id: "asc" }],
     take: Math.min(Math.max(q.limit ?? 200, 1), 200),
   });
+}
+
+/** How many qualifying matches kick off in [from, to). One cheap COUNT per dashboard tab. */
+export async function countQualifying(from: Date, to: Date): Promise<number> {
+  return getDb().match.count({ where: { qualifies: true, kickoffAt: { gte: from, lt: to } } });
 }
 
 export async function findById(id: string): Promise<MatchRecord | null> {

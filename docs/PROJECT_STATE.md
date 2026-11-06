@@ -66,9 +66,9 @@ Status values: `todo` · `in-progress` · `done` · `blocked`. A step is `done` 
 | 7 | Domain: screening engine | todo | | | |
 | 8 | Providers, ingest & import | todo | | | |
 | 9 | Run pipeline & cron | todo | | | |
-| 10 | Dashboard | todo | | | |
-| 10.3 | Sticky filter bar & list polish | todo | | | |
-| 10.4 | Day groups & navbar freshness pill | todo | | | |
+| 10 | Dashboard (10.1 match components, 10.2 page, 10.3 sticky bar, 10.4 day groups + pill) | **built, review pending** 2026-11-06 (branch step-10-dashboard) | see TEST_LOG | 7+ bugs fixed | A.12 review pending |
+| 10.3 | Sticky filter bar & list polish | **built** (part of Step 10) | | | |
+| 10.4 | Day groups & navbar freshness pill | **built** (part of Step 10) | | | |
 | 11 | Match detail (11.1) + FormDuel (11.2) | todo | | | |
 | 12 | Runs history | todo | | | |
 | 13 | Settings & Import UI | todo | | | |
@@ -102,6 +102,8 @@ Status values: `todo` · `in-progress` · `done` · `blocked`. A step is `done` 
 
 ## 6. Currently working on
 Step 9.1 (daily cron) built on branch step-09-cron; awaiting review/merge. Details in docs/TEST_LOG.md. Env: `CRON_SECRET` must exist on Vercel so the cron call carries the bearer; schedule `0 6 * * *` UTC (Hobby: once a day, up to 1 h late; owner-local 06:00 winter / 07:00 summer); `Setting.runHourLocal` is informational only. SKIPPED runs: use `runs.list({ excludeSkipped: true })` on the Runs page (Step 12).
+
+Step 10 notes: dashboard reads everything through services in `(app)/dashboard-content.tsx` (inside Suspense); the e2e dev server uses the isolated schema `test_dash` (playwright.config.ts) and e2e specs seed with raw SQL (`tests/e2e/helpers/dashboard-db.ts`, owner timezone = a fixed Etc/GMT zone whose local time is ~12:00 now); run the dashboard specs with `--workers=1` (shared schema). Tab counts ignore the league search. Logo images use `unoptimized` (hosts unknown until recon).
 
 ## 7. Next action
 Start Step 0.1: send the client message (change password, send image #2, confirm questions).
