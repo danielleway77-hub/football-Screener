@@ -20,3 +20,20 @@ export async function bumpSessionVersion(): Promise<SettingRecord> {
   await ensureSettings();
   return getDb().setting.update({ where: { id: 1 }, data: { sessionVersion: { increment: 1 } } });
 }
+
+/**
+ * Read-modify-write of the singleton under a row lock (SELECT ... FOR UPDATE): `decide` sees the locked,
+ * current row and returns the patch (or throws to abort). Concurrent saves are serialised.
+ */
+export async function updateLocked(
+  decide: (current: SettingRecord) => SettingUpdate,
+): Promise<{ before: SettingRecord; after: SettingRecord }> {
+  await ensureSettings();
+  return getDb().$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT "id" FROM "Setting" WHERE "id" = 1 FOR UPDATE`;
+    const before = await tx.setting.findUniqueOrThrow({ where: { id: 1 } });
+    const patch = decide(before);
+    const after = await tx.setting.update({ where: { id: 1 }, data: patch });
+    return { before, after };
+  });
+}

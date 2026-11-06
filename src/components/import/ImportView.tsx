@@ -432,6 +432,11 @@ export function ImportView({
                       rows={8}
                       value={pageText}
                       onChange={(e) => {
+                        if (new Blob([e.target.value]).size > MAX_BYTES) {
+                          setInputError("That paste is too large (max 1 MB).");
+                          return;
+                        }
+                        setInputError(null);
                         setPageText(e.target.value);
                         setEdits({});
                         setOutcome(null);
@@ -442,6 +447,9 @@ export function ImportView({
                       className="field-sizing-fixed text-[13px]"
                     />
                   </div>
+                  {inputError && source === "text" ? (
+                    <Callout tone="negative">{inputError}</Callout>
+                  ) : null}
                   {parsed && parsed.problems.length > 0 ? (
                     <Callout
                       tone="warning"

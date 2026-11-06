@@ -52,17 +52,18 @@ export async function updateSettings(input: unknown): Promise<{
     }
     throw new AppError("VALIDATION_FAILED", "Some settings are not valid.", fieldErrors);
   }
-  const before = await settingsRepo.getSettings();
   const patch = parsed.data;
-  const merged = {
-    low: patch.lowThreshold ?? before.lowThreshold,
-    high: patch.highThreshold ?? before.highThreshold,
-  };
-  const check = validateThresholds(merged);
-  if (!check.ok) {
-    throw new AppError("VALIDATION_FAILED", check.reason, { lowThreshold: check.reason });
-  }
-  const settings = await settingsRepo.updateSettings(patch);
+  // Read + validate (merged low < high on the LOCKED row) + write in one transaction.
+  const { before, after: settings } = await settingsRepo.updateLocked((current) => {
+    const check = validateThresholds({
+      low: patch.lowThreshold ?? current.lowThreshold,
+      high: patch.highThreshold ?? current.highThreshold,
+    });
+    if (!check.ok) {
+      throw new AppError("VALIDATION_FAILED", check.reason, { lowThreshold: check.reason });
+    }
+    return patch;
+  });
   return {
     settings,
     thresholdsChanged:
@@ -96,8 +97,11 @@ export async function saveSettings(input: unknown): Promise<{
     try {
       rescreen = await rescreenAll(settings);
     } catch (error) {
-      if (!(error instanceof AppError)) throw error;
-      rescreenSkipped = error.message;
+      if (error instanceof AppError) rescreenSkipped = error.message;
+      else {
+        console.error("Re-screen after save failed", { name: (error as Error).name });
+        rescreenSkipped = "Settings were saved, but re-screening the stored matches failed.";
+      }
     }
   }
   return {

@@ -159,3 +159,10 @@ describe("preview validation (same rules as the server)", () => {
     });
   });
 });
+
+describe("review hardening", () => {
+  it("L6: header names like constructor/__proto__ are not treated as columns", () => {
+    const p = buildPreview("constructor,__proto__,toString\n1,2,3", ctx);
+    expect(p.error).toContain("Missing columns");
+  });
+});
