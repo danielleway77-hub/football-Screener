@@ -54,6 +54,7 @@ Status values: `todo` · `in-progress` · `done` · `blocked`. A step is `done` 
 | 1 | Agent context & docs in repo | **done** 2026-11-05 (1.1 docs in repo, commit d19edce; 1.2 context summary below + TEST_LOG, pending owner confirmation) | ✅ secret scan, format, lint | ✅ 8 contradictions logged (TEST_LOG, Step 1) | Step 2 NOT started — waiting for owner |
 | 2 | Design tokens, depth system, contrast script (2.1–2.3) | **done** 2026-11-05 | ✅ 21 unit, 76 e2e, contrast 24/24, build, prod 404 | ✅ 4 bugs fixed + 7 mutations | **Step 3 NOT started — waiting for owner** |
 | 2.3 | Depth system & sleek surfaces | **done** (part of Step 2) | ✅ | ✅ | |
+| 4 | Routing skeleton (4.1) | **done** 2026-11-06 | ✅ 371 e2e | ✅ 2 fixed | **Step 5 started** |
 | 3 | Shared kits: layout, state, motion, interactions, brand (3.1–3.5) | **done** 2026-11-06 | ✅ 156 unit/component, 264 e2e ×3 cold, 41/41 mutations | ✅ 10+ bugs fixed | **Step 4 NOT started — waiting for owner** |
 | 3.4 | Signature interaction kit (spotlight, segmented, sticky, scroll fade) | **done** (part of Step 3) | ✅ | ✅ | |
 | 3.5 | Brand & illustration kit | **done** (part of Step 3) | ✅ | ✅ | |

@@ -30,9 +30,9 @@ function SkeletonGroup({
 export function HeaderSkeleton() {
   return (
     <div className="space-y-2" data-testid="header-skeleton">
-      <Skeleton className="h-3 w-20" />
-      <Skeleton className="h-9 w-[min(70%,16rem)]" />
-      <Skeleton className="h-4 w-[min(100%,22rem)]" />
+      <Skeleton className="h-[0.9rem] w-20" />
+      <Skeleton className="h-[calc(clamp(1.75rem,3.2vw,2.5rem)*1.15)] w-[min(70%,16rem)]" />
+      <Skeleton className="h-[1.3125rem] w-[min(100%,22rem)]" />
     </div>
   );
 }

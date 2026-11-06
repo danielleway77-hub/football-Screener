@@ -1,7 +1,18 @@
 import { expect, test } from "@playwright/test";
 
 // A page wider than the screen makes phones zoom out and hides fixed/sticky bars. Guard every route.
-const ROUTES = ["/", "/style-guide", "/style-guide/shell", "/style-guide/sticky"];
+const ROUTES = [
+  "/",
+  "/login",
+  "/runs",
+  "/import",
+  "/settings",
+  "/matches/1",
+  "/nope",
+  "/style-guide",
+  "/style-guide/shell",
+  "/style-guide/sticky",
+];
 const WIDTHS = [360, 390];
 
 for (const route of ROUTES) {

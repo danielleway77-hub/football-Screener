@@ -47,7 +47,7 @@ Layout: AppShell, Navbar, NavLinks, MobileNav, LogoutButton, Footer, PageContain
 |---|---|---|---|---|---|---|
 | ConfirmDialog | `components/shared/ConfirmDialog.tsx` | destructive/irreversible confirmations (revoke token, re-screen) | title, description, confirmLabel, tone, onConfirm | pending, error | 3.1 | planned |
 | CopyButton | `components/shared/CopyButton.tsx` | copy to clipboard w/ feedback (tokens) | value | idle/copied/failed | 3.1 | planned |
-| PasswordInput | `components/shared/PasswordInput.tsx` | input with show/hide toggle | – | error, disabled | 6.1 | planned |
+| PasswordInput | `components/shared/PasswordInput.tsx` | input with show/hide toggle | – | error, disabled | 4.1 | built |
 | ExternalLink | `components/shared/ExternalLink.tsx` | `target=_blank rel="noopener noreferrer"` + icon + sr text | href | – | 11.1 | planned |
 | Pagination | `components/shared/Pagination.tsx` | URL-param pagination | page,total | disabled ends | 12.1 | planned |
 | Breadcrumb / BackLink | `components/layout/BackLink.tsx` | back to dashboard preserving filters | href | – | 11.1 | planned |
@@ -102,3 +102,5 @@ Reveal · Stagger/StaggerItem · PageTransition · CountUp · AnimatedBar · Pre
 
 ## Forbidden duplicates (grep guards, run at Step 16)
 `grep -rn "<nav" src` → only Navbar/MobileNav · `grep -rn "<footer" src` → only Footer · `grep -rEn "#[0-9A-Fa-f]{6}" src --include=*.tsx` → none · `grep -rn "@prisma/client" src` → only `lib/db.ts` + repositories/types.
+
+Step 4 additions: RouteError, NotFoundView, RouteFocus, ForceError, PasswordInput (shared).

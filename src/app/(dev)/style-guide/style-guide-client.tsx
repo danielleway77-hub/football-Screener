@@ -55,7 +55,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useHydrated } from "@/hooks/useHydrated";
 import { cn } from "@/lib/utils";
-import { RouteProgress } from "@/components/states/RouteProgress";
 import { BrandDemos } from "./brand-demos";
 import { InteractionDemos } from "./interaction-demos";
 import { LayoutKitDemos } from "./kit-demos";
@@ -281,7 +280,6 @@ export function StyleGuideClient() {
 
   return (
     <div className="container-wide pb-24" data-testid="style-guide" data-hydrated={hydrated}>
-      <RouteProgress />
       <BreakpointBadge />
       <header className="py-10">
         <p className="text-overline text-primary">Dev only</p>
