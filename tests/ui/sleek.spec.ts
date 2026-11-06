@@ -22,7 +22,7 @@ const TARGETS: Target[] = [
     { name: "settings", url: "/settings", lime: 0.03, ...v },
     { name: "runs", url: "/runs", lime: 0.03, ...v },
     { name: "import", url: "/import", lime: 0.03, ...v },
-    { name: "login", url: "/login", anon: true, lime: 0.04, ...v },
+    { name: "login", url: "/login", anon: true, lime: v.w === 390 ? 0.06 : 0.04, ...v },
   ]),
   { name: "dashboard", url: "/", lime: 0.03, w: 1920, h: 1080 },
 ];

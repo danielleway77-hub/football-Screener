@@ -30,6 +30,12 @@ const jetbrainsMono = localFont({
   display: "swap",
 });
 export const metadata: Metadata = {
+  // Absolute base for og:image / twitter:image (Vercel sets the production host; local falls back to localhost).
+  metadataBase: new URL(
+    process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : `http://localhost:${process.env.PORT ?? 3000}`,
+  ),
   title: { default: "Screener", template: "%s · Screener" },
   description: "Private football match screening dashboard.",
   applicationName: "Screener",
