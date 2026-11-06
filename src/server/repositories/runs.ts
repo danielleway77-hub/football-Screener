@@ -13,6 +13,8 @@ export async function createRunning(input: {
   provider: string;
   windowFrom?: Date | null;
   windowTo?: Date | null;
+  /** Injected clock (defaults to the database clock). */
+  startedAt?: Date;
 }): Promise<{ run: RunRecord; created: boolean }> {
   const db = getDb();
   // The RUNNING run may finish between our failed insert and the lookup; retry instead of surfacing P2002.
@@ -23,6 +25,7 @@ export async function createRunning(input: {
           trigger: input.trigger,
           provider: input.provider,
           status: "RUNNING",
+          ...(input.startedAt ? { startedAt: input.startedAt } : {}),
           windowFrom: input.windowFrom ?? null,
           windowTo: input.windowTo ?? null,
         },
@@ -92,6 +95,10 @@ export async function list(
     db.screeningRun.count(),
   ]);
   return { items, total };
+}
+
+export async function hasRunning(): Promise<boolean> {
+  return (await getDb().screeningRun.count({ where: { status: "RUNNING" } })) > 0;
 }
 
 export async function getById(id: string): Promise<RunRecord | null> {

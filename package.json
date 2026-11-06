@@ -22,6 +22,7 @@
     "db:migrate:test": "cross-env PRISMA_ENV=test tsx scripts/db-migrate.ts",
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
+    "token:create": "tsx scripts/create-token.ts",
     "db:seed:dev": "cross-env SEED_FIXTURES=1 tsx prisma/seed.ts",
     "hash-password": "tsx scripts/hash-password.ts",
     "run:daily": "tsx scripts/run-daily.ts",

@@ -49,7 +49,7 @@ export async function startRun(
 ): Promise<{ runId: string; alreadyRunning: boolean }> {
   const now = (clock.now ?? (() => new Date()))();
   await runs.expireAbandoned(ABANDONED_RUN_MINUTES, now);
-  const { run, created } = await runs.createRunning(input);
+  const { run, created } = await runs.createRunning({ ...input, startedAt: now });
   return { runId: run.id, alreadyRunning: !created };
 }
 
@@ -185,8 +185,13 @@ async function executeRun(opts: {
   } catch (error) {
     // Anything unexpected: the transaction already rolled back, earlier data is untouched.
     const known = error instanceof AppError;
+    const cancelled = error instanceof Error && error.message === matches.RUN_NOT_RUNNING;
     console.error("Run failed", { runId, code: known ? error.code : (error as Error).name });
-    const message = known ? error.message : "Something went wrong while saving. Try again.";
+    const message = known
+      ? error.message
+      : cancelled
+        ? "This update took too long and was cancelled. Try again."
+        : "Something went wrong while saving. Try again.";
     await finishRun(runId, { status: "FAILED", finishedAt: nowFn(), error: message });
     if (known) throw error;
     return { runId, status: "FAILED", scanned: 0, qualified: 0, failed: 0, error: message };
@@ -250,13 +255,18 @@ export async function pullAndProcess(
         { from: window.fromUtc, to: window.toUtc },
         { settings: opts.settings, signal: opts.signal ?? new AbortController().signal },
       );
-      return {
-        valid: items,
-        validIndexes: items.map((_, i) => i),
-        invalid: [],
-        duplicates: 0,
-        pulledEmpty: items.length === 0,
-      };
+      if (items.length === 0) {
+        return { valid: [], validIndexes: [], invalid: [], duplicates: 0, pulledEmpty: true };
+      }
+      // Pulled items go through the SAME validation as pushed ones (dedupe, kickoff, ranges).
+      const asJson = items.map((m) => ({
+        ...m,
+        kickoffAt:
+          m.kickoffAt instanceof Date && !Number.isNaN(m.kickoffAt.getTime())
+            ? m.kickoffAt.toISOString()
+            : "invalid",
+      }));
+      return normalizePayload({ matches: asJson });
     },
   });
 }
@@ -265,24 +275,32 @@ export async function pullAndProcess(
 export async function rescreenAll(
   settings: SettingRecord,
 ): Promise<{ changed: number; qualifying: number }> {
-  const all = await matches.listAll();
-  const thresholds = { high: settings.highThreshold, low: settings.lowThreshold };
-  const updates: matches.ScreeningUpdate[] = [];
-  let qualifying = 0;
-  for (const m of all) {
-    const r = evaluateMatch({ homeFormPct: m.homeFormPct, awayFormPct: m.awayFormPct }, thresholds);
-    if (r.qualifies) qualifying += 1;
-    if (r.qualifies !== m.qualifies || r.strongSide !== m.strongSide || r.formGap !== m.formGap) {
-      updates.push({
-        id: m.id,
-        qualifies: r.qualifies,
-        strongSide: r.strongSide,
-        formGap: r.formGap,
-      });
-    }
+  // Refuse while an update is running: it would be screened with the old thresholds.
+  if (await runs.hasRunning()) {
+    throw new AppError("RUN_IN_PROGRESS", "An update is running. Try again in a minute.");
   }
-  await matches.applyScreening(updates);
-  return { changed: updates.length, qualifying };
+  const thresholds = { high: settings.highThreshold, low: settings.lowThreshold };
+  let qualifying = 0;
+  const { updated } = await matches.rescreen((all) => {
+    const updates: matches.ScreeningUpdate[] = [];
+    for (const m of all) {
+      const r = evaluateMatch(
+        { homeFormPct: m.homeFormPct, awayFormPct: m.awayFormPct },
+        thresholds,
+      );
+      if (r.qualifies) qualifying += 1;
+      if (r.qualifies !== m.qualifies || r.strongSide !== m.strongSide || r.formGap !== m.formGap) {
+        updates.push({
+          id: m.id,
+          qualifies: r.qualifies,
+          strongSide: r.strongSide,
+          formGap: r.formGap,
+        });
+      }
+    }
+    return updates;
+  });
+  return { changed: updated, qualifying };
 }
 
 /** Retention: matches 90 days after kickoff, login attempts 30 days, rate-limit counters 2 days. */

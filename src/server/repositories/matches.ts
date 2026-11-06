@@ -115,6 +115,8 @@ export async function linkToRun(
   });
 }
 
+export const RUN_NOT_RUNNING = "RUN_NOT_RUNNING";
+
 /** One screened match ready to store, plus how it screened in this run. */
 export type StoreRow = { input: MatchInput; qualifiedAtRun: boolean };
 
@@ -135,6 +137,12 @@ export async function storeBatch(rows: StoreRow[], runId: string): Promise<numbe
 
   await getDb().$transaction(
     async (tx) => {
+      // The run must still be RUNNING (it may have been expired as abandoned): lock its row, or roll back.
+      const live = await tx.$queryRawUnsafe<{ id: string }[]>(
+        `SELECT "id" FROM "ScreeningRun" WHERE "id" = $1 AND "status" = 'RUNNING' FOR UPDATE`,
+        runId,
+      );
+      if (live.length === 0) throw new Error(RUN_NOT_RUNNING);
       for (let i = 0; i < list.length; i += CHUNK) {
         const payload = list.slice(i, i + CHUNK).map(({ input: m, qualifiedAtRun }) => ({
           id: crypto.randomUUID(),
@@ -236,6 +244,33 @@ export async function applyScreening(updates: ScreeningUpdate[]): Promise<void> 
           JSON.stringify(updates.slice(i, i + CHUNK)),
         );
       }
+    },
+    { maxWait: 30_000, timeout: 60_000 },
+  );
+}
+
+/**
+ * Reads every match, lets `compute` decide the changes, and applies them in ONE transaction that holds a
+ * table lock against concurrent writers (no run can slip in between the read and the write).
+ */
+export async function rescreen(
+  compute: (all: MatchRecord[]) => ScreeningUpdate[],
+): Promise<{ total: number; updated: number }> {
+  return getDb().$transaction(
+    async (tx) => {
+      await tx.$executeRawUnsafe(`LOCK TABLE "Match" IN SHARE ROW EXCLUSIVE MODE`);
+      const all = await tx.match.findMany();
+      const updates = compute(all);
+      for (let i = 0; i < updates.length; i += CHUNK) {
+        await tx.$executeRawUnsafe(
+          `UPDATE "Match" m SET "qualifies" = r."qualifies", "strongSide" = r."strongSide"::"Side",
+             "formGap" = r."formGap", "updatedAt" = now()
+           FROM jsonb_to_recordset($1::jsonb) AS r("id" text, "qualifies" boolean, "strongSide" text, "formGap" float8)
+           WHERE m."id" = r."id"`,
+          JSON.stringify(updates.slice(i, i + CHUNK)),
+        );
+      }
+      return { total: all.length, updated: updates.length };
     },
     { maxWait: 30_000, timeout: 60_000 },
   );

@@ -32,7 +32,8 @@ const text = (label: string, max: number, required: boolean) =>
       return { ok: false, reason: `${label} is not text` };
     if (typeof v !== "string" && typeof v !== "number")
       return { ok: false, reason: `${label} is not text` };
-    const s = String(v).trim();
+    // NUL characters and lone surrogates would make PostgreSQL reject the whole batch: strip them here.
+    const s = String(v).replaceAll("\u0000", "").toWellFormed().trim();
     if (s.length > max) return { ok: false, reason: `${label} is longer than ${max} characters` };
     return { ok: true, value: s };
   });

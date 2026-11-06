@@ -48,3 +48,12 @@ export function toErrorBody(error: AppError) {
     },
   };
 }
+
+/** A rate-limit error that carries its Retry-After seconds. */
+export class RateLimitedError extends AppError {
+  readonly retryAfterSeconds: number;
+  constructor(retryAfterSeconds: number) {
+    super("RATE_LIMITED", "Too many requests. Try again later.");
+    this.retryAfterSeconds = retryAfterSeconds;
+  }
+}
