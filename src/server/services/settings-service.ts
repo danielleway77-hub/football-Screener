@@ -1,33 +1,34 @@
-import { z } from "zod";
 import { validateThresholds } from "@/server/domain/screening";
+import { settingsUpdateSchema, type SettingsUpdate } from "@/lib/schemas/settings";
 import { AppError } from "@/server/errors";
+import * as matches from "@/server/repositories/matches";
 import * as settingsRepo from "@/server/repositories/settings";
 import type { SettingRecord } from "@/server/repositories/types";
+import { rescreenAll } from "@/server/services/run-service";
 
-function isTimezone(value: string): boolean {
-  try {
-    new Intl.DateTimeFormat("en-GB", { timeZone: value });
-    return true;
-  } catch {
-    return false;
-  }
+export { settingsUpdateSchema };
+export type { SettingsUpdate };
+
+/** What the API and the Settings page see: never the session version. */
+export type PublicSettings = Omit<
+  SettingRecord,
+  "id" | "sessionVersion" | "updatedAt" | "windowDays"
+> & {
+  windowDays: 1 | 2;
+};
+
+export function toPublicSettings(s: SettingRecord): PublicSettings {
+  return {
+    highThreshold: s.highThreshold,
+    lowThreshold: s.lowThreshold,
+    windowDays: s.windowDays === 1 ? 1 : 2,
+    formScope: s.formScope,
+    timezone: s.timezone,
+    runHourLocal: s.runHourLocal,
+    accessMode: s.accessMode,
+    staleAfterHrs: s.staleAfterHrs,
+  };
 }
-
-export const settingsUpdateSchema = z
-  .object({
-    highThreshold: z.number().int().min(0).max(100),
-    lowThreshold: z.number().int().min(0).max(100),
-    windowDays: z.union([z.literal(1), z.literal(2)]),
-    formScope: z.enum(["league", "overall"]),
-    timezone: z.string().min(1).max(64).refine(isTimezone, "Unknown timezone"),
-    runHourLocal: z.number().int().min(0).max(23),
-    accessMode: z.enum(["official_api", "assisted_ingest", "manual_import"]),
-    staleAfterHrs: z.number().int().min(1).max(168),
-  })
-  .partial()
-  .strict();
-
-export type SettingsUpdate = z.infer<typeof settingsUpdateSchema>;
 
 export async function getSettings(): Promise<SettingRecord> {
   return settingsRepo.getSettings();
@@ -46,7 +47,8 @@ export async function updateSettings(input: unknown): Promise<{
   if (!parsed.success) {
     const fieldErrors: Record<string, string> = {};
     for (const issue of parsed.error.issues) {
-      fieldErrors[String(issue.path[0] ?? "settings")] = issue.message;
+      const key = String(issue.path[0] ?? "settings");
+      fieldErrors[key] ??= issue.message;
     }
     throw new AppError("VALIDATION_FAILED", "Some settings are not valid.", fieldErrors);
   }
@@ -71,4 +73,49 @@ export async function updateSettings(input: unknown): Promise<{
       settings.timezone !== before.timezone ||
       settings.formScope !== before.formScope,
   };
+}
+
+export type RescreenResult = { changed: number; qualifying: number };
+
+/**
+ * Save from the Settings page. Changed thresholds are applied to the stored matches right away
+ * (the dashboard lists stored verdicts). When the re-screen cannot run (an update is in progress)
+ * the settings stay saved and `rescreenSkipped` tells the UI to offer the manual button.
+ */
+export async function saveSettings(input: unknown): Promise<{
+  settings: PublicSettings;
+  thresholdsChanged: boolean;
+  windowChanged: boolean;
+  rescreen: RescreenResult | null;
+  rescreenSkipped: string | null;
+}> {
+  const { settings, thresholdsChanged, windowChanged } = await updateSettings(input);
+  let rescreen: RescreenResult | null = null;
+  let rescreenSkipped: string | null = null;
+  if (thresholdsChanged) {
+    try {
+      rescreen = await rescreenAll(settings);
+    } catch (error) {
+      if (!(error instanceof AppError)) throw error;
+      rescreenSkipped = error.message;
+    }
+  }
+  return {
+    settings: toPublicSettings(settings),
+    thresholdsChanged,
+    windowChanged,
+    rescreen,
+    rescreenSkipped,
+  };
+}
+
+/** Re-screen with the stored thresholds (Maintenance card). */
+export async function rescreenStored(): Promise<RescreenResult & { total: number }> {
+  const settings = await settingsRepo.getSettings();
+  const result = await rescreenAll(settings);
+  return { ...result, total: await matches.countAll() };
+}
+
+export async function countStoredMatches(): Promise<number> {
+  return matches.countAll();
 }

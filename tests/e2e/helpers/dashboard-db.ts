@@ -10,7 +10,7 @@ import { schemaOf, stripPrismaParams } from "@/lib/pg-url";
 export const HOUR = 3_600_000;
 
 /** Runs `fn` with a pg client on the isolated schema (raw SQL: the generated Prisma client is ESM-only). */
-async function withClient<T>(fn: (c: pg.Client) => Promise<T>): Promise<T> {
+export async function withClient<T>(fn: (c: pg.Client) => Promise<T>): Promise<T> {
   const url = process.env.DIRECT_URL_TEST;
   if (!url || !/^test(_[a-z0-9]+)?$/.test(schemaOf(url))) {
     throw new Error(

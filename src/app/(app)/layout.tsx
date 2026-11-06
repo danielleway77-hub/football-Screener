@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { RouteFocus } from "@/components/layout/RouteFocus";
@@ -7,6 +8,8 @@ import { requireSession } from "@/server/auth/guard";
 
 /** Reads the session (cookies + DB) at request time, so it must sit inside Suspense (Cache Components). */
 async function SessionGate({ children }: { children: React.ReactNode }) {
+  // Time-based session checks must not run during (runtime-)prefetch renders.
+  await connection();
   await requireSession();
   return <>{children}</>;
 }

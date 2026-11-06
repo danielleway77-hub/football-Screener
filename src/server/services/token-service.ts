@@ -1,4 +1,5 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import { MAX_ACTIVE_TOKENS } from "@/lib/schemas/settings";
 import { AppError } from "@/server/errors";
 import * as tokens from "@/server/repositories/tokens";
 import type { TokenRecord } from "@/server/repositories/types";
@@ -33,6 +34,13 @@ export async function createToken(
     throw new AppError("VALIDATION_FAILED", "Label must be 1–40 characters.", {
       label: "Label must be 1–40 characters.",
     });
+  }
+  if ((await tokens.countActive()) >= MAX_ACTIVE_TOKENS) {
+    throw new AppError(
+      "VALIDATION_FAILED",
+      `You can have up to ${MAX_ACTIVE_TOKENS} active tokens. Revoke one first.`,
+      { label: `You can have up to ${MAX_ACTIVE_TOKENS} active tokens. Revoke one first.` },
+    );
   }
   const token = TOKEN_PREFIX + randomBytes(32).toString("base64url");
   const row = await tokens.create(clean, hashToken(token));

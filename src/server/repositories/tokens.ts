@@ -24,3 +24,7 @@ export async function revoke(id: string, at: Date): Promise<TokenRecord | null> 
   await db.ingestToken.updateMany({ where: { id, revokedAt: null }, data: { revokedAt: at } });
   return db.ingestToken.findUnique({ where: { id } });
 }
+
+export async function countActive(): Promise<number> {
+  return getDb().ingestToken.count({ where: { revokedAt: null } });
+}

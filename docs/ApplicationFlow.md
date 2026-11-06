@@ -116,7 +116,7 @@ Click → button disabled + spinner → `POST /api/run` (202 `{runId}`) → poll
 ### 6.7 Settings change effects
 | Change | Effect |
 |---|---|
-| thresholds | saved only; existing matches keep old `qualifies` **until** "Re-screen" (or next run). UI shows a hint after saving: "Re-screen to apply to stored matches". |
+| thresholds | saved, and the stored matches are re-screened in the same request (the dashboard lists stored verdicts); the UI says how many changed. If an update is running at that moment the re-screen is skipped and the UI shows "Re-screen to apply to stored matches" with a button (Maintenance has the same action). |
 | windowDays | affects next run and the Day tabs; stored matches untouched |
 | formScope | the next run/ingest must supply that scope: items whose `formScope` differs from the setting are **rejected** (reason "form scope mismatch: expected league") so the list is never a mix of league and overall form. Stored matches keep their own label. The helper/Import page tells the owner which scope to select on PrediGoal. |
 | timezone | affects window computation and all displayed times immediately |

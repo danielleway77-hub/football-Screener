@@ -28,6 +28,8 @@ export type RunSummary = {
   qualified: number;
   failed: number;
   error?: string | null;
+  /** Per-item reasons for skipped items (first 200): index in the payload, id and a human sentence. */
+  reasons?: InvalidItem[];
   /** True when another run was already in progress: this call did nothing and returned that run. */
   alreadyRunning?: boolean;
 };
@@ -182,7 +184,7 @@ async function executeRun(opts: {
       error,
       details: details.length ? details : undefined,
     });
-    return { runId, status, scanned, qualified, failed: invalid.length, error };
+    return { runId, status, scanned, qualified, failed: invalid.length, error, reasons: details };
   } catch (error) {
     // Anything unexpected: the transaction already rolled back, earlier data is untouched.
     const known = error instanceof AppError;

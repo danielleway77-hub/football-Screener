@@ -265,3 +265,18 @@ Fixed: Run now TIMEOUT copy ("may already be running", status refreshed, no retr
 Results: vitest node+dom 397/397 · tsc, eslint, prettier clean · pnpm build OK · resilience.spec on mobile/tablet/desktop/wide: first run 69/76, after fixes the 4 failing tests (7 cases) re-run on all projects 32/32 green (PW_PORT=3014, --workers=1, schema test_resil). Screenshots re-captured and all 28 viewed (stale-partial, offline, back-online, slow-run, error-state, not-found, login-429): no visual defects.
 overflow.spec: 142 passed, 2 failed (`/?q=zzz` at 360/390 mobile: a fixed 2px route-progress bar, `div.fixed inset-x-0 top-0 h-0.5`, measured during navigation); this is in files untouched by this step, not investigated further, flagged as pending.
 Mutation: removing the `redirecting` guard failed the 401-once test; retry-on-mutation failed the no-replay test.
+
+### Step 13.1 — Settings page — 2026-11-07 — Claude (Sonnet 5.5) — branch step-13-settings (worktree football-screener-step13, schema test_settings)
+Built: GET/PUT `/api/settings` (PUT re-screens stored matches when thresholds changed; answer `rescreen {changed, qualifying}` or `rescreenSkipped`), POST `/api/settings/rescreen`, POST `/api/settings/password` (verify current, Credential hash + sessionVersion bump in ONE transaction, cookie re-issued, wrong-current rate limit `pw:<ip>`), max 5 active tokens, shared zod schemas `lib/schemas/settings.ts`, UI: SettingsView, DualThresholdSlider, TimezoneCombobox, SectionNav, TokenManager (plaintext once), PasswordForm, MaintenanceCard, save bar, unsaved guard.
+Tests: unit `settings-schema` 6 · integration `settings.test.ts` 14 (+ api.test.ts 35 still green: 49/49) · e2e `settings.spec.ts` 16 x 4 viewports (all green after fixes; overflow guard for /settings and /import 16/16).
+Mutations (caught, reverted): sessionVersion increment -> 0 failed "success updates ... other session"; token cap `>=` -> `>` failed "at most 5"; schema `>=` -> `>` failed 2 unit tests.
+Bugs found: Radix sorted thumbs swapped past each other (now stopped one short); dev badge blocked clicks (devIndicators off); `new Date()` prerender error from the session gate (added `connection()`); phone tab/segment labels clipped (wrap).
+A2 (screenshots docs/reference/ui-review/step-13/settings-*, looked at): hierarchy 2 · accent 2 · spacing 2 · alignment 2 · contrast 2 · touch 2 · responsive 2 · states 2 · motion 1 (not recorded) · consistency 2 = 19/20.
+
+### Step 13.2 — Import page — 2026-11-07
+Built: ImportView (tabs, data file vs page text, DropZone, PreviewList table/cards, TextMatches editable), CSV parser, client preview with the server's `normalizePayload`, `parse-page-text.ts`, generated samples (golden + Atletico), `reasons[]` on ingest/import answers (also 422), fetcher keeps error body. Helper 8.3 NOT built (D17); no scraping.
+Tests: unit `parse-page-text` 10, `import` 8 · e2e `import.spec.ts` 15 x 4 viewports (golden paste -> dashboard, inline edit, kickoff picker, 2 MB, double submit = 1 run, invalid first, cards at 390, offline).
+Mutation: parser `homeForm ?? 0` -> 3 parser tests failed (never guessed); reverted.
+Full run of settings+import over 4 projects: 124 tests, 3 failures in my own specs (assertion tuning, fixed and re-run green individually).
+Gates: prettier ✅ · tsc ✅ · eslint ✅ · vitest node+dom 393/393 · `pnpm build` ✅.
+A2: 18/20 (preview chips and text rows fine; motion not recorded; consistency of tab chip on 360 tuned). Pending: A.12 review, full 4-project run after merge.

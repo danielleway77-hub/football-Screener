@@ -33,6 +33,8 @@ export class AppClientError extends Error {
     readonly status?: number,
     readonly fieldErrors?: FieldErrors,
     readonly retryAfterSeconds?: number,
+    /** The parsed JSON error body (e.g. the per-item `reasons` of a 422 import), when there was one. */
+    readonly body?: unknown,
   ) {
     super(message);
     this.name = "AppClientError";
@@ -114,10 +116,12 @@ async function toError(res: Response): Promise<AppClientError> {
   let code: ClientErrorCode = "INTERNAL";
   let message: string | undefined;
   let fieldErrors: FieldErrors | undefined;
+  let parsedBody: unknown;
   try {
     const body = (await res.json()) as {
       error?: { code?: string; message?: string; fieldErrors?: FieldErrors };
     };
+    parsedBody = body;
     if (body?.error) {
       code = body.error.code ?? code;
       message = body.error.message;
@@ -141,6 +145,7 @@ async function toError(res: Response): Promise<AppClientError> {
     res.status,
     fieldErrors,
     retryAfter,
+    parsedBody,
   );
 }
 

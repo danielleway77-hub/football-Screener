@@ -297,3 +297,7 @@ export async function rescreen(
 export async function listAll(): Promise<MatchRecord[]> {
   return getDb().match.findMany({ orderBy: { kickoffAt: "asc" } });
 }
+
+export async function countAll(): Promise<number> {
+  return getDb().match.count();
+}
