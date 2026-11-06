@@ -10,7 +10,13 @@ import { useHydrated } from "@/hooks/useHydrated";
 import { cn } from "@/lib/utils";
 
 /** The ONE navbar: sticky 64px glass bar (UI_BLUEPRINT §2). Inline links ≥ 768px, sheet below. */
-export function Navbar({ className }: { className?: string }) {
+export function Navbar({
+  className,
+  freshness,
+}: {
+  className?: string;
+  freshness?: React.ReactNode;
+}) {
   const [scrolled, setScrolled] = React.useState(false);
   const hydrated = useHydrated();
 
@@ -47,12 +53,13 @@ export function Navbar({ className }: { className?: string }) {
               <NavLinks />
             </React.Suspense>
           </nav>
+          {freshness ? <div className="mr-1 ml-2 hidden lg:block">{freshness}</div> : null}
           <span aria-hidden="true" className="mx-2 h-6 w-px bg-border-strong" />
           <LogoutButton variant="icon" />
         </div>
 
         <React.Suspense fallback={<span className="size-11 md:hidden" />}>
-          <MobileNav />
+          <MobileNav freshness={freshness} />
         </React.Suspense>
       </div>
     </header>

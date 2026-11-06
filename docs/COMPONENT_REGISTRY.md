@@ -107,3 +107,6 @@ Step 4 additions: RouteError, NotFoundView, RouteFocus, ForceError, PasswordInpu
 
 ## Step 10.1 — Match components (done)
 `components/match/`: FormBar (pct, low, high, teamName, leading, index, size) · FormBadges · QualifiesChip · TeamLogo · PairTile · PredictedScore · ProbabilityGrid (compact) · MatchCard (data: MatchCardData) · PctCount · logic.ts (formStrength, highest1x2, pairLeader, derived, parseResults) · dimensions.ts · mock-data.ts (style guide/tests only). Specimen page: `/style-guide/match`.
+
+## Step 10.2–10.4 — Dashboard (done)
+`components/dashboard/`: RunStatusPanel, RunButton, RunAction (stale banner / onboarding action), useRunNow, BentoSummary (BentoTile, hero with SpotlightCard), NextKickoff, FilterBar (DayTabs with sliding pill, SearchBox with phone expand, SortControl; wraps StickyBar), DashboardNav (provider, ResultsRegion with 300 ms skeleton guard and scroll-under-bar), DayGroup, ResultsError · `components/layout/FreshnessPill` (+ `freshness` slot on AppShell/Navbar/MobileNav) · `components/shared/StatusChip` (reuse on /runs) · hooks `useNowTick`, `useRunPolling` · lib `schemas/dashboard.ts`, `day-groups.ts`, `dashboard-state.ts`, `format.formatCountdown/formatAgo` · app `(app)/dashboard-content.tsx`, `freshness-gate.tsx`, `freshness-data.ts`, `to-card-data.ts`. Skeleton: `DashboardSkeleton` mirrors the page.

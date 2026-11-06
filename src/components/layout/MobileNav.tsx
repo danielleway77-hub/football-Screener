@@ -19,7 +19,13 @@ import { isActivePath, NAV_LINKS } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 
 /** Phone navigation (< 768px): hamburger → right-hand sheet. Replaces the inline links. */
-export function MobileNav({ className }: { className?: string }) {
+export function MobileNav({
+  className,
+  freshness,
+}: {
+  className?: string;
+  freshness?: React.ReactNode;
+}) {
   const [open, setOpen] = React.useState(false);
   const pathname = usePathname();
 
@@ -58,6 +64,7 @@ export function MobileNav({ className }: { className?: string }) {
             </Button>
           </SheetClose>
         </div>
+        {freshness ? <div className="border-b border-hairline px-4 py-3">{freshness}</div> : null}
         <nav aria-label="Main" className="flex-1 overflow-y-auto overscroll-contain">
           <ul>
             {NAV_LINKS.map(({ href, label, icon: Icon }) => {

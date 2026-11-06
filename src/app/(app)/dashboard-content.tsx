@@ -15,11 +15,13 @@ import {
   RadarIllustration,
 } from "@/components/illustrations";
 import { SectionHeader } from "@/components/layout/SectionHeader";
+import { DayGroup } from "@/components/dashboard/DayGroup";
 import { MatchCard } from "@/components/match/MatchCard";
 import { toCardData } from "./to-card-data";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { EmptyState } from "@/components/states/EmptyState";
 import { Button } from "@/components/ui/button";
+import { groupByLocalDate } from "@/lib/day-groups";
 import { derivePanelState } from "@/lib/dashboard-state";
 import { formatRelative, formatRunTime } from "@/lib/format";
 import { parseDashboardParams } from "@/lib/schemas/dashboard";
@@ -65,7 +67,9 @@ function Results({
   stats,
   summary,
   now,
+  grouped,
 }: {
+  grouped: boolean;
   matches: MatchRecord[];
   settings: SettingRecord;
   stats: RunStats;
@@ -137,14 +141,28 @@ function Results({
     );
   }
 
+  const grid = "grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 xl:gap-6 3xl:grid-cols-4";
+  const card = (m: MatchRecord, i: number) => (
+    <StaggerItem key={m.id} index={i}>
+      <MatchCard data={toCardData(m, timezone, now)} low={low} high={high} index={i} />
+    </StaggerItem>
+  );
+
+  if (!grouped) return <Stagger className={grid}>{matches.map(card)}</Stagger>;
+
+  // Upcoming: one section per LOCAL day, chronological; the chosen sort applies inside each day.
+  const groups = groupByLocalDate(matches, timezone, now);
   return (
-    <Stagger className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 xl:gap-6 3xl:grid-cols-4">
-      {matches.map((m, i) => (
-        <StaggerItem key={m.id} index={i}>
-          <MatchCard data={toCardData(m, timezone, now)} low={low} high={high} index={i} />
-        </StaggerItem>
-      ))}
-    </Stagger>
+    <div className="space-y-8">
+      {groups.map((group, gi) => {
+        const start = groups.slice(0, gi).reduce((n, g) => n + g.items.length, 0);
+        return (
+          <DayGroup key={group.key} id={group.key} label={group.label} count={group.items.length}>
+            <Stagger className={grid}>{group.items.map((m, i) => card(m, start + i))}</Stagger>
+          </DayGroup>
+        );
+      })}
+    </div>
   );
 }
 
@@ -169,6 +187,7 @@ export async function DashboardContent({ searchParams }: { searchParams: Search 
     : null;
   const runningId = stats.lastRun?.status === "RUNNING" ? stats.lastRun.id : null;
   const showing = matches?.length ?? 0;
+  const grouped = params.day === "upcoming" && showing > 0;
 
   return (
     <>
@@ -227,7 +246,12 @@ export async function DashboardContent({ searchParams }: { searchParams: Search 
           caption={matches ? `Showing ${showing} ${showing === 1 ? "match" : "matches"}` : ""}
         />
         <div role="tabpanel" id="results-panel" aria-labelledby={`day-tab-${params.day}`}>
-          <h2 className="sr-only">Matches</h2>
+          {grouped ? null : <h2 className="sr-only">Matches</h2>}
+          {grouped && params.sort !== "kickoff" ? (
+            <p data-testid="sort-note" className="text-caption mt-3 text-faint">
+              Sorted within each day
+            </p>
+          ) : null}
           <div className="mt-4">
             <ResultsRegion>
               {matches ? (
@@ -237,6 +261,7 @@ export async function DashboardContent({ searchParams }: { searchParams: Search 
                   stats={stats}
                   summary={summary}
                   now={now}
+                  grouped={grouped}
                 />
               ) : (
                 <ResultsError />

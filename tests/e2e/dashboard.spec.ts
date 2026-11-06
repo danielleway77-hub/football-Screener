@@ -82,15 +82,24 @@ test.describe("dashboard with seeded data", () => {
     await expect(page.getByLabel("Filter by league")).toHaveValue("x".repeat(60));
   });
 
-  test("sort by biggest form gap orders cards by gap", async ({ page }) => {
-    await ready(page, "/?sort=gap");
-    // gaps: dayafter 79, golden 73, today 72
-    const names = await page.getByTestId("match-card").locator("h3").allTextContents();
-    expect(names.filter((_, i) => i % 2 === 0)).toEqual([
-      "Dayafter Home",
-      "Sporting Cristal",
-      "Today Home",
+  test("sort by biggest form gap orders cards by gap inside a day", async ({ page }) => {
+    await seedMatches([
+      {
+        id: "t-small",
+        home: "Small Gap",
+        away: "Small Gap Away",
+        homePct: 76,
+        awayPct: 30,
+        inHours: 23.5,
+      },
     ]);
+    await ready(page, "/?day=tomorrow&sort=gap");
+    // tomorrow: golden gap 73, small gap 46 (kicks off earlier, so kickoff order would be reversed)
+    const names = await page.getByTestId("match-card").locator("h3").allTextContents();
+    expect(names.filter((_, i) => i % 2 === 0)).toEqual(["Sporting Cristal", "Small Gap"]);
+    await ready(page, "/?day=tomorrow");
+    const byKickoff = await page.getByTestId("match-card").locator("h3").allTextContents();
+    expect(byKickoff.filter((_, i) => i % 2 === 0)).toEqual(["Small Gap", "Sporting Cristal"]);
   });
 
   test("tabs are keyboard navigable (arrow keys move and select)", async ({ page }) => {
