@@ -1,0 +1,170 @@
+// Prisma 7: connection URLs live in prisma.config.ts (migrations) and the driver adapter in src/lib/db.ts (runtime).
+// The generated client is git-ignored and may only be imported by src/lib/db.ts and src/server/repositories/*.
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AccessMode {
+  official_api
+  assisted_ingest
+  manual_import
+}
+
+enum FormScope {
+  league
+  overall
+}
+
+enum RunStatus {
+  RUNNING
+  SUCCESS
+  PARTIAL
+  FAILED
+  SKIPPED
+}
+
+enum RunTrigger {
+  CRON
+  MANUAL
+  INGEST
+  IMPORT
+}
+
+enum Side {
+  HOME
+  AWAY
+}
+
+enum Confidence {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+/// Singleton: id = 1.
+model Setting {
+  id             Int        @id @default(1)
+  highThreshold  Int        @default(75)
+  lowThreshold   Int        @default(35)
+  windowDays     Int        @default(2)
+  formScope      FormScope  @default(league)
+  timezone       String     @default("Europe/London")
+  runHourLocal   Int        @default(7)
+  accessMode     AccessMode @default(manual_import)
+  staleAfterHrs  Int        @default(26)
+  sessionVersion Int        @default(1)
+  updatedAt      DateTime   @updatedAt
+}
+
+/// Optional override of the env password hash (set on password change).
+model Credential {
+  id           Int      @id @default(1)
+  passwordHash String
+  updatedAt    DateTime @updatedAt
+}
+
+model Match {
+  id              String     @id @default(cuid())
+  provider        String
+  providerMatchId String
+  sourceUrl       String?
+  kickoffAt       DateTime
+  league          String?
+  country         String?
+  homeName        String
+  awayName        String
+  homeLogoUrl     String?
+  awayLogoUrl     String?
+  homeFormPct     Float
+  awayFormPct     Float
+  formScope       FormScope
+  homeLastResults String?
+  awayLastResults String?
+  pHomeWin        Float?
+  pDraw           Float?
+  pAwayWin        Float?
+  /// Probability of "Yes"; "No" = 100 - pBtts (derived for display).
+  pBtts           Float?
+  /// Probability of "Over 2.5"; "Under" = 100 - pOver25 (derived for display).
+  pOver25         Float?
+  predHomeGoals   Int?
+  predAwayGoals   Int?
+  confidence      Confidence?
+  qualifies       Boolean    @default(false)
+  strongSide      Side?
+  formGap         Float      @default(0)
+  firstRunId      String?
+  lastRunId       String?
+  fetchedAt       DateTime
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  runs            RunMatch[]
+
+  @@unique([provider, providerMatchId])
+  @@index([kickoffAt])
+  @@index([qualifies, kickoffAt])
+}
+
+model ScreeningRun {
+  id          String     @id @default(cuid())
+  trigger     RunTrigger
+  provider    String
+  status      RunStatus
+  startedAt   DateTime   @default(now())
+  finishedAt  DateTime?
+  windowFrom  DateTime?
+  windowTo    DateTime?
+  scanned     Int        @default(0)
+  qualified   Int        @default(0)
+  failedCount Int        @default(0)
+  error       String?
+  details     Json?
+  matches     RunMatch[]
+
+  @@index([startedAt])
+  @@index([status, startedAt])
+}
+
+model RunMatch {
+  runId          String
+  matchId        String
+  qualifiedAtRun Boolean
+  run            ScreeningRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  match          Match        @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@id([runId, matchId])
+}
+
+model IngestToken {
+  id         String    @id @default(cuid())
+  label      String
+  /// sha256 hex of the plaintext token; the plaintext is never stored.
+  tokenHash  String    @unique
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+}
+
+/// Rate limiting + audit; purge > 30 days.
+model LoginAttempt {
+  id      String   @id @default(cuid())
+  ip      String
+  at      DateTime @default(now())
+  success Boolean
+
+  @@index([ip, at])
+}
+
+/// Generic fixed-window counter, e.g. "ingest:<tokenId>:2026-11-03T14".
+model RateLimit {
+  key         String   @id
+  count       Int      @default(0)
+  windowStart DateTime
+
+  @@index([windowStart])
+}

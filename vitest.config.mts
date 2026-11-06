@@ -22,11 +22,19 @@ export default defineConfig({
         test: {
           name: "node",
           environment: "node",
-          include: [
-            "tests/unit/**/*.test.ts",
-            "tests/integration/**/*.test.ts",
-            "src/**/*.test.ts",
-          ],
+          include: ["tests/unit/**/*.test.ts", "src/**/*.test.ts"],
+        },
+      },
+      {
+        // Real Postgres (isolated "test" schema): files run one at a time so they never collide.
+        extends: true,
+        test: {
+          name: "integration",
+          environment: "node",
+          include: ["tests/integration/**/*.test.ts"],
+          fileParallelism: false,
+          testTimeout: 30_000,
+          hookTimeout: 60_000,
         },
       },
       {
