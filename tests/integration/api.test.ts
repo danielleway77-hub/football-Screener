@@ -564,3 +564,108 @@ describe("pipeline hardening (review fixes)", () => {
     });
   });
 });
+
+describe("review hardening (8.2)", () => {
+  it("every session route refuses a stale session (sessionVersion bumped), not only import", async () => {
+    await signIn();
+    await settingsRepo.bumpSessionVersion();
+    const run = await import("@/app/api/run/route");
+    const runsId = await import("@/app/api/runs/[id]/route");
+    const tokensRoute = await import("@/app/api/tokens/route");
+    const tokenId = await import("@/app/api/tokens/[id]/route");
+    const o = { origin: ORIGIN };
+    const idCtx = { params: Promise.resolve({ id: "x" }) };
+    const results = [
+      await run.POST(req("/api/run", { headers: o })),
+      await runsId.GET(
+        req("/api/runs/x", { method: "GET" }),
+        idCtx as Parameters<typeof runsId.GET>[1],
+      ),
+      await tokensRoute.GET(req("/api/tokens", { method: "GET" })),
+      await tokensRoute.POST(req("/api/tokens", { body: { label: "x" }, headers: o })),
+      await tokenId.DELETE(
+        req("/api/tokens/x", { method: "DELETE", headers: o }),
+        idCtx as Parameters<typeof tokenId.DELETE>[1],
+      ),
+    ];
+    expect(results.map((r) => r.status)).toEqual([401, 401, 401, 401, 401]);
+    const { GET } = await import("@/app/api/health/route");
+    expect(Object.keys(await (await GET()).json()).sort()).toEqual(["db", "ok"]); // no detail for a stale session
+  });
+
+  it("concurrent first requests in a new window never produce a 500 and count exactly", async () => {
+    const { token } = await createToken("helper");
+    const body = { matches: [match("c1")] };
+    const responses = await Promise.all(
+      Array.from({ length: 5 }, () => ingest(req("/api/ingest", { headers: bearer(token), body }))),
+    );
+    expect(responses.map((r) => r.status).every((s) => s === 200 || s === 409)).toBe(true);
+    const row = await getDb().rateLimit.findFirstOrThrow();
+    expect(row.count).toBe(5);
+  });
+
+  it("the rate-limit window rolls over: last hour's counter does not block this hour", async () => {
+    const { token, id } = await createToken("helper");
+    const prev = new Date(Date.now() - 3_600_000);
+    prev.setUTCMinutes(0, 0, 0);
+    await getDb().rateLimit.create({
+      data: {
+        key: `ingest:${id}:${prev.toISOString().slice(0, 13)}`,
+        count: 99,
+        windowStart: prev,
+      },
+    });
+    const res = await ingest(
+      req("/api/ingest", { headers: bearer(token), body: { matches: [match("r1")] } }),
+    );
+    expect(res.status).toBe(200);
+  });
+
+  it("a rate-limited request does not run the pipeline (nothing stored, no run created)", async () => {
+    const { token, id } = await createToken("helper");
+    const hour = new Date();
+    hour.setUTCMinutes(0, 0, 0);
+    await getDb().rateLimit.create({
+      data: {
+        key: `ingest:${id}:${hour.toISOString().slice(0, 13)}`,
+        count: 30,
+        windowStart: hour,
+      },
+    });
+    const res = await ingest(
+      req("/api/ingest", { headers: bearer(token), body: { matches: [match("blocked")] } }),
+    );
+    expect(res.status).toBe(429);
+    expect(await getDb().match.count()).toBe(0);
+    expect(await getDb().screeningRun.count()).toBe(0);
+  });
+
+  it("401 happens before any write: no token → no rate-limit row, no run, no match", async () => {
+    await ingest(req("/api/ingest", { body: { matches: [match("x")] } }));
+    expect(await getDb().rateLimit.count()).toBe(0);
+    expect(await getDb().screeningRun.count()).toBe(0);
+  });
+
+  it("OPTIONS with 'Origin: null' or no Origin is refused / headerless", async () => {
+    const { OPTIONS } = await import("@/app/api/ingest/route");
+    const nul = OPTIONS(req("/api/ingest", { method: "OPTIONS", headers: { origin: "null" } }));
+    expect(nul.status).toBe(403);
+    expect(nul.headers.get("access-control-allow-origin")).toBeNull();
+  });
+
+  it("an unexpected pipeline failure leaves the run FAILED, never RUNNING, and the API answers 500", async () => {
+    const { token } = await createToken("helper");
+    const matches = await import("@/server/repositories/matches");
+    const spy = vi.spyOn(matches, "storeBatch").mockRejectedValueOnce(new Error("boom"));
+    const res = await ingest(
+      req("/api/ingest", { headers: bearer(token), body: { matches: [match("f1")] } }),
+    );
+    spy.mockRestore();
+    expect(res.status).toBe(500);
+    const text = await res.text();
+    expect(text).not.toContain("boom");
+    expect(JSON.parse(text).error.code).toBe("INTERNAL");
+    expect(await getDb().screeningRun.count({ where: { status: "RUNNING" } })).toBe(0);
+    expect((await getDb().screeningRun.findFirstOrThrow()).status).toBe("FAILED");
+  });
+});

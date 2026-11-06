@@ -1,13 +1,18 @@
 import { getDb } from "@/lib/db";
 
-/** Atomically increments the fixed-window counter for `key` and returns the new count. */
+/**
+ * Atomically increments the fixed-window counter for `key` and returns the new count. A single
+ * INSERT … ON CONFLICT statement: two concurrent first requests cannot collide on the unique key.
+ */
 export async function increment(key: string, windowStart: Date): Promise<number> {
-  const row = await getDb().rateLimit.upsert({
-    where: { key },
-    update: { count: { increment: 1 } },
-    create: { key, count: 1, windowStart },
-  });
-  return row.count;
+  const rows = await getDb().$queryRawUnsafe<{ count: number }[]>(
+    `INSERT INTO "RateLimit" ("key", "count", "windowStart") VALUES ($1, 1, $2::timestamp)
+     ON CONFLICT ("key") DO UPDATE SET "count" = "RateLimit"."count" + 1
+     RETURNING "count"`,
+    key,
+    windowStart.toISOString(),
+  );
+  return Number(rows[0]!.count);
 }
 
 export async function purgeOlderThan(date: Date): Promise<number> {
