@@ -162,7 +162,12 @@ test.describe("slow, timeout, 500", () => {
     await page.route("**/api/run", async (route) => {
       posts++;
       await new Promise((r) => setTimeout(r, 1500));
-      await route.fulfill({ status: 500, json: { error: { code: "INTERNAL", message: "x" } } });
+      await route.fulfill({
+        status: 500,
+        json: {
+          error: { code: "INTERNAL", message: "Something went wrong on our side. Try again." },
+        },
+      });
     });
     await page.getByTestId("run-status-panel").getByRole("button", { name: "Run now" }).dblclick();
     await expect(page.getByText("Something went wrong on our side").first()).toBeVisible();
@@ -210,6 +215,7 @@ test.describe("session expiry (401 mid-session)", () => {
     await page
       .context()
       .setExtraHTTPHeaders({ "x-forwarded-for": `2001:db8::${randomUUID().slice(0, 4)}` });
+    await expect(page.getByTestId("login-form")).toHaveAttribute("data-hydrated", "true");
     await page.locator("#password").fill(PASSWORD);
     await page.getByRole("button", { name: "Sign in" }).click();
     await expect(page).toHaveURL(/localhost:\d+\/$/);
@@ -236,7 +242,9 @@ test.describe("logout with an expired session", () => {
   test("still lands on /login", async ({ page, context }) => {
     await open(page, "/");
     await context.clearCookies();
-    await page.getByRole("button", { name: "Log out" }).click();
+    const logout = page.getByRole("button", { name: "Log out" });
+    if (!(await logout.isVisible())) await page.getByRole("button", { name: "Open menu" }).click();
+    await logout.click();
     await expect(page).toHaveURL(/\/login/);
   });
 });

@@ -80,6 +80,8 @@ export function LoginForm() {
 
   return (
     <motion.form
+      method="post"
+      action="/api/auth/login"
       onSubmit={onSubmit}
       animate={shake}
       noValidate
