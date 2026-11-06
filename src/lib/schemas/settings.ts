@@ -75,6 +75,8 @@ export type SettingsUpdate = z.infer<typeof settingsUpdateSchema>;
 
 export const MIN_PASSWORD_LENGTH = 10;
 const SHORT_PASSWORD = `Use at least ${MIN_PASSWORD_LENGTH} characters.`;
+const LONG_PASSWORD = "Use at most 72 bytes (bcrypt limit); shorten the password.";
+const bytes72 = (v: string) => new TextEncoder().encode(v).length <= 72;
 const SAME_PASSWORD = "Choose a password that is different from the current one.";
 
 /** Password change body: shared by the form and POST /api/settings/password. */
@@ -84,7 +86,8 @@ export const passwordChangeSchema = z
     newPassword: z
       .string()
       .min(MIN_PASSWORD_LENGTH, SHORT_PASSWORD)
-      .max(200, "That password is too long."),
+      .max(200, "That password is too long.")
+      .refine(bytes72, LONG_PASSWORD),
   })
   .superRefine((value, ctx) => {
     if (value.newPassword === value.currentPassword) {
@@ -98,7 +101,8 @@ export const passwordFormSchema = z
     newPassword: z
       .string()
       .min(MIN_PASSWORD_LENGTH, SHORT_PASSWORD)
-      .max(200, "That password is too long."),
+      .max(200, "That password is too long.")
+      .refine(bytes72, LONG_PASSWORD),
     confirmPassword: z.string().min(1, "Repeat the new password."),
   })
   .superRefine((value, ctx) => {

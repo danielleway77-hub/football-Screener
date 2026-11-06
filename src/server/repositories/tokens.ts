@@ -28,3 +28,17 @@ export async function revoke(id: string, at: Date): Promise<TokenRecord | null> 
 export async function countActive(): Promise<number> {
   return getDb().ingestToken.count({ where: { revokedAt: null } });
 }
+
+/** Counts active tokens and inserts in ONE transaction under an advisory lock (no cap race). Null = cap reached. */
+export async function createIfBelowCap(
+  label: string,
+  tokenHash: string,
+  cap: number,
+): Promise<TokenRecord | null> {
+  return getDb().$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(913001)`;
+    const active = await tx.ingestToken.count({ where: { revokedAt: null } });
+    if (active >= cap) return null;
+    return tx.ingestToken.create({ data: { label, tokenHash } });
+  });
+}
