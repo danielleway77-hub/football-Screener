@@ -29,7 +29,7 @@ function AiChip({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "rounded-xs bg-violet-soft px-1 text-[0.6875rem] leading-4 font-bold tracking-wider text-violet",
+        "rounded-sm bg-violet-soft px-1.5 text-xs leading-4 font-bold tracking-wider text-violet",
         className,
       )}
     >

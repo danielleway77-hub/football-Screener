@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
+import { APP_NAME, THEME_COLOR } from "@/lib/brand";
 import { RouteProgress } from "@/components/states/RouteProgress";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,6 +10,7 @@ import "./globals.css";
 const inter = localFont({
   src: "../../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2",
   variable: "--font-inter",
+  adjustFontFallback: "Arial", // size-adjusted fallback: no layout shift on font swap (§30 #27)
   weight: "100 900",
   display: "swap",
 });
@@ -16,6 +18,7 @@ const inter = localFont({
 const spaceGrotesk = localFont({
   src: "../../node_modules/@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2",
   variable: "--font-space-grotesk",
+  adjustFontFallback: "Arial",
   weight: "300 700",
   display: "swap",
 });
@@ -27,10 +30,23 @@ const jetbrainsMono = localFont({
   display: "swap",
 });
 export const metadata: Metadata = {
+  // Absolute base for og:image / twitter:image (Vercel sets the production host; local falls back to localhost).
+  metadataBase: new URL(
+    process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : `http://localhost:${process.env.PORT ?? 3000}`,
+  ),
   title: { default: "Screener", template: "%s · Screener" },
   description: "Private football match screening dashboard.",
   applicationName: "Screener",
   robots: { index: false, follow: false },
+  openGraph: {
+    title: APP_NAME,
+    siteName: APP_NAME,
+    description: "Private football match screening dashboard.",
+    type: "website",
+  },
+  twitter: { card: "summary_large_image", title: APP_NAME },
   icons: {
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },
@@ -42,7 +58,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#070A09", // = --bg-base (the one allowed literal outside globals.css)
+  themeColor: THEME_COLOR, // = --bg-base
   colorScheme: "dark",
 };
 

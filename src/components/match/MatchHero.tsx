@@ -113,7 +113,14 @@ export function MatchHero({
         data-testid="form-duel-slot"
         className="mt-5 flex flex-col gap-4 border-t border-border pt-4"
       >
-        <FormDuel home={home} away={away} low={low} high={high} qualifies={qualifies} />
+        <FormDuel
+          className="mx-auto"
+          home={home}
+          away={away}
+          low={low}
+          high={high}
+          qualifies={qualifies}
+        />
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <p className="text-caption text-muted-foreground">
             {strongName ? (

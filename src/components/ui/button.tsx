@@ -9,7 +9,7 @@ import { Slot } from "radix-ui";
  * secondary, outline, ghost, destructive, link. Sizes: sm 36 · default 44 · lg 52 (+ icon sizes).
  */
 const buttonVariants = cva(
-  "group/button relative inline-flex shrink-0 items-center justify-center gap-2 rounded-md border border-transparent text-[0.9375rem] leading-none font-semibold whitespace-nowrap transition-[transform,background-color,border-color,box-shadow,color] duration-150 ease-out select-none active:not-aria-[haspopup]:scale-[0.98] disabled:pointer-events-none disabled:opacity-45 aria-busy:pointer-events-none aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[1.125rem]",
+  "group/button relative inline-flex shrink-0 items-center justify-center gap-2 rounded-md border border-transparent text-[0.9375rem] leading-none font-semibold whitespace-nowrap transition-[transform,background-color,border-color,box-shadow,color] duration-[120ms] ease-out select-none active:not-aria-[haspopup]:scale-[0.98] disabled:pointer-events-none disabled:opacity-45 aria-busy:pointer-events-none aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[1.125rem]",
   {
     variants: {
       variant: {

@@ -31,7 +31,7 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "fixed inset-0 isolate z-50 bg-[var(--scrim)] backdrop-blur-sm duration-150 data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        "fixed inset-0 isolate z-50 bg-[var(--scrim)] backdrop-blur-sm duration-[240ms] data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
         className,
       )}
       {...props}
@@ -55,7 +55,7 @@ function DialogContent({
         className={cn(
           // < 640px: bottom sheet (full width, anchored to the bottom, safe-area padding);
           // >= 640px: centred dialog. Width is overridable via className (default 440px).
-          "surface-3 fixed z-50 grid w-full gap-4 p-6 text-sm text-popover-foreground duration-150 max-sm:inset-x-0 max-sm:bottom-0 max-sm:max-h-[90dvh] max-sm:overflow-y-auto max-sm:rounded-t-xl max-sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:top-1/2 sm:left-1/2 sm:max-w-[440px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 max-sm:data-open:slide-in-from-bottom data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 max-sm:data-closed:slide-out-to-bottom",
+          "surface-3 fixed z-50 grid w-full gap-4 p-6 text-sm text-popover-foreground duration-[240ms] max-sm:inset-x-0 max-sm:bottom-0 max-sm:max-h-[90dvh] max-sm:overflow-y-auto max-sm:rounded-t-xl max-sm:pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:top-1/2 sm:left-1/2 sm:max-w-[440px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl data-open:animate-in data-open:fade-in-0 data-open:zoom-in-[0.98] max-sm:data-open:slide-in-from-bottom data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-[0.98] max-sm:data-closed:slide-out-to-bottom",
           className,
         )}
         {...props}

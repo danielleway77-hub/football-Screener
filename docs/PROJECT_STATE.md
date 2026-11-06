@@ -83,10 +83,10 @@ Status values: `todo` · `in-progress` · `done` · `blocked`. A step is `done` 
 | 13.1 | Settings page | **built, review pending** 2026-11-06 (branch step-13-settings, worktree football-screener-step13) | see TEST_LOG | see TEST_LOG | A2 self-score in TEST_LOG; A.12 review pending |
 | 13.2 | Import page (file + smart paste C-lite) | **built, review pending** 2026-11-06 (same branch) | see TEST_LOG | see TEST_LOG | helper 8.3 NOT built (D17) |
 | 14 | Resilience (offline/slow/errors) | todo | | | |
-| 15 | Premium animation pass | todo | | | |
-| 15.2–15.3 | Design critique; real-device check | todo | | | |
-| 15.4–15.5 | Delight pass; sleek tests & visual baselines | todo | | | |
-| 15.6 | Micro-details, contrast modes, large-screen polish | todo | | | |
+| 15 | Premium animation pass (15.1) | **built, review pending** 2026-11-06 (branch step-15-polish) | see TEST_LOG | A2 see TEST_LOG | login GSAP entrance, card sheen, OG/manifest, hydration-safe reduced motion |
+| 15.2–15.3 | Design critique; real-device check | 15.2 built (3 token-only improvements, docs/reference/ui-review/15.2/critique.md); **15.3 MANUAL: pending** | | | |
+| 15.4–15.5 | Delight pass; sleek tests & visual baselines | built. **15.4 decision: View Transitions skipped** (FEATURE_VIEW_TRANSITIONS=false; would need experimental Next config + React ViewTransition on every route, shared files; fallback fade stays). Sleek baselines cover dashboard/card/detail/login only (settings/import baselines to be added after Step 13 merges) | | | |
+| 15.6 | Micro-details, contrast modes, large-screen polish | built (microdetails.md 30 rows; forced-colors, prefers-contrast, vignette >=1920, print) | | | |
 | 16 | A11y, performance, security | todo | | | |
 | 17 | Production deploy + real-data check | todo | | | |
 | 18 | Final audits | todo | | | |

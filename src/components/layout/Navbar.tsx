@@ -42,7 +42,11 @@ export function Navbar({
       )}
     >
       <div className="container-wide flex h-full items-center justify-between gap-4">
-        <Link href="/" aria-label="Screener — dashboard" className="rounded-md">
+        <Link
+          href="/"
+          aria-label="Screener — dashboard"
+          className="inline-flex min-h-11 items-center rounded-md"
+        >
           <Logo size={28} />
         </Link>
 

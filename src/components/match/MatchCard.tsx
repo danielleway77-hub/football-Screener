@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { ClockIcon, TrophyIcon } from "lucide-react";
+import { CardSheen } from "@/components/motion/CardSheen";
+import { SpotlightCard } from "@/components/motion/SpotlightCard";
 import { cn } from "@/lib/utils";
 import { MATCH_CARD_MIN_HEIGHT_CLASS } from "./dimensions";
 import { FormBar } from "./FormBar";
@@ -85,11 +87,13 @@ export function MatchCard({ data, low, high, index = 0, className, href }: Match
     : `${data.home.name} vs ${data.away.name}`;
 
   return (
-    <article
+    <SpotlightCard
+      as="article"
       data-testid="match-card"
       data-qualifies={data.qualifies}
+      contentClassName="flex flex-col p-4 md:p-5"
       className={cn(
-        "surface-1 bg-grad-card @container relative flex flex-col rounded-lg p-4 transition-[transform,border-color,box-shadow] duration-200 ease-out md:p-5",
+        "surface-1 bg-grad-card @container relative flex flex-col rounded-lg transition-[transform,border-color,box-shadow] duration-200 ease-out",
         MATCH_CARD_MIN_HEIGHT_CLASS,
         data.qualifies && "glow-accent accent-border",
         "hover:-translate-y-0.5 hover:border-border-strong hover:shadow-md active:scale-[0.995]",
@@ -152,6 +156,7 @@ export function MatchCard({ data, low, high, index = 0, className, href }: Match
       >
         <span className="sr-only">{linkLabel}</span>
       </Link>
-    </article>
+      {data.qualifies ? <CardSheen /> : null}
+    </SpotlightCard>
   );
 }

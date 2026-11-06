@@ -1,12 +1,21 @@
 "use client";
 
 import { useReducedMotion } from "framer-motion";
+import { useHydrated } from "@/hooks/useHydrated";
 
 /**
  * Shared motion tokens (docs/ThemeGuideline.md §7, UI_BLUEPRINT §26 "calm precision").
  * All animation in feature code goes through components/motion/* which use these values.
  * NOTE: GSAP is NOT used in the kit; it is dynamically imported only on the login page (Step 15.1).
  */
+/**
+ * Delight flags (UI_BLUEPRINT §25-27): each effect is removable by flipping ONE constant.
+ * FEATURE_VIEW_TRANSITIONS stays false: see docs/PROJECT_STATE.md (Step 15.4 decision).
+ */
+export const FEATURE_SPOTLIGHT = true;
+export const FEATURE_CARD_SHEEN = true;
+export const FEATURE_VIEW_TRANSITIONS = false;
+
 export const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 export const EASE_IN_OUT = [0.65, 0, 0.35, 1] as const;
 export const SPRING = { type: "spring", stiffness: 380, damping: 30 } as const;
@@ -41,7 +50,15 @@ export const staggerItem = {
   visible: { ...VISIBLE, transition: { duration: 0.4, ease: EASE_OUT } },
 } as const;
 
-/** `reduce` is true when the user prefers reduced motion: render final states immediately. */
+/**
+ * `reduce` is true when the user prefers reduced motion: render final states immediately.
+ * It is false during the server render AND the hydration render (even if the browser prefers reduced
+ * motion) so the first client render has the same tree and the same useId() values as the server HTML;
+ * it flips right after hydration. (Reading the media query on the first client render caused
+ * hydration/ID mismatches for reduced-motion visitors.)
+ */
 export function useMotionPrefs(): { reduce: boolean } {
-  return { reduce: useReducedMotion() ?? false };
+  const hydrated = useHydrated();
+  const media = useReducedMotion() ?? false;
+  return { reduce: hydrated && media };
 }

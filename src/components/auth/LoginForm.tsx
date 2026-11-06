@@ -96,7 +96,7 @@ export function LoginForm() {
         </Banner>
       ) : null}
 
-      <div>
+      <div data-login-field>
         <label htmlFor="password" className="mb-2 block text-sm font-medium">
           Password
         </label>
@@ -125,7 +125,7 @@ export function LoginForm() {
         )}
       </div>
 
-      <div>
+      <div data-login-field>
         <Button
           type="submit"
           size="lg"
@@ -139,7 +139,7 @@ export function LoginForm() {
         {online ? null : <HelperText>You&apos;re offline. Reconnect to sign in.</HelperText>}
       </div>
 
-      <p className="text-caption flex items-center gap-1.5 text-faint">
+      <p data-login-field className="text-caption flex items-center gap-1.5 text-faint">
         <InfoIcon className="size-3.5 shrink-0" aria-hidden="true" />
         Personal use only.
       </p>

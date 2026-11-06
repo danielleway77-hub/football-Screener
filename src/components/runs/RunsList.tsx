@@ -35,7 +35,7 @@ function useIsMobile(): boolean | null {
 
 function TriggerChip({ trigger }: { trigger: RunRow["trigger"] }) {
   return (
-    <span className="inline-flex h-6 items-center rounded-4xl border border-hairline-strong bg-neutral-soft px-2 text-[11px] font-semibold tracking-[0.08em] text-muted-foreground">
+    <span className="inline-flex h-6 items-center rounded-4xl border border-hairline-strong bg-neutral-soft px-2 text-xs font-semibold tracking-[0.06em] text-muted-foreground">
       {trigger}
     </span>
   );
@@ -218,7 +218,7 @@ export function RunsList({ rows: serverRows, timezone, nowIso }: Props) {
                         open(run.id);
                       }
                     }}
-                    className="h-14 cursor-pointer border-b border-hairline transition-colors outline-none last:border-0 hover:bg-white/[0.03] focus-visible:bg-white/[0.03] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                    className="row-cv h-14 cursor-pointer border-b border-hairline transition-colors outline-none last:border-0 hover:bg-white/[0.03] focus-visible:bg-white/[0.03] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                   >
                     <td className="px-4">
                       <div className="truncate font-medium">{label}</div>

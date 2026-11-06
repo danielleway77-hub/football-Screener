@@ -27,6 +27,8 @@ const base = devices["Desktop Chrome"];
 export default defineConfig({
   testDir: "./tests",
   testMatch: ["e2e/**/*.spec.ts", "ui/**/*.spec.ts"],
+  // Visual baselines live next to the specs, one folder per OS (fonts/AA differ): tests/ui/__screenshots__/<platform>/
+  snapshotPathTemplate: "{testDir}/ui/__screenshots__/{platform}/{arg}{ext}",
   fullyParallel: true,
   globalSetup: ["./tests/e2e/global-setup.ts", "./tests/e2e/seed-detail.ts"],
   // The dev server compiles routes on demand; under 4 parallel workers hydration can exceed 5 s.

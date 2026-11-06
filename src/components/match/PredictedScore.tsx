@@ -22,7 +22,7 @@ export function PredictedScore({ home, away, className }: PredictedScoreProps) {
       </span>
       <span
         aria-hidden="true"
-        className="rounded-xs bg-violet-soft px-1 text-[0.6875rem] leading-4 font-bold tracking-wider text-violet"
+        className="rounded-sm bg-violet-soft px-1.5 text-xs leading-4 font-bold tracking-wider text-violet"
       >
         AI
       </span>
