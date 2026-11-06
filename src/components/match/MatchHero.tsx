@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { ClockIcon, TrophyIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { FormDuel } from "./FormDuel";
 import { QualifiesChip } from "./QualifiesChip";
 import { TeamLogo } from "./TeamLogo";
 
-type HeroTeam = { name: string; logoUrl: string | null };
+type HeroTeam = { name: string; logoUrl: string | null; pct: number };
 
 type MatchHeroProps = {
   home: HeroTeam;
@@ -108,11 +109,11 @@ export function MatchHero({
         <Team team={away} side="Away" />
       </div>
 
-      {/* Reserved 96px slot: the FormDuel visual (Step 11.2) goes above the caption without moving the layout. */}
       <div
         data-testid="form-duel-slot"
-        className="mt-5 flex min-h-24 flex-col justify-center gap-3 border-t border-border pt-4"
+        className="mt-5 flex flex-col gap-4 border-t border-border pt-4"
       >
+        <FormDuel home={home} away={away} low={low} high={high} qualifies={qualifies} />
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <p className="text-caption text-muted-foreground">
             {strongName ? (

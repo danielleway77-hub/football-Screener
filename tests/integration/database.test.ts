@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { getDb } from "@/lib/db";
+import { schemaOf } from "@/lib/pg-url";
 import * as credentials from "@/server/repositories/credentials";
 import * as loginAttempts from "@/server/repositories/login-attempts";
 import * as matches from "@/server/repositories/matches";
@@ -26,7 +27,7 @@ describe("test guard", () => {
 
   it("the live connection really uses the test schema", async () => {
     const rows = await getDb().$queryRaw<{ s: string }[]>`SELECT current_schema() AS s`;
-    expect(rows[0]?.s).toBe("test");
+    expect(rows[0]?.s).toBe(schemaOf(process.env.DATABASE_URL_TEST!));
   });
 });
 

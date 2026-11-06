@@ -1,4 +1,10 @@
+import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
+
+// The detail page needs a real match: ids come from the seeded isolated e2e schema (tests/e2e/seed-detail.ts).
+const goldenId = () =>
+  (JSON.parse(readFileSync("tests/e2e/.auth/detail-ids.json", "utf8")) as Record<string, string>)
+    .golden!;
 
 // Step 4.1 (docs/TEST_CATALOG.md §4.1): routing skeleton.
 
@@ -9,12 +15,16 @@ const PAGES = [
   { path: "/runs", title: "Runs · Screener", h1: "Run history" },
   { path: "/import", title: "Import · Screener", h1: "Update your matches" },
   { path: "/settings", title: "Settings · Screener", h1: "Settings" },
-  { path: "/matches/1", title: "Match detail · Screener", h1: "Match detail" },
+  {
+    path: "/matches/@golden",
+    title: "Sporting Cristal vs FC Cajamarca · Screener",
+    h1: "Sporting Cristal vs FC Cajamarca",
+  },
 ];
 
 for (const p of PAGES) {
   test(`${p.path}: one h1, correct title, shell present`, async ({ page }) => {
-    await page.goto(p.path);
+    await page.goto(p.path.replace("@golden", goldenId()));
     await expect(page.locator("h1")).toHaveCount(1);
     await expect(page.locator("h1")).toHaveText(p.h1);
     await expect(page).toHaveTitle(p.title);
@@ -66,9 +76,9 @@ test("unknown URL shows the branded 404 linking home", async ({ page }) => {
   await expect(page).toHaveURL((u) => u.pathname === "/");
 });
 
-for (const path of ["/", "/runs", "/import", "/settings", "/matches/1"]) {
+for (const path of ["/", "/runs", "/import", "/settings", "/matches/@golden"]) {
   test(`forced error on ${path} shows ErrorState and Retry recovers`, async ({ page }) => {
-    await page.goto(`${path}?__error=1`);
+    await page.goto(`${path.replace("@golden", goldenId())}?__error=1`);
     await expect(page.getByText("Something went wrong")).toBeVisible();
     await expect(page.getByRole("link", { name: "Dashboard" }).last()).toHaveAttribute("href", "/");
     // Retry re-renders the segment, which throws again while ?__error=1 is present: the boundary must still
@@ -91,7 +101,7 @@ test("skeleton header block has the same height as the real header (±2px)", asy
 test("health endpoint and robots", async ({ request }) => {
   const h = await request.get("/api/health");
   expect(h.status()).toBe(200);
-  expect(await h.json()).toEqual({ ok: true, db: null });
+  expect(await h.json()).toMatchObject({ ok: true, db: true }); // shape since Step 8: db check + last run
   const r = await (await request.get("/robots.txt")).text();
   expect(r).toContain("Disallow: /");
 });

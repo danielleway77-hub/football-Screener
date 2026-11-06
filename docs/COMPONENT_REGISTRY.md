@@ -40,7 +40,7 @@ Layout: AppShell, Navbar, NavLinks, MobileNav, LogoutButton, Footer, PageContain
 | illustrationFor(variant) | `components/illustrations/index.ts` | maps empty-state variants → illustration | variant | – | 3.5 | planned |
 | DayGroup | `components/match/DayGroup.tsx` | date header (label + count + hairline) + grid section | date, count, children | single-day tabs: hidden | 10.4 | planned |
 | FreshnessPill | `components/layout/FreshnessPill.tsx` | navbar data-freshness pill (dot + "Updated 2 h ago" → /runs) | lastRun, staleAfterHrs | fresh/stale/never/running | 10.4 | planned |
-| FormDuel | `components/match/FormDuel.tsx` | one-scale visual of both teams' form vs thresholds with gap bracket (detail hero) | home, away, low, high, qualifies | overlap offset, edges | 11.2 | planned |
+| FormDuel | `components/match/FormDuel.tsx` | one-scale visual of both teams' form vs thresholds with gap bracket (detail hero) | home, away, low, high, qualifies | overlap offset, edges | 11.2 | built |
 
 ## Shared building blocks (generic, reused by many screens)
 | Component | Path | Purpose | Key props | States | Built in | Status |

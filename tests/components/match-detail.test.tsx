@@ -22,8 +22,8 @@ beforeAll(() => {
   window.IntersectionObserver ??= IO as unknown as typeof IntersectionObserver;
 });
 
-const home = { name: "Sporting Cristal", logoUrl: null };
-const away = { name: "FC Cajamarca", logoUrl: null };
+const home = { name: "Sporting Cristal", logoUrl: null, pct: 80 };
+const away = { name: "FC Cajamarca", logoUrl: null, pct: 7 };
 const full = { homeWin: 76, draw: 16, awayWin: 8, btts: 54, over25: 70 };
 const none = { homeWin: null, draw: null, awayWin: null, btts: null, over25: null };
 const panel = (probabilities: typeof full | typeof none, score: [number, number] | null = null) => (
@@ -134,7 +134,7 @@ describe("MatchHero", () => {
     expect(screen.queryByText("Strong:", { exact: false })).toBeNull();
   });
   it("renders hostile names as text", () => {
-    render(<MatchHero {...props} home={{ name: "<script>x</script>", logoUrl: null }} />);
+    render(<MatchHero {...props} home={{ name: "<script>x</script>", logoUrl: null, pct: 80 }} />);
     expect(screen.getByRole("heading", { name: "<script>x</script>" })).toBeInTheDocument();
     expect(document.querySelector("script")).toBeNull();
   });

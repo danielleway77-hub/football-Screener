@@ -67,6 +67,7 @@ Status values: `todo` · `in-progress` · `done` · `blocked`. A step is `done` 
 | 8 | Providers, ingest & import | todo | | | |
 | 9 | Run pipeline & cron | todo | | | |
 | 10 | Dashboard | todo | | | |
+| 11.2 | FormDuel | **built, review pending** 2026-11-06 | ✅ 8 component + 7 e2e x4 | ✅ | A2 18/20; specimen at /style-guide/form-duel (dev only) |
 | 11.1 | Match detail | **built, review pending** 2026-11-06 (branch step-11-import, worktree football-screener-step11) | ✅ 29 unit/component + 1 integration + 19 e2e x4 viewports | ✅ see TEST_LOG | A2 18/20; 11.2 FormDuel NOT started (96px slot reserved in the hero) |
 | 10.3 | Sticky filter bar & list polish | todo | | | |
 | 10.4 | Day groups & navbar freshness pill | todo | | | |
