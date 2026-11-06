@@ -23,6 +23,7 @@ type Props = {
   onOpenChange: (open: boolean) => void;
   timezone: string;
   now: Date;
+  onCloseAutoFocus?: (event: Event) => void;
 };
 
 function windowText(run: RunRow, timezone: string): string {
@@ -32,7 +33,14 @@ function windowText(run: RunRow, timezone: string): string {
 }
 
 /** Run details: dialog (>= 640px, 560px wide) or bottom sheet (< 640px, max 85dvh, scrollable). */
-export function RunDetailDialog({ run, open, onOpenChange, timezone, now }: Props) {
+export function RunDetailDialog({
+  run,
+  open,
+  onOpenChange,
+  timezone,
+  now,
+  onCloseAutoFocus,
+}: Props) {
   if (!run) return null;
   const summary: [string, React.ReactNode, boolean?][] = [
     ["Trigger", run.trigger.charAt(0) + run.trigger.slice(1).toLowerCase()],
@@ -68,6 +76,7 @@ export function RunDetailDialog({ run, open, onOpenChange, timezone, now }: Prop
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
+        onCloseAutoFocus={onCloseAutoFocus}
         data-testid="run-detail"
         className="gap-5 p-5 max-sm:max-h-[85dvh] sm:max-w-[560px] sm:p-6"
       >

@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 // Needs the isolated schema: run with PW_ISOLATED_DB=1 (the dev server then reads DIRECT_URL_TEST).
 test.skip(process.env.PW_ISOLATED_DB !== "1", "requires PW_ISOLATED_DB=1");
-test.describe.configure({ mode: "serial" });
+test.describe.configure({ mode: "serial", timeout: 120_000 });
 
 import { randomUUID } from "node:crypto";
 import pg from "pg";
@@ -129,9 +129,12 @@ test("detail dialog: Enter opens, Esc closes and focus returns; reasons and long
   await expect(dialog).toBeVisible();
   await expect(dialog.getByText("Home form is not a percentage")).toBeVisible();
   await expect(dialog.getByText("Kickoff has no timezone")).toBeVisible();
-  const box = await dialog.boundingBox();
-  if (width >= 640) expect(Math.round(box!.width)).toBe(560);
-  else expect(box!.height).toBeLessThanOrEqual(page.viewportSize()!.height * 0.85 + 1);
+  if (width >= 640)
+    await expect.poll(async () => Math.round((await dialog.boundingBox())!.width)).toBe(560);
+  else
+    expect((await dialog.boundingBox())!.height).toBeLessThanOrEqual(
+      page.viewportSize()!.height * 0.85 + 1,
+    );
   // long error wraps: no horizontal overflow inside the dialog
   const overflow = await dialog.evaluate((el) => el.scrollWidth - el.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);

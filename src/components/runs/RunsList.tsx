@@ -132,7 +132,11 @@ export function RunsList({ rows: serverRows, timezone, nowIso }: Props) {
   }, [runningKey, router]);
 
   const selected = rows.find((r) => r.id === dialog.id) ?? null;
-  const open = (id: string) => setDialog({ open: true, id });
+  const returnFocus = React.useRef<HTMLElement | null>(null);
+  const open = (id: string) => {
+    returnFocus.current = document.activeElement as HTMLElement | null;
+    setDialog({ open: true, id });
+  };
 
   const showTable = isMobile !== true;
   const showCards = isMobile !== false;
@@ -304,6 +308,10 @@ export function RunsList({ rows: serverRows, timezone, nowIso }: Props) {
         onOpenChange={(next) => setDialog((d) => ({ ...d, open: next }))}
         timezone={timezone}
         now={now}
+        onCloseAutoFocus={(e) => {
+          e.preventDefault();
+          returnFocus.current?.focus();
+        }}
       />
     </>
   );
