@@ -111,6 +111,8 @@ Step 11.1 (match detail) built on branch step-11-import; Step 10 components merg
 
 Step 10 notes: dashboard reads everything through services in `(app)/dashboard-content.tsx` (inside Suspense); the e2e dev server uses the isolated schema `test_dash` (playwright.config.ts) and e2e specs seed with raw SQL (`tests/e2e/helpers/dashboard-db.ts`, owner timezone = a fixed Etc/GMT zone whose local time is ~12:00 now); run the dashboard specs with `--workers=1` (shared schema). Tab counts ignore the league search. Logo images use `unoptimized` (hosts unknown until recon).
 
+Step 14.1 (resilience) done on branch step-14-resilience: see docs/STATE_AUDIT.md and the TEST_LOG block; /import and /settings re-audit pending Step 13 merge.
+
 ## 7. Next action
 Start Step 0.1: send the client message (change password, send image #2, confirm questions).
 

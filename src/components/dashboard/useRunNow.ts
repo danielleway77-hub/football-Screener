@@ -14,8 +14,12 @@ export type RunNowState = {
   dismiss: () => void;
 };
 
+/** Errors stay 8 s (UI spec); successes use the Toaster default of 4 s. */
+const ERROR_TOAST_MS = 8000;
+
 function announce(run: PolledRun) {
-  if (run.status === "FAILED") toast.error("The check didn't finish. Try again.");
+  if (run.status === "FAILED")
+    toast.error("The check didn't finish. Try again.", { duration: ERROR_TOAST_MS });
   else if (run.qualified > 0) toast.success(`${run.qualified} qualifying matches found.`);
   else toast.success("No matches qualify right now.");
 }
@@ -30,6 +34,7 @@ export function useRunNow(initialRunId: string | null = null): RunNowState {
   const [starting, setStarting] = React.useState(false);
   const [timedOut, setTimedOut] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const inFlight = React.useRef(false);
 
   useRunPolling(runId, {
     firstDelayMs: 400,
@@ -45,6 +50,8 @@ export function useRunNow(initialRunId: string | null = null): RunNowState {
   });
 
   const start = React.useCallback(async () => {
+    if (inFlight.current) return; // a double click must never start two runs
+    inFlight.current = true;
     setError(null);
     setTimedOut(false);
     setStarting(true);
@@ -55,8 +62,9 @@ export function useRunNow(initialRunId: string | null = null): RunNowState {
       const message =
         e instanceof AppClientError ? e.message : "The check didn't finish. Try again.";
       setError(message);
-      toast.error(message);
+      toast.error(message, { duration: ERROR_TOAST_MS });
     } finally {
+      inFlight.current = false;
       setStarting(false);
     }
   }, []);

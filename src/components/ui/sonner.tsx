@@ -33,6 +33,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       offset={16}
       mobileOffset={{ top: 72, left: 16, right: 16 }}
       visibleToasts={3}
+      duration={4000}
       className="toaster group"
       icons={{
         success: <CircleCheckIcon className="size-4 text-positive" />,

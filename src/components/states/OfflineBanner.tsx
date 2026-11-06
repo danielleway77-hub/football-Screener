@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import { CheckCircle2Icon, WifiOffIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { Banner } from "@/components/states/Banner";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 
@@ -11,6 +13,7 @@ import { useOnlineStatus } from "@/hooks/useOnlineStatus";
  */
 export function OfflineBanner() {
   const online = useOnlineStatus();
+  const router = useRouter();
   const [showRecovered, setShowRecovered] = React.useState(false);
   const wasOffline = React.useRef(false);
 
@@ -45,7 +48,16 @@ export function OfflineBanner() {
   }
   if (showRecovered) {
     return (
-      <Banner tone="positive" icon={CheckCircle2Icon}>
+      // Refresh re-reads the current view (GET only); nothing that failed offline is replayed.
+      <Banner
+        tone="positive"
+        icon={CheckCircle2Icon}
+        action={
+          <Button size="xs" variant="secondary" onClick={() => router.refresh()}>
+            Refresh
+          </Button>
+        }
+      >
         Back online.
       </Banner>
     );

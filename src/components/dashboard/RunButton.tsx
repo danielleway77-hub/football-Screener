@@ -4,6 +4,8 @@ import Link from "next/link";
 import { RefreshCwIcon, UploadCloudIcon } from "lucide-react";
 import { HelperText } from "@/components/shared/HelperText";
 import { Button } from "@/components/ui/button";
+import { SlowHint } from "@/components/states/SlowHint";
+import { useSlowRequest } from "@/hooks/useSlowRequest";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { cn } from "@/lib/utils";
 import type { RunNowState } from "./useRunNow";
@@ -26,6 +28,7 @@ export function RunButton({
   className,
 }: RunButtonProps) {
   const online = useOnlineStatus();
+  const slow = useSlowRequest(run.running);
   if (!canPull) {
     return (
       <Button asChild variant={variant} size={size} className={className}>
@@ -51,6 +54,7 @@ export function RunButton({
         />
         {run.running ? "Running…" : "Run now"}
       </Button>
+      <SlowHint active={slow} />
       {!online ? <HelperText>You&apos;re offline. Reconnect to run a check.</HelperText> : null}
       {run.error && online ? <HelperText role="alert">{run.error}</HelperText> : null}
     </div>

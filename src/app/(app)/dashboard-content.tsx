@@ -6,6 +6,7 @@ import { DashboardNavProvider, ResultsRegion } from "@/components/dashboard/Dash
 import { FilterBar } from "@/components/dashboard/MatchFilters";
 import { RunAction } from "@/components/dashboard/RunAction";
 import { ResultsError } from "@/components/dashboard/ResultsError";
+import { AppErrorBoundary } from "@/components/states/AppErrorBoundary";
 import { RunStatusPanel } from "@/components/dashboard/RunStatusPanel";
 import {
   FunnelIllustration,
@@ -215,16 +216,18 @@ export async function DashboardContent({ searchParams }: { searchParams: Search 
           className="min-w-0 flex-1 md:flex-col md:items-start"
         />
         <div className="w-full lg:w-[400px] lg:shrink-0">
-          <RunStatusPanel
-            state={state}
-            canPull={canPull}
-            runningRunId={runningId}
-            updatedText={updatedText}
-            scanned={stats.usable?.scanned ?? 0}
-            qualified={stats.usable?.qualified ?? 0}
-            failedCount={stats.usable?.failedCount ?? 0}
-            failedMessage={stats.lastRun?.status === "FAILED" ? stats.lastRun.error : null}
-          />
+          <AppErrorBoundary>
+            <RunStatusPanel
+              state={state}
+              canPull={canPull}
+              runningRunId={runningId}
+              updatedText={updatedText}
+              scanned={stats.usable?.scanned ?? 0}
+              qualified={stats.usable?.qualified ?? 0}
+              failedCount={stats.usable?.failedCount ?? 0}
+              failedMessage={stats.lastRun?.status === "FAILED" ? stats.lastRun.error : null}
+            />
+          </AppErrorBoundary>
         </div>
       </div>
 

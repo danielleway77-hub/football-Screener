@@ -10,6 +10,8 @@ import { PasswordInput } from "@/components/shared/PasswordInput";
 import { HelperText } from "@/components/shared/HelperText";
 import { Banner } from "@/components/states/Banner";
 import { Button } from "@/components/ui/button";
+import { SlowHint } from "@/components/states/SlowHint";
+import { useSlowRequest } from "@/hooks/useSlowRequest";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useHydrated } from "@/hooks/useHydrated";
 import { loginSchema, type LoginInput } from "@/lib/schemas/login";
@@ -74,6 +76,7 @@ export function LoginForm() {
   );
 
   const disabled = isSubmitting || limited;
+  const slow = useSlowRequest(isSubmitting);
 
   return (
     <motion.form
@@ -130,6 +133,7 @@ export function LoginForm() {
         >
           {isSubmitting ? "Signing in…" : "Sign in"}
         </Button>
+        <SlowHint active={slow} />
         {online ? null : <HelperText>You&apos;re offline. Reconnect to sign in.</HelperText>}
       </div>
 
