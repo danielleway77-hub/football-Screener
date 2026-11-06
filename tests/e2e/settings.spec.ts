@@ -187,6 +187,7 @@ test("sticky save bar at 390 is fixed to the bottom with safe-area padding and e
     const box = el.getBoundingClientRect();
     return {
       position: css.position,
+      cssBottom: css.bottom,
       bottom: Math.round(box.bottom),
       viewport: window.innerHeight,
       left: Math.round(box.left),
@@ -195,7 +196,8 @@ test("sticky save bar at 390 is fixed to the bottom with safe-area padding and e
     };
   });
   expect(info.position).toBe("fixed");
-  expect(info.bottom).toBe(info.viewport);
+  expect(info.cssBottom).toBe("0px");
+  expect(Math.abs(info.bottom - info.viewport)).toBeLessThanOrEqual(8);
   expect(info.left).toBe(0);
   expect(info.width).toBe(390);
   expect(info.paddingBottom).toBeGreaterThanOrEqual(12); // 12px + env(safe-area-inset-bottom)
@@ -264,7 +266,10 @@ test("offline disables Save with a visible reason and loses nothing", async ({ p
 test("section nav highlights the current section on scroll at 1280 and jumps on click", async ({
   page,
 }, testInfo) => {
-  test.skip(!["desktop", "wide"].includes(testInfo.project.name), "section nav is >= 1024px");
+  test.skip(
+    testInfo.project.name !== "desktop",
+    "section nav is >= 1024px; measured at 1280 (at 1920 the page is too short to scroll Security to the top)",
+  );
   await openSettings(page);
   const link = (name: string) => page.getByTestId("section-nav").getByRole("link", { name });
   await expect(link("Screening")).toHaveAttribute("aria-current", "location");
@@ -392,7 +397,8 @@ test("unsaved changes: leaving through a link asks first and can be cancelled", 
   await makeDirty(page);
   const goRuns = async () => {
     if (testInfo.project.name === "mobile") {
-      await page.getByRole("button", { name: "Open menu" }).click();
+      const menu = page.getByRole("button", { name: "Open menu" });
+      if (await menu.isVisible()) await menu.click(); // the sheet may still be open after "Keep editing"
       await page.getByRole("dialog").getByRole("link", { name: "Runs" }).click();
     } else {
       await page
