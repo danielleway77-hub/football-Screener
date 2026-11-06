@@ -10,7 +10,7 @@ export const PUSH_MODE_NOTE = "push mode - waiting for the owner's data";
 
 export type Cleaned = { matches: number; attempts: number; rateLimits: number };
 export type DailyResult =
-  | { skipped: "recent"; runId: string; status: string }
+  | { skipped: "recent" | "running"; runId: string; status: string }
   | { runId?: string; status: string; error?: string | null; cleaned: Cleaned };
 
 /** Timing-safe check of `Authorization: Bearer <secret>` (padded copies, so lengths never short-circuit). */
@@ -57,6 +57,8 @@ export async function runDaily(opts: { now?: () => Date } = {}): Promise<DailyRe
     const settings = await getSettings();
     if (settings.accessMode === "official_api") {
       const result = await pullAndProcess({ trigger: "CRON", settings, now: nowFn });
+      if (result.alreadyRunning)
+        return { skipped: "running", runId: result.runId, status: result.status };
       ({ runId, status, error } = result);
     } else {
       status = "SKIPPED";

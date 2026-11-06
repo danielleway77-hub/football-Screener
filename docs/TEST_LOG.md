@@ -180,3 +180,8 @@ Independent reviews (A.12) for 8.1 and 8.2: no critical/high. Fixed: store only 
 Deviation: 500-match batch measured 5.3 s on remote Neon (guide: < 2 s on a LOCAL DB); design is one statement per 100 rows.
 Step 8.3 (userscript helper): SKIPPED — needs PrediGoal's written permission (Gate G2/D17); C-lite import is the compliant path.
 Manual check not done here: the PowerShell ingest example against `pnpm dev` (needs a human-run terminal).
+
+### Step 9.1 — closing (A.12 independent review fixed) — 2026-11-06
+Reviewer: no critical/high, no auth bypass. Fixed: the 30-minute "recent" shortcut ignored FAILED runs, so a failed 06:00 job can be retried at once (it used to answer `skipped:recent` with 200 and hide the failure) · the failure lookup now matches only a FAILED run (it could pick another call's RUNNING run) · a pull that finds another run in progress answers `skipped:"running"` instead of a bare success · `isValidCronAuth` unit-tested for unset/empty secret, prefix, case. 19/19 cron integration tests (4 new), unit 270/270, build ✅.
+Accepted: push-mode SKIPPED row is read-then-insert (two simultaneous calls could insert two cosmetic SKIPPED rows, hidden by default) · cleanup errors are logged and return zeros · a platform kill at 60 s leaves RUNNING until the 10-minute expiry · no minimum CRON_SECRET length beyond env validation (32) · FAILED answers HTTP 500 on purpose (visible in the Vercel cron log).
+Manual (not done here): `pnpm run:daily` against `pnpm dev`; Vercel Settings → Cron Jobs after deployment (Step 17, skipped).

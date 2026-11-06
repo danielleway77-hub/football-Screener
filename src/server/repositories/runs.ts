@@ -114,7 +114,12 @@ export async function findFinishedSince(
   since: Date,
 ): Promise<RunRecord | null> {
   return getDb().screeningRun.findFirst({
-    where: { trigger, finishedAt: { gte: since } },
+    // FAILED runs never count as "done": a retry after a failure must be able to run.
+    where: {
+      trigger,
+      finishedAt: { gte: since },
+      status: { in: ["SUCCESS", "PARTIAL", "SKIPPED"] },
+    },
     orderBy: { finishedAt: "desc" },
   });
 }
@@ -130,7 +135,7 @@ export async function findStartedSince(
   since: Date,
 ): Promise<RunRecord | null> {
   return getDb().screeningRun.findFirst({
-    where: { trigger, startedAt: { gte: since } },
+    where: { trigger, status: "FAILED", startedAt: { gte: since } },
     orderBy: { startedAt: "desc" },
   });
 }

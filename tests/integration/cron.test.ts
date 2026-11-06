@@ -305,3 +305,56 @@ describe("GET /api/cron/daily - cleanup", () => {
     expect(await count()).toBe(1);
   });
 });
+
+describe("review fixes (9.1)", () => {
+  beforeEach(() => setMode("official_api"));
+
+  it("a FAILED run does not block a retry: the next call runs again and can succeed", async () => {
+    fetchWindow = async () => {
+      throw new Error("provider down");
+    };
+    const failed = await authed();
+    expect(failed.status).toBe(500);
+    fetchWindow = async () => [raw("retry-1")];
+    const retry = await authed();
+    expect(retry.status).toBe(200);
+    const body = await retry.json();
+    expect(body.skipped).toBeUndefined();
+    expect(body.status).toBe("SUCCESS");
+    expect(await count()).toBe(1);
+  });
+
+  it("while another run is in progress the cron reports skipped:running (200), not a success", async () => {
+    const { run } = await runs.createRunning({ trigger: "MANUAL", provider: "t" });
+    const res = await authed();
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({
+      skipped: "running",
+      runId: run.id,
+      status: "RUNNING",
+    });
+    expect(await count()).toBe(0);
+  });
+
+  it("the failure lookup only ever returns a FAILED run (never another run that is still RUNNING)", async () => {
+    const running = await runs.createRunning({ trigger: "CRON", provider: "t" });
+    const since = new Date(Date.now() - 60_000);
+    expect(await runs.findStartedSince("CRON", since)).toBeNull();
+    await getDb().screeningRun.update({
+      where: { id: running.run.id },
+      data: { status: "FAILED" },
+    });
+    expect((await runs.findStartedSince("CRON", since))?.id).toBe(running.run.id);
+  });
+
+  it("isValidCronAuth: unset or empty secret never authenticates; prefix and case variants fail", async () => {
+    const { isValidCronAuth } = await import("@/server/services/cron-service");
+    expect(isValidCronAuth(`Bearer ${SECRET}`, undefined)).toBe(false);
+    expect(isValidCronAuth("Bearer ", "")).toBe(false);
+    expect(isValidCronAuth(null, SECRET)).toBe(false);
+    expect(isValidCronAuth(`Bearer ${SECRET}`, SECRET)).toBe(true);
+    expect(isValidCronAuth(`Bearer ${SECRET.slice(0, -1)}`, SECRET)).toBe(false);
+    expect(isValidCronAuth(`Bearer ${SECRET}x`, SECRET)).toBe(false);
+    expect(isValidCronAuth(`bearer ${SECRET}`, SECRET)).toBe(false);
+  });
+});
