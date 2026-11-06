@@ -1,8 +1,11 @@
 import { Prisma } from "@/generated/prisma/client";
 import { getDb } from "@/lib/db";
-import type { RunFinish, RunRecord, RunTrigger } from "./types";
+import type { RunFinish, RunRecord, RunStatus, RunTrigger } from "./types";
 
 const UNIQUE_VIOLATION = "P2002";
+
+/** Error text written by `expireAbandoned`; the Runs page shows such runs as "timed out". */
+export const ABANDONED_ERROR = "Run did not finish and was marked failed.";
 
 /**
  * Start a run. The partial unique index `one_running_run` allows only one RUNNING row; if another run
@@ -67,7 +70,7 @@ export async function expireAbandoned(olderThanMinutes: number, now: Date): Prom
   const cutoff = new Date(now.getTime() - olderThanMinutes * 60_000);
   const r = await getDb().screeningRun.updateMany({
     where: { status: "RUNNING", startedAt: { lt: cutoff } },
-    data: { status: "FAILED", finishedAt: now, error: "Run did not finish and was marked failed." },
+    data: { status: "FAILED", finishedAt: now, error: ABANDONED_ERROR },
   });
   return r.count;
 }
@@ -81,13 +84,23 @@ export async function getLatestUsable(): Promise<RunRecord | null> {
 }
 
 export async function list(
-  opts: { page?: number; pageSize?: number; excludeSkipped?: boolean } = {},
+  opts: {
+    page?: number;
+    pageSize?: number;
+    excludeSkipped?: boolean;
+    /** Only runs with this status (wins over `excludeSkipped`). */
+    status?: RunStatus;
+  } = {},
 ): Promise<{ items: RunRecord[]; total: number }> {
   const pageSize = Math.min(Math.max(opts.pageSize ?? 20, 1), 100);
   const page = Math.max(opts.page ?? 1, 1);
   const db = getDb();
   // SKIPPED runs (push mode, nothing to do) are bookkeeping: the Runs page hides them unless asked.
-  const where = opts.excludeSkipped ? { status: { not: "SKIPPED" as const } } : {};
+  const where = opts.status
+    ? { status: opts.status }
+    : opts.excludeSkipped
+      ? { status: { not: "SKIPPED" as const } }
+      : {};
   const [items, total] = await Promise.all([
     db.screeningRun.findMany({
       where,

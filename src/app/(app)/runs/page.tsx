@@ -3,8 +3,8 @@ import { Suspense } from "react";
 import { ForceError } from "@/components/layout/ForceError";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { SectionHeader } from "@/components/layout/SectionHeader";
-import { FunnelSearchIllustration } from "@/components/illustrations";
-import { EmptyState } from "@/components/states/EmptyState";
+import { TableSkeleton } from "@/components/states/Skeletons";
+import { RunsContent } from "./runs-content";
 
 export const metadata: Metadata = { title: "Runs" };
 
@@ -19,11 +19,9 @@ export default function RunsPage({ searchParams }: PageProps<"/runs">) {
         title="Run history"
         description="Every check the system has made."
       />
-      <EmptyState
-        illustration={<FunnelSearchIllustration size={160} />}
-        title="No runs yet"
-        description="Runs appear here after your first data update."
-      />
+      <Suspense fallback={<TableSkeleton />}>
+        <RunsContent searchParams={searchParams} />
+      </Suspense>
     </PageContainer>
   );
 }

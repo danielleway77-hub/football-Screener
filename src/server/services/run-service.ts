@@ -11,6 +11,7 @@ import * as runs from "@/server/repositories/runs";
 import type {
   AccessMode,
   MatchInput,
+  RunRecord,
   RunStatus,
   RunTrigger,
   SettingRecord,
@@ -312,4 +313,30 @@ export async function cleanup(
     attempts: await loginAttempts.purge(new Date(now.getTime() - 30 * DAY)),
     limits: await rateLimits.purgeOlderThan(new Date(now.getTime() - 2 * DAY)),
   };
+}
+
+export const RUNS_PAGE_SIZE = 20;
+
+/**
+ * One page of run history for the Runs page. Abandoned RUNNING rows are expired first (on read), SKIPPED
+ * runs are hidden unless asked for, and the page is clamped to the existing range (size is capped at 20).
+ */
+export async function listRunsPage(
+  opts: { page: number; status?: RunStatus | null; showSkipped?: boolean },
+  now: Date,
+): Promise<{ items: RunRecord[]; total: number; page: number; totalPages: number }> {
+  await runs.expireAbandoned(ABANDONED_RUN_MINUTES, now);
+  const base = {
+    pageSize: RUNS_PAGE_SIZE,
+    excludeSkipped: !opts.showSkipped,
+    ...(opts.status ? { status: opts.status } : {}),
+  };
+  let page = Math.max(opts.page, 1);
+  let result = await runs.list({ ...base, page });
+  const totalPages = Math.max(Math.ceil(result.total / RUNS_PAGE_SIZE), 1);
+  if (page > totalPages) {
+    page = totalPages;
+    result = await runs.list({ ...base, page });
+  }
+  return { items: result.items, total: result.total, page, totalPages };
 }

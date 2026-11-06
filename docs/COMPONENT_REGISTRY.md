@@ -49,7 +49,7 @@ Layout: AppShell, Navbar, NavLinks, MobileNav, LogoutButton, Footer, PageContain
 | CopyButton | `components/shared/CopyButton.tsx` | copy to clipboard w/ feedback (tokens) | value | idle/copied/failed | 3.1 | planned |
 | PasswordInput | `components/shared/PasswordInput.tsx` | input with show/hide toggle | – | error, disabled | 4.1 | built |
 | ExternalLink | `components/shared/ExternalLink.tsx` | `target=_blank rel="noopener noreferrer"` + icon + sr text | href | – | 11.1 | planned |
-| Pagination | `components/shared/Pagination.tsx` | URL-param pagination | page,total | disabled ends | 12.1 | planned |
+| Pagination | `components/shared/Pagination.tsx` | URL-param pager (server-renderable; numbered >=768, Prev/Next + caption <768) | page,totalPages,hrefFor | disabled ends | 12.1 | built |
 | Breadcrumb / BackLink | `components/layout/BackLink.tsx` | back to dashboard preserving filters | href | – | 11.1 | planned |
 | DualThresholdSlider | `components/settings/DualThresholdSlider.tsx` | linked low/high slider + numeric inputs, `low < high` enforced | low,high | invalid, disabled | 13.1 | planned |
 | HelperText | `components/shared/HelperText.tsx` | visible reason text for disabled controls | – | – | 3.1 | planned |
@@ -79,8 +79,11 @@ Layout: AppShell, Navbar, NavLinks, MobileNav, LogoutButton, Footer, PageContain
 | RunStatusChip | `components/runs/RunStatusChip.tsx` | RUNNING/SUCCESS/PARTIAL/FAILED/SKIPPED/STALE chip | status | pulse | 10.2 | planned |
 | RunStatusPanel | `…/RunStatusPanel.tsx` | last run summary + primary action by mode | run, mode | none/running/success/partial/failed/stale | 10.2 | planned |
 | ~~StatsStrip~~ | — | **removed: replaced by BentoSummary / BentoHero / BentoTile (see the Sleek section above)** | — | — | — | removed |
-| RunsTable | `…/RunsTable.tsx` | table → stacked cards < 768 | runs | empty, error | 12.1 | planned |
-| RunDetailDialog | `…/RunDetailDialog.tsx` | error + failed items | run | – | 12.1 | planned |
+| RunsList (table/cards, polling) | `components/runs/RunsList.tsx` | table >=768 / stacked cards <768 (only one rendered after hydration); polls /api/runs/[id] every 3s only while RUNNING | rows,timezone,nowIso | empty/error handled by runs-content | 12.1 | built |
+| RunsToolbar | `components/runs/RunsToolbar.tsx` | status Select + Show skipped switch, URL-driven | status,showSkipped | – | 12.1 | built |
+| RunsError | `components/runs/RunsError.tsx` | ErrorState with Retry for the list | – | – | 12.1 | built |
+| StatusChip | `components/shared/StatusChip.tsx` | run status chip with pulse dot (same file as step 10) | status | RUNNING pulse | 12.1 | built |
+| RunDetailDialog | `components/runs/RunDetailDialog.tsx` | 560px dialog / bottom sheet: summary, error callout, per-item failures (<=200), focus returned to the row | run | – | 12.1 | built |
 
 ## Settings & import
 ThresholdForm · ScheduleForm · AccessModeForm · TokenManager · PasswordForm · MaintenanceCard (`components/settings/*`, Step 13.1) · ImportPanel · ImportPreview · HelperInstructions (`components/import/*`, Step 13.2) — planned.
