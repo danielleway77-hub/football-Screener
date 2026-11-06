@@ -40,6 +40,9 @@ test("first server paint shows final values (nothing hidden waiting for JS)", as
 
 test("CountUp counts up after Replay and ends on the exact value", async ({ page }) => {
   await open(page);
+  // CountUp starts when it is on screen; the smooth hash-scroll may still be running, so bring it into view first.
+  await page.getByTestId("motion-stage").scrollIntoViewIfNeeded();
+  await expect(page.getByTestId("motion-stage")).toBeInViewport();
   await page.getByRole("button", { name: "Replay" }).click();
   await expect(visibleCounts(page).nth(0)).toHaveText("80%", { timeout: 4000 });
   await expect(visibleCounts(page).nth(1)).toHaveText("76%");

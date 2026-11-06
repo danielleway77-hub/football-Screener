@@ -9,6 +9,16 @@ export async function countRecentFailures(ip: string, since: Date): Promise<numb
   return getDb().loginAttempt.count({ where: { ip, success: false, at: { gte: since } } });
 }
 
+/** Timestamps (ascending) of failed attempts from `ip` at or after `since`. */
+export async function recentFailureTimes(ip: string, since: Date): Promise<Date[]> {
+  const rows = await getDb().loginAttempt.findMany({
+    where: { ip, success: false, at: { gte: since } },
+    orderBy: { at: "asc" },
+    select: { at: true },
+  });
+  return rows.map((r) => r.at);
+}
+
 export async function purge(olderThan: Date): Promise<number> {
   const r = await getDb().loginAttempt.deleteMany({ where: { at: { lt: olderThan } } });
   return r.count;

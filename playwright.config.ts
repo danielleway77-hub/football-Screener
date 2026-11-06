@@ -11,6 +11,7 @@ export default defineConfig({
   testDir: "./tests",
   testMatch: ["e2e/**/*.spec.ts", "ui/**/*.spec.ts"],
   fullyParallel: true,
+  globalSetup: "./tests/e2e/global-setup.ts",
   // The dev server compiles routes on demand; under 4 parallel workers hydration can exceed 5 s.
   expect: { timeout: 15_000 },
   forbidOnly: !!process.env.CI,
@@ -18,6 +19,7 @@ export default defineConfig({
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
     baseURL,
+    storageState: "tests/e2e/.auth/owner.json",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },

@@ -23,13 +23,16 @@ for (const p of PAGES) {
   });
 }
 
-test("/login: titled, one h1, no nav and no footer", async ({ page }) => {
-  await page.goto("/login");
-  await expect(page).toHaveTitle("Sign in · Screener");
-  await expect(page.locator("h1")).toHaveText("Sign in");
-  await expect(page.locator("nav")).toHaveCount(0);
-  await expect(page.locator("footer")).toHaveCount(0);
-  await expect(page.getByText("Personal use only.")).toBeVisible();
+test.describe("signed out", () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+  test("/login: titled, one h1, no nav and no footer", async ({ page }) => {
+    await page.goto("/login");
+    await expect(page).toHaveTitle("Sign in · Screener");
+    await expect(page.locator("h1")).toHaveText("Sign in");
+    await expect(page.locator("nav")).toHaveCount(0);
+    await expect(page.locator("footer")).toHaveCount(0);
+    await expect(page.getByText("Personal use only.")).toBeVisible();
+  });
 });
 
 test("every nav link navigates and lands focus on #main", async ({ page }) => {

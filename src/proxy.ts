@@ -1,8 +1,45 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { sanitizeNext } from "@/lib/next-param";
+import { sessionCookieName, verifySessionToken } from "@/server/auth/jwt";
 
-/** Step 4: pass-through. Step 6 adds the JWT check (thin and stateless; no DB here). */
-export function proxy() {
-  return NextResponse.next();
+/**
+ * Network-boundary auth check: thin and stateless (no database). It verifies the session JWT signature
+ * and expiry only; the sessionVersion comparison needs the database and happens in Node via
+ * requireSession() (see src/server/auth/guard.ts).
+ */
+const PUBLIC_PAGES = ["/login"];
+// Dev-only demo routes (they return 404 in production builds) are public so they can be inspected.
+const PUBLIC_PREFIXES = ["/api/auth/", "/api/health", "/api/cron/", "/api/ingest", "/style-guide"];
+
+function isPublic(pathname: string): boolean {
+  return PUBLIC_PAGES.includes(pathname) || PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));
+}
+
+export async function proxy(request: NextRequest) {
+  const { pathname, search } = request.nextUrl;
+  const token = request.cookies.get(sessionCookieName(process.env.NODE_ENV))?.value;
+  const valid = (await verifySessionToken(token, process.env.SESSION_SECRET ?? "")) !== null;
+
+  if (pathname === "/login") {
+    // Already signed in: skip the form. `?expired=1` is set when the version no longer matches.
+    if (valid && !request.nextUrl.searchParams.has("expired")) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+    return NextResponse.next();
+  }
+
+  if (isPublic(pathname) || valid) return NextResponse.next();
+
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.json(
+      { error: { code: "UNAUTHORIZED", message: "Sign in required." } },
+      { status: 401 },
+    );
+  }
+  const login = new URL("/login", request.url);
+  const next = sanitizeNext(pathname + search);
+  login.searchParams.set("next", next);
+  return NextResponse.redirect(login);
 }
 
 export const config = {
