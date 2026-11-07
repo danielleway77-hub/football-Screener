@@ -51,3 +51,4 @@ next-env.d.ts
 /src/generated/
 tests/e2e/.auth/
 .scratch/
+shots/

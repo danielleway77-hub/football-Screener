@@ -3,6 +3,7 @@ import { ExternalLink } from "@/components/shared/ExternalLink";
 import { Reveal } from "@/components/motion/Reveal";
 import { FormCard } from "./FormCard";
 import { MatchHero } from "./MatchHero";
+import { MatchStickyBar } from "./MatchStickyBar";
 import { MatchPager, type PagerTarget } from "./MatchPager";
 import { ProbabilityPanel, type PanelProbabilities } from "./ProbabilityPanel";
 
@@ -39,6 +40,15 @@ const CARD = "surface-1 bg-grad-card h-full rounded-lg p-5 md:p-6";
 export function MatchDetailView({ m }: { m: MatchDetailModel }) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_auto] md:gap-x-4 md:gap-y-4">
+      <MatchStickyBar
+        title={`${m.home.name} vs ${m.away.name}`}
+        qualifies={m.qualifies}
+        score={
+          m.predictedHome !== null && m.predictedAway !== null
+            ? `${m.predictedHome} – ${m.predictedAway}`
+            : null
+        }
+      />
       <div className="md:col-start-1 md:row-start-1">
         <BackLink href={m.backHref} />
       </div>

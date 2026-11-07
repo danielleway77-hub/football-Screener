@@ -3,7 +3,7 @@
 import * as React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { XCircleIcon } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { HelperText } from "@/components/shared/HelperText";
 import { PasswordInput } from "@/components/shared/PasswordInput";
@@ -16,7 +16,50 @@ import {
   passwordFormSchema,
   type PasswordFormValues,
 } from "@/lib/schemas/settings";
+import { cn } from "@/lib/utils";
 import { SlowHint } from "@/components/states/SlowHint";
+
+/** Advisory strength 0-4 (length + variety). Runs in the browser only; never stored or logged. */
+export function passwordStrength(pw: string): number {
+  if (pw.length === 0) return 0;
+  let score = 0;
+  if (pw.length >= MIN_PASSWORD_LENGTH) score++;
+  if (pw.length >= MIN_PASSWORD_LENGTH + 6) score++;
+  const classes = [/[a-z]/, /[A-Z]/, /d/, /[^A-Za-z0-9]/].filter((r) => r.test(pw)).length;
+  if (classes >= 3) score++;
+  if (classes >= 3 && pw.length >= MIN_PASSWORD_LENGTH + 6) score++;
+  return pw.length < MIN_PASSWORD_LENGTH ? Math.min(score, 1) : Math.max(1, score);
+}
+
+const STRENGTH = [
+  ["", "bg-neutral-soft"],
+  ["Weak", "bg-negative"],
+  ["Fair", "bg-warning"],
+  ["Good", "bg-positive"],
+  ["Strong", "bg-primary"],
+] as const;
+
+function StrengthMeter({ value }: { value: string }) {
+  const level = passwordStrength(value);
+  return (
+    <div data-testid="password-strength" data-level={level} className="mt-3">
+      <div aria-hidden="true" className="flex gap-1.5">
+        {[1, 2, 3, 4].map((i) => (
+          <span
+            key={i}
+            className={cn(
+              "h-1.5 flex-1 rounded-full transition-colors duration-300 motion-reduce:transition-none",
+              i <= level ? STRENGTH[level]![1] : "bg-neutral-soft",
+            )}
+          />
+        ))}
+      </div>
+      <p className="text-caption mt-1.5 h-4 text-faint" aria-live="polite">
+        {level > 0 ? `Strength: ${STRENGTH[level]![0]}` : ""}
+      </p>
+    </div>
+  );
+}
 
 const EMPTY: PasswordFormValues = { currentPassword: "", newPassword: "", confirmPassword: "" };
 
@@ -41,6 +84,7 @@ export function PasswordForm() {
     register,
     handleSubmit,
     reset,
+    control,
     setError,
     setFocus,
     formState: { errors, isSubmitting },
@@ -51,6 +95,7 @@ export function PasswordForm() {
   });
   const [formError, setFormError] = React.useState<string | null>(null);
   const slow = useSlowRequest(isSubmitting);
+  const newPasswordValue = useWatch({ control, name: "newPassword" });
 
   const onSubmit = handleSubmit(async (values) => {
     setFormError(null);
@@ -138,6 +183,7 @@ export function PasswordForm() {
             At least {MIN_PASSWORD_LENGTH} characters.
           </p>
         )}
+        <StrengthMeter value={newPasswordValue ?? ""} />
       </div>
       <div>
         <label htmlFor="confirm-password" className="mb-2 block text-sm font-medium">
