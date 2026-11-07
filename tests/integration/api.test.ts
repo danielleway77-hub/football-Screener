@@ -74,7 +74,12 @@ const ingest = async (r: Request) => (await import("@/app/api/ingest/route")).PO
 const bearer = (t: string) => ({ authorization: `Bearer ${t}` });
 
 describe("POST /api/ingest — authentication", () => {
-  const bodies = async (res: Response) => JSON.stringify(await res.json());
+  // The per-request correlation id legitimately differs; everything else must be identical.
+  const bodies = async (res: Response) => {
+    const body = (await res.json()) as { error?: { requestId?: string } };
+    delete body.error?.requestId;
+    return JSON.stringify(body);
+  };
 
   it("no header, malformed header, wrong token and revoked token all give the same 401", async () => {
     const good = await createToken("helper");

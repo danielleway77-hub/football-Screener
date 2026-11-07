@@ -113,7 +113,7 @@ describe("GET /api/cron/daily - pull mode", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.status).toBe("SUCCESS");
-    expect(body.cleaned).toEqual({ matches: 0, attempts: 0, rateLimits: 0 });
+    expect(body.cleaned).toEqual({ matches: 0, runs: 0, attempts: 0, rateLimits: 0 });
     const run = await runs.getById(body.runId);
     expect(run).toMatchObject({
       trigger: "CRON",
@@ -159,7 +159,7 @@ describe("GET /api/cron/daily - pull mode", () => {
     expect(run?.error).toBeTruthy();
     expect(await getDb().match.findMany({ orderBy: { providerMatchId: "asc" } })).toEqual(before);
     // Cleanup still ran and reports numbers.
-    expect(body.cleaned).toEqual({ matches: 0, attempts: 0, rateLimits: 0 });
+    expect(body.cleaned).toEqual({ matches: 0, runs: 0, attempts: 0, rateLimits: 0 });
   });
 
   it("a known provider error (not configured) becomes a FAILED run with its readable message", async () => {
@@ -288,7 +288,7 @@ describe("GET /api/cron/daily - cleanup", () => {
     await rateLimits.increment("k-new", new Date(now - DAY));
 
     const body = await (await authed()).json();
-    expect(body.cleaned).toEqual({ matches: 1, attempts: 1, rateLimits: 1 });
+    expect(body.cleaned).toEqual({ matches: 1, runs: 0, attempts: 1, rateLimits: 1 });
     const left = (await getDb().match.findMany()).map((m) => m.providerMatchId).sort();
     expect(left).toEqual(["edge", "far", "upcoming", "yesterday"]);
     expect(await getDb().loginAttempt.count()).toBe(1);

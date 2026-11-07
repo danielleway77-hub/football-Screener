@@ -9,7 +9,7 @@ import { ABANDONED_RUN_MINUTES, cleanup, pullAndProcess } from "@/server/service
 export const RECENT_RUN_MINUTES = 30;
 export const PUSH_MODE_NOTE = "push mode - waiting for the owner's data";
 
-export type Cleaned = { matches: number; attempts: number; rateLimits: number };
+export type Cleaned = { matches: number; runs: number; attempts: number; rateLimits: number };
 export type DailyResult =
   | { skipped: "recent" | "running"; runId: string; status: string }
   | { runId?: string; status: string; error?: string | null; cleaned: Cleaned };
@@ -31,10 +31,10 @@ export function isValidCronAuth(header: string | null, secret: string | undefine
 async function runCleanup(now: Date): Promise<Cleaned> {
   try {
     const c = await cleanup(now);
-    return { matches: c.matches, attempts: c.attempts, rateLimits: c.limits };
+    return { matches: c.matches, runs: c.runs, attempts: c.attempts, rateLimits: c.limits };
   } catch (error) {
     logger.error("Cleanup failed", { name: (error as Error).name });
-    return { matches: 0, attempts: 0, rateLimits: 0 };
+    return { matches: 0, runs: 0, attempts: 0, rateLimits: 0 };
   }
 }
 

@@ -308,13 +308,21 @@ export async function rescreenAll(
 }
 
 /** Retention: matches 90 days after kickoff, login attempts 30 days, rate-limit counters 2 days. */
+/** Retention windows (days). Documented in docs/ARCHITECTURE.md "Data lifecycle". */
+export const RETENTION_DAYS = { matches: 90, runs: 365, loginAttempts: 30, rateLimits: 2 } as const;
+
 export async function cleanup(
   now: Date,
-): Promise<{ matches: number; attempts: number; limits: number }> {
+): Promise<{ matches: number; runs: number; attempts: number; limits: number }> {
   return {
-    matches: await matches.deleteOlderThan(new Date(now.getTime() - 90 * DAY)),
-    attempts: await loginAttempts.purge(new Date(now.getTime() - 30 * DAY)),
-    limits: await rateLimits.purgeOlderThan(new Date(now.getTime() - 2 * DAY)),
+    matches: await matches.deleteOlderThan(new Date(now.getTime() - RETENTION_DAYS.matches * DAY)),
+    runs: await runs.deleteFinishedOlderThan(new Date(now.getTime() - RETENTION_DAYS.runs * DAY)),
+    attempts: await loginAttempts.purge(
+      new Date(now.getTime() - RETENTION_DAYS.loginAttempts * DAY),
+    ),
+    limits: await rateLimits.purgeOlderThan(
+      new Date(now.getTime() - RETENTION_DAYS.rateLimits * DAY),
+    ),
   };
 }
 

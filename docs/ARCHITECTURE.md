@@ -281,3 +281,37 @@ Hobby = one cron/day, ±1h. Previews must never use the production database (use
 
 ## 13. Testing architecture
 Unit (domain, normalizers, auth utils) · integration (repositories/services against the isolated `test` schema, reset per suite) · component (RTL) · e2e (Playwright: 4 projects mobile/tablet/desktop/wide) · a11y (axe) · network-state tests (MSW/offline/slow) · contract tests for `/api/ingest`. Coverage gates: domain ≥ 95%, services ≥ 85%.
+
+## Observability and database resilience (production baseline)
+
+**Logging.** `src/lib/logger.ts` writes one JSON object per line (`time, level, msg, requestId?, ...context`); warn/error go to stderr, the rest to stdout. `LOG_LEVEL` (`debug|info|warn|error`, default `info`) filters. Redaction is automatic: keys matching password/secret/token/cookie/authorization/session/hash/url-credential names become `[REDACTED]`, and free text is scrubbed of `scheme://user:pass@`, `Bearer ...`, JWTs and `key=value` secrets. Errors keep only `name` and a redacted `message` (no stack, no payloads). Never log request bodies or provider payloads.
+
+**Request ids.** `src/proxy.ts` takes a valid incoming `x-request-id` (`[A-Za-z0-9._-]{8,64}`) or mints a UUID, forwards it to the route handler and sets it on every matched response. `handle()` (src/server/http.ts) adds it to the response, to the error body (`error.requestId`) and to the log context (AsyncLocalStorage).
+
+**Database pool** (`POOL` in `src/lib/db.ts`):
+
+| Setting | Value | Why |
+|---|---|---|
+| `max` | 5 | small per-instance pool; the Supabase/PgBouncer pooler multiplexes |
+| `idleTimeoutMillis` | 10 000 | release idle connections on warm serverless instances |
+| `connectionTimeoutMillis` | 5 000 | fail fast instead of queueing forever |
+| `query_timeout` | 20 000 | client-side cap, works through any pooler |
+| `statement_timeout` | 15 000 | server-side cap; sent only on direct (non-pooler) URLs because PgBouncer can reject startup parameters |
+| `keepAlive` | true | detect dead sockets |
+
+**Read retry.** `readQuery()` (`src/lib/db-retry.ts`) retries a read exactly once (150 ms delay) on transient connection errors only (ECONNRESET/ECONNREFUSED/ETIMEDOUT/EPIPE, 57P01/57P03/08xxx, Prisma P1001/P1002/P1008/P1017/P2024, "connection terminated"). Writes and transactions never use it (enforced by `tests/unit/db-resilience.test.ts`).
+
+**Health.** `GET /api/health` pings with a 2 s timeout, never throws, clears its timer, and returns `{ok, db}` (HTTP 200 with `ok:false` when the database is down so probes can read the body).
+
+## Data lifecycle and retention
+
+`cleanup(now)` in `src/server/services/run-service.ts` runs at the end of every daily cron (idempotent: re-running deletes nothing more). Windows live in `RETENTION_DAYS`:
+
+| Data | Kept | Rule |
+|---|---|---|
+| `Match` (and its `RunMatch` rows, `onDelete: Cascade`) | 90 days after kickoff | `kickoffAt < now - 90d`; upcoming matches are never deleted |
+| `ScreeningRun` (and its `RunMatch` rows, cascade) | 365 days | finished runs with `startedAt < now - 365d`; `RUNNING` rows are never deleted (abandoned ones are first expired to FAILED) |
+| `LoginAttempt` | 30 days | `at < now - 30d` |
+| `RateLimit` counters | 2 days | `windowStart < now - 2d` |
+
+Cascades are tested in `tests/integration/database.test.ts` (both directions) and `tests/integration/run-service.test.ts` (retention path). `Match.firstRunId/lastRunId` are plain ids without foreign keys, so deleting an old run never blocks or alters a kept match. Old run history only affects the Runs page.

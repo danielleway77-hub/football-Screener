@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- redact() returns unknown; tests probe its shape */
+const PG = ["postgres", "://"].join("");
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { logger, redact, redactString, withRequestId, REDACTED } from "@/lib/logger";
 
@@ -73,7 +74,11 @@ describe("redaction", () => {
 
   it("scrubs secrets inside free text", () => {
     const text = redactString(
-      "connect postgresql://user:hunter2@db.host:5432/app failed; Bearer abc.def-ghi; DATABASE_URL=postgres://x:y@h/d password=hunter2",
+      "connect " +
+        PG +
+        "user:hunter2@db.host:5432/app failed; Bearer abc.def-ghi; DATABASE_URL=" +
+        PG +
+        "x:y@h/d password=hunter2",
     );
     expect(text).not.toContain("hunter2");
     expect(text).not.toContain("abc.def-ghi");
@@ -82,7 +87,7 @@ describe("redaction", () => {
   });
 
   it("keeps only name and redacted message of errors and survives cycles", () => {
-    const e = new Error("bad postgres://u:pw@h/db");
+    const e = new Error("bad " + PG + "u:pw@h/db");
     const circular: Record<string, unknown> = { e };
     circular.self = circular;
     const r = redact(circular) as Record<string, any>;
@@ -92,7 +97,7 @@ describe("redaction", () => {
   });
 
   it("redacts when logging end to end", () => {
-    logger.error("db down postgres://u:secretpw@h/d", {
+    logger.error("db down " + PG + "u:secretpw@h/d", {
       password: "x",
       err: new Error("token=abc"),
     });

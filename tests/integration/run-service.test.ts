@@ -378,11 +378,79 @@ describe("cleanup", () => {
         { key: "new", count: 1, windowStart: new Date(FIXTURE_NOW.getTime() - 3_600_000) },
       ],
     });
-    expect(await runService.cleanup(FIXTURE_NOW)).toEqual({ matches: 1, attempts: 1, limits: 1 });
+    expect(await runService.cleanup(FIXTURE_NOW)).toEqual({
+      matches: 1,
+      runs: 0,
+      attempts: 1,
+      limits: 1,
+    });
     expect((await getDb().match.findMany()).map((m) => m.providerMatchId).sort()).toEqual([
       "future",
       "recent",
     ]);
+  });
+});
+
+describe("cleanup - run history retention", () => {
+  const day = 86_400_000;
+  it("deletes finished runs older than 365 days with their RunMatch rows, keeps newer and RUNNING, and is idempotent", async () => {
+    const db = getDb();
+    // (pushed first: a push expires stale RUNNING rows) A match that is kept (future kickoff) linked to every run: only the old run's link must disappear.
+    await push({ matches: [item("kept", 80, 7)] });
+    const match = (await db.match.findMany())[0]!;
+    const old = new Date(FIXTURE_NOW.getTime() - 366 * day);
+    const recent = new Date(FIXTURE_NOW.getTime() - 364 * day);
+    const oldRun = await db.screeningRun.create({
+      data: { trigger: "CRON", provider: "t", status: "SUCCESS", startedAt: old, finishedAt: old },
+    });
+    const recentRun = await db.screeningRun.create({
+      data: {
+        trigger: "CRON",
+        provider: "t",
+        status: "SUCCESS",
+        startedAt: recent,
+        finishedAt: recent,
+      },
+    });
+    const stuck = await db.screeningRun.create({
+      data: { trigger: "CRON", provider: "t", status: "RUNNING", startedAt: old },
+    });
+    for (const run of [oldRun, recentRun, stuck]) {
+      await db.runMatch.create({
+        data: { runId: run.id, matchId: match.id, qualifiedAtRun: true },
+      });
+    }
+    const first = await runService.cleanup(FIXTURE_NOW);
+    expect(first.runs).toBe(1);
+    expect(
+      (
+        await db.screeningRun.findMany({
+          where: { id: { in: [oldRun.id, recentRun.id, stuck.id] } },
+        })
+      )
+        .map((r) => r.id)
+        .sort(),
+    ).toEqual([recentRun.id, stuck.id].sort());
+    expect(await db.runMatch.count({ where: { runId: oldRun.id } })).toBe(0);
+    expect(await db.runMatch.count({ where: { runId: recentRun.id } })).toBe(1);
+    expect(await db.match.count()).toBe(1);
+    expect((await runService.cleanup(FIXTURE_NOW)).runs).toBe(0);
+  });
+
+  it("deleting old matches cascades their RunMatch rows but keeps the run", async () => {
+    const db = getDb();
+    await push({
+      matches: [
+        item("ancient", 80, 7, {
+          kickoffAt: new Date(FIXTURE_NOW.getTime() - 100 * day).toISOString(),
+        }),
+      ],
+    });
+    expect(await db.runMatch.count()).toBeGreaterThan(0);
+    const runsBefore = await db.screeningRun.count();
+    expect((await runService.cleanup(FIXTURE_NOW)).matches).toBe(1);
+    expect(await db.runMatch.count()).toBe(0);
+    expect(await db.screeningRun.count()).toBe(runsBefore);
   });
 });
 

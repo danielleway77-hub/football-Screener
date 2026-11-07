@@ -53,7 +53,7 @@ Data is stale when the last successful update is older than **Settings -> stale 
 | Matches                    | 90 days after kickoff         |
 | Login attempts (IP address) | 30 days (personal data, short) |
 | Rate-limit counters        | 2 days                        |
-| Run history                | not purged by the code        |
+| Run history                | 365 days (finished runs; RUNNING never deleted) |
 
 ## 6. Backups and Neon
 
@@ -102,3 +102,7 @@ Env changes only apply to new deployments, so always redeploy.
 4. **Cron misbehaving:** Vercel -> Settings -> Cron Jobs -> disable; investigate in `/runs` and Vercel logs.
 5. **Database problem:** `pnpm db:verify` against production (read-only); restore via Neon Branches -> Restore if needed.
 6. Record what happened and what changed in `PROJECT_STATE.md` (no secrets).
+
+## 10. Reading logs and request ids
+
+Logs are JSON lines (one object per line): `{"time","level","msg","requestId?",...}`; set `LOG_LEVEL=debug|info|warn|error` (default `info`). Passwords, tokens, cookies and connection strings are redacted automatically. Every API response carries an `x-request-id` header and error bodies carry `error.requestId`; when the owner reports a problem, ask for that id and search the Vercel log for it. A client may send its own `x-request-id` (8-64 chars `A-Za-z0-9._-`) and it is reused.

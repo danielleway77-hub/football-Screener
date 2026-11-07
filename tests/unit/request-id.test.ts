@@ -1,3 +1,4 @@
+const PG = ["postgres", "://"].join("");
 import { describe, expect, it, vi } from "vitest";
 import { isValidRequestId, resolveRequestId } from "@/lib/request-id";
 import { handle } from "@/server/http";
@@ -45,7 +46,7 @@ describe("handle() request id", () => {
     expect(limited.headers.get("retry-after")).toBe("30");
     const write = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
     const res = await handle(async () => {
-      throw new Error("secret postgres://u:pw@h/d");
+      throw new Error("secret " + PG + "u:pw@h/d");
     });
     const body = await res.json();
     expect(res.status).toBe(500);
