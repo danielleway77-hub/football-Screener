@@ -1,0 +1,139 @@
+# Continuous integration. Nothing here deploys. Real secrets are never required for the default jobs:
+# database-backed jobs only run on manual dispatch and read secrets BY NAME from the repository settings
+# (DATABASE_URL_TEST, DIRECT_URL_TEST, E2E_PASSWORD). Values are never written in this file.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master, main]
+  workflow_dispatch:
+    inputs:
+      run_integration:
+        description: "Run integration tests (needs the DATABASE_URL_TEST / DIRECT_URL_TEST secrets, schema test_ci)"
+        type: boolean
+        default: false
+      run_e2e:
+        description: "Run Playwright e2e (needs the same secrets plus E2E_PASSWORD)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "24"
+  CI: "true"
+
+jobs:
+  quality:
+    name: Lint, typecheck, unit tests, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4 # version comes from "packageManager" in package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec prisma generate
+      - run: pnpm format:check
+      - run: pnpm exec next typegen
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - name: Unit tests (TZ=UTC)
+        run: pnpm exec cross-env TZ=UTC vitest run --project node --project dom
+      - name: Unit tests (TZ=Asia/Karachi)
+        run: pnpm exec cross-env TZ=Asia/Karachi vitest run --project node --project dom
+      - name: Build with throw-away environment values
+        run: |
+          # Generated per run, never stored: the build only needs the variables to exist and be well formed.
+          echo "SESSION_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+          echo "CRON_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+          pnpm build
+        env:
+          DATABASE_URL: postgresql://localhost:5432/ci
+          DIRECT_URL: postgresql://localhost:5432/ci
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+          INGEST_ALLOWED_ORIGINS: http://localhost:3000
+
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: node scripts/secret-scan.mjs
+
+  audit:
+    name: Dependency audit (high and above)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true # advisory: a new advisory must not block unrelated work; review the log
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm audit --audit-level high
+
+  integration:
+    name: Integration tests (manual, isolated schema)
+    if: github.event_name == 'workflow_dispatch' && inputs.run_integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: quality
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec prisma generate
+      - name: Integration tests
+        run: pnpm exec vitest run --project integration
+        env:
+          # Secret NAMES only. The URLs must point at an isolated schema (schema=test_ci).
+          DATABASE_URL_TEST: ${{ secrets.DATABASE_URL_TEST }}
+          DIRECT_URL_TEST: ${{ secrets.DIRECT_URL_TEST }}
+
+  e2e:
+    name: Playwright e2e (manual, isolated schema)
+    if: github.event_name == 'workflow_dispatch' && inputs.run_e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: quality
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec prisma generate
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm e2e
+        env:
+          DATABASE_URL_TEST: ${{ secrets.DATABASE_URL_TEST }}
+          DIRECT_URL_TEST: ${{ secrets.DIRECT_URL_TEST }}
+          E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7
