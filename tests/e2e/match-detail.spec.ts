@@ -137,7 +137,7 @@ test.describe("match detail", () => {
   test("external link has rel noopener noreferrer and target _blank", async ({ page }) => {
     await open(page, "golden");
     const link = page.getByTestId("source-link");
-    await expect(link).toHaveText(/Open on PrediGoal/);
+    await expect(link).toHaveText(/Open on e2e-detail/); // label derives from the match provider (not hard-coded)
     await expect(link).toHaveAttribute("target", "_blank");
     await expect(link).toHaveAttribute("rel", "noopener noreferrer");
     await expect(link).toHaveAttribute("href", "https://example.com/predigoal/match/golden");
