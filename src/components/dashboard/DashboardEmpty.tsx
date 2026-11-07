@@ -24,7 +24,7 @@ export function DashboardEmpty(props: DashboardEmptyProps) {
 /** Small read-only chip used under an empty state's description. */
 export function HintChip({ label, value }: { label: string; value: string }) {
   return (
-    <span className="inline-flex h-7 items-center gap-1.5 rounded-4xl border border-hairline-strong bg-surface-raised px-2.5 text-xs">
+    <span className="inline-flex h-7 shrink-0 items-center gap-1.5 rounded-4xl border border-hairline-strong bg-surface-raised px-2.5 text-xs whitespace-nowrap">
       <span className="text-muted-foreground">{label}</span>
       <span className="num text-foreground">{value}</span>
     </span>

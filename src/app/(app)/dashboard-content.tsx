@@ -96,7 +96,7 @@ function Results({
           description="Run your first check to see matches that meet your rule."
           actions={<RunAction canPull variant="default" size="default" />}
         >
-          <HintChip label="Your rule" value={`form above ${high}% vs below ${low}%`} />
+          <HintChip label="Rule" value={`above ${high}% vs below ${low}%`} />
         </DashboardEmpty>
       ) : mode === "assisted_ingest" ? (
         <DashboardEmpty
@@ -109,7 +109,7 @@ function Results({
             </Button>
           }
         >
-          <HintChip label="Your rule" value={`form above ${high}% vs below ${low}%`} />
+          <HintChip label="Rule" value={`above ${high}% vs below ${low}%`} />
         </DashboardEmpty>
       ) : (
         <DashboardEmpty
@@ -122,7 +122,7 @@ function Results({
             </Button>
           }
         >
-          <HintChip label="Your rule" value={`form above ${high}% vs below ${low}%`} />
+          <HintChip label="Rule" value={`above ${high}% vs below ${low}%`} />
         </DashboardEmpty>
       );
     }
@@ -141,7 +141,7 @@ function Results({
         >
           <HintChip label="Scanned" value={String(stats.scanned)} />
           <HintChip label="Qualified" value="0" />
-          <HintChip label="Your rule" value={`form above ${high}% vs below ${low}%`} />
+          <HintChip label="Rule" value={`above ${high}% vs below ${low}%`} />
         </DashboardEmpty>
       );
     }
