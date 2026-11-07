@@ -12,6 +12,7 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Stagger, StaggerItem } from "@/components/motion/Stagger";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatRunTime } from "@/lib/format";
 import { modeLabel, runDurationText, type RunRow } from "@/lib/run-view";
@@ -46,30 +47,6 @@ export function RunDetailDialog({
     ["Trigger", run.trigger.charAt(0) + run.trigger.slice(1).toLowerCase()],
     ["Mode", modeLabel(run.provider)],
     ["Window", windowText(run, timezone)],
-    [
-      "Scanned",
-      <span key="s" className="num">
-        {run.scanned}
-      </span>,
-    ],
-    [
-      "Qualified",
-      <span key="q" className="num">
-        {run.qualified}
-      </span>,
-    ],
-    [
-      "Failed",
-      <span key="f" className={cn("num", run.failedCount > 0 && "text-negative")}>
-        {run.failedCount}
-      </span>,
-    ],
-    [
-      "Duration",
-      <span key="d" className="num">
-        {runDurationText(run, now)}
-      </span>,
-    ],
   ];
 
   return (
@@ -98,6 +75,24 @@ export function RunDetailDialog({
           </DialogClose>
         </header>
 
+        <Stagger className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {(
+            [
+              ["Scanned", run.scanned, ""],
+              ["Qualified", run.qualified, run.qualified > 0 ? "text-primary" : ""],
+              ["Failed", run.failedCount, run.failedCount > 0 ? "text-negative" : ""],
+              ["Duration", runDurationText(run, now), ""],
+            ] as const
+          ).map(([label, value, tone], i) => (
+            <StaggerItem key={label} index={i}>
+              <div className="rounded-md border border-hairline bg-subtle px-3 py-2.5">
+                <div className="text-overline text-faint">{label}</div>
+                <div className={cn("num mt-0.5 text-lg font-semibold", tone)}>{value}</div>
+              </div>
+            </StaggerItem>
+          ))}
+        </Stagger>
+
         <section aria-labelledby="run-summary">
           <h4 id="run-summary" className="text-overline mb-2 text-faint">
             Summary
@@ -119,7 +114,7 @@ export function RunDetailDialog({
             </h4>
             <p
               data-testid="run-error"
-              className="text-body-sm rounded-md border border-negative/30 bg-negative-soft p-3 break-words whitespace-pre-wrap text-muted-foreground"
+              className="text-body-sm rounded-md border border-l-[3px] border-negative/30 border-l-negative bg-negative-soft p-3 break-words whitespace-pre-wrap text-muted-foreground"
             >
               {run.error}
             </p>

@@ -96,7 +96,7 @@ test.describe("freshness pill", () => {
     expect(box.width).toBeGreaterThanOrEqual(150);
     await expect(pill(page)).toHaveAttribute("data-tone", "positive");
     await expect(pill(page)).toHaveAccessibleName(
-      /^Data last updated Today \d\d:\d\d\. View run history\.$/,
+      /^Updated .+. Data last updated Today \d\d:\d\d\. View run history\.$/,
     );
     await pill(page).click();
     await expect(page).toHaveURL(/\/runs$/);

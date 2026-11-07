@@ -33,7 +33,9 @@ describe("FreshnessPill states", () => {
     const link = screen.getByTestId("freshness-pill");
     expect(link).toHaveAttribute("data-tone", "positive");
     expect(link).toHaveAttribute("href", "/runs");
-    expect(link).toHaveAccessibleName("Data last updated Today 10:00. View run history.");
+    expect(link).toHaveAccessibleName(
+      "Updated 2 h ago. Data last updated Today 10:00. View run history.",
+    );
     expect(link).toHaveTextContent("Updated 2 h ago");
   });
 
