@@ -31,3 +31,7 @@ Deploy to Vercel (17.1) and first real-data run (17.2); rotate the Neon password
 ## Operating rules (saved in memory `autonomous-pipeline-mode`)
 
 User is away; never ask permission questions. Do not push or deploy. RAM is limited: heavy Playwright runs ONE project at a time; keep at most ~4 agents running. Windows: Python is not installed (use node scripts); bash heredocs containing quotes can break, prefer the Write tool; Prisma schema engine cannot reach Neon from this PC (use `pnpm db:migrate`); `.env.local` hash needs `\$` escapes; integration/e2e schemas must match `test_[a-z0-9]+` (no second underscore).
+
+## STOPPED BY THE USER (2026-11-07): all agents were stopped on purpose
+
+The user stopped every agent and will resume with a new account. Work-in-progress in the three worktrees was committed as `wip: checkpoint before agents were stopped` (ui-dashboard, ui-import, audit-functional), so nothing is lost. To resume: start FRESH agents (the old ids are dead) on the existing worktrees/branches, with the briefs in this file's table; ui-dashboard and ui-import then merge into master; audit-functional finishes `docs/FUNCTIONAL_AUDIT.md` (incl. the 'Client idea fit' section: read D:\WEB DEV\Daniel\Refrence\*, verify the golden example end to end); then follow 'Remaining after the above'.
