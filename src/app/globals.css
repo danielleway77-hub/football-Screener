@@ -947,6 +947,9 @@
   70%,
   100% {
     transform: scale(2.8);
+    opacity: 0;
+  }
+}
 
 /* ---------------------------------------------------------------------------------------------
    UI elevation: Runs (status rail, live sheen, outcome strip). Additive, transform/opacity/bg only.
