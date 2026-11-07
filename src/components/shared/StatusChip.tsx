@@ -26,13 +26,17 @@ export function StatusChip({ status, className }: { status: ChipStatus; classNam
         className,
       )}
     >
-      <span
-        aria-hidden="true"
-        className={cn(
-          "size-2 rounded-full bg-current",
-          status === "RUNNING" && "animate-pulse motion-reduce:animate-none",
-        )}
-      />
+      <span aria-hidden="true" className="relative inline-flex size-2">
+        {status === "RUNNING" ? (
+          <span className="run-ping absolute inset-0 rounded-full bg-current opacity-60" />
+        ) : null}
+        <span
+          className={cn(
+            "relative size-2 rounded-full bg-current",
+            status === "RUNNING" && "animate-pulse motion-reduce:animate-none",
+          )}
+        />
+      </span>
       {s.text}
     </span>
   );

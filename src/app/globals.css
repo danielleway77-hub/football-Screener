@@ -925,3 +925,90 @@
     transition: none !important;
   }
 }
+
+/* ---------------------------------------------------------------------------------------------
+   UI elevation: Runs (status rail, live sheen, outcome strip). Additive, transform/opacity/bg only.
+   --------------------------------------------------------------------------------------------- */
+.run-rail {
+  --rail: transparent;
+}
+.run-rail[data-status="SUCCESS"] {
+  --rail: var(--positive);
+}
+.run-rail[data-status="PARTIAL"] {
+  --rail: var(--warning);
+}
+.run-rail[data-status="FAILED"] {
+  --rail: var(--negative);
+}
+.run-rail[data-status="RUNNING"] {
+  --rail: var(--primary);
+}
+tr.run-rail > td:first-child {
+  box-shadow: inset 3px 0 0 var(--rail);
+}
+li.run-rail {
+  box-shadow:
+    var(--inner-highlight),
+    inset 3px 0 0 var(--rail);
+}
+.run-row {
+  transition: background-color 160ms var(--ease-out);
+}
+.run-row:hover > td:first-child,
+.run-row:focus-visible > td:first-child {
+  box-shadow: inset 5px 0 0 var(--rail);
+}
+.run-row .run-chevron {
+  transition:
+    transform 200ms var(--ease-out),
+    color 160ms;
+}
+.run-row:hover .run-chevron,
+.run-row:focus-visible .run-chevron {
+  transform: translateX(3px);
+  color: var(--primary);
+}
+.run-card {
+  transition:
+    transform 180ms var(--ease-out),
+    border-color 160ms;
+}
+.run-card:active {
+  transform: scale(0.985);
+}
+@media (hover: hover) {
+  .run-card:hover {
+    border-color: var(--hairline-strong);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .run-live {
+    background-image: linear-gradient(
+      100deg,
+      transparent 30%,
+      rgba(200, 245, 46, 0.07) 50%,
+      transparent 70%
+    );
+    background-size: 250% 100%;
+    animation: run-sheen 2.4s linear infinite;
+  }
+  .run-ping {
+    animation: run-ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+}
+@keyframes run-sheen {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+@keyframes run-ping {
+  75%,
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}

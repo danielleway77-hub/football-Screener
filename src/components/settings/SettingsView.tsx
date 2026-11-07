@@ -4,6 +4,15 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AnimatePresence, motion } from "framer-motion";
+import {
+  CalendarClockIcon,
+  DatabaseIcon,
+  KeyRoundIcon,
+  ShieldCheckIcon,
+  SlidersHorizontalIcon,
+  WrenchIcon,
+  type LucideIcon,
+} from "lucide-react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
 import { Callout } from "@/components/shared/Callout";
@@ -28,12 +37,15 @@ import { MaintenanceCard, type RescreenResult } from "./MaintenanceCard";
 import { PasswordForm } from "./PasswordForm";
 import { SectionNav, type SectionLink } from "./SectionNav";
 import { TimezoneCombobox } from "./TimezoneCombobox";
+import { ThresholdPreview, type FormPair } from "./ThresholdPreview";
 import { TokenManager, type TokenRow } from "./TokenManager";
 
 export type SettingsViewProps = {
   settings: SettingsFormValues & { runHourLocal: number };
   tokens: TokenRow[];
   storedCount: number;
+  /** [home, away] form % of recent stored matches, for the live "would qualify" preview. */
+  formPairs?: readonly FormPair[];
   officialApiConfigured: boolean;
 };
 
@@ -54,6 +66,15 @@ const SECTIONS: SectionLink[] = [
   { id: "maintenance", label: "Maintenance" },
 ];
 
+const SECTION_ICONS: Record<string, LucideIcon> = {
+  screening: SlidersHorizontalIcon,
+  schedule: CalendarClockIcon,
+  access: DatabaseIcon,
+  tokens: KeyRoundIcon,
+  security: ShieldCheckIcon,
+  maintenance: WrenchIcon,
+};
+
 function Section({
   id,
   title,
@@ -65,14 +86,23 @@ function Section({
   description: string;
   children: React.ReactNode;
 }) {
+  const Icon = SECTION_ICONS[id] ?? SlidersHorizontalIcon;
   return (
     <section id={id} aria-labelledby={`${id}-title`} className="scroll-mt-24">
-      <Card className="gap-5 px-4 md:px-6">
-        <header className="space-y-1">
-          <h2 id={`${id}-title`} className="text-h3">
-            {title}
-          </h2>
-          <p className="text-body-sm text-muted-foreground">{description}</p>
+      <Card className="gap-5 px-4 transition-colors hover:border-hairline-strong md:px-6">
+        <header className="flex items-start gap-3">
+          <span
+            aria-hidden="true"
+            className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-md border border-primary-border bg-primary-soft text-primary"
+          >
+            <Icon className="size-[18px]" />
+          </span>
+          <div className="min-w-0 space-y-1">
+            <h2 id={`${id}-title`} className="text-h3">
+              {title}
+            </h2>
+            <p className="text-body-sm text-muted-foreground">{description}</p>
+          </div>
         </header>
         {children}
       </Card>
@@ -98,6 +128,7 @@ export function SettingsView({
   settings,
   tokens,
   storedCount,
+  formPairs = [],
   officialApiConfigured,
 }: SettingsViewProps) {
   const router = useRouter();
@@ -122,6 +153,7 @@ export function SettingsView({
   const [needsRescreen, setNeedsRescreen] = React.useState<string | null>(null);
   const [rescreening, setRescreening] = React.useState(false);
   const [saveError, setSaveError] = React.useState<string | null>(null);
+  const [justSaved, setJustSaved] = React.useState(false);
 
   const {
     control,
@@ -139,6 +171,15 @@ export function SettingsView({
   const slow = useSlowRequest(isSubmitting);
   const guard = useUnsavedGuard(isDirty);
   const errorCount = Object.keys(errors).length;
+  const changedCount = (Object.keys(saved) as (keyof SettingsFormValues)[]).filter(
+    (k) => values[k] !== saved[k],
+  ).length;
+
+  React.useEffect(() => {
+    if (!justSaved) return;
+    const t = setTimeout(() => setJustSaved(false), 2600);
+    return () => clearTimeout(t);
+  }, [justSaved]);
 
   const onSubmit = handleSubmit(async (form) => {
     setSaveError(null);
@@ -151,6 +192,7 @@ export function SettingsView({
       setSaved(next);
       reset(next);
       toast.success("Settings saved.");
+      setJustSaved(true);
       if (result.rescreen) {
         setRescreen(result.rescreen);
         setNeedsRescreen(null);
@@ -243,6 +285,15 @@ export function SettingsView({
                   setValue("lowThreshold", low, opts);
                   setValue("highThreshold", high, opts);
                 }}
+              />
+
+              <ThresholdPreview
+                pairs={formPairs}
+                low={values.lowThreshold}
+                high={values.highThreshold}
+                savedLow={saved.lowThreshold}
+                savedHigh={saved.highThreshold}
+                invalid={Boolean(errors.lowThreshold || errors.highThreshold)}
               />
 
               {needsRescreen ? (
@@ -454,13 +505,41 @@ export function SettingsView({
         </Section>
 
         <AnimatePresence>
+          {justSaved && !isDirty ? (
+            <motion.div
+              key="saved-chip"
+              data-testid="saved-chip"
+              role="status"
+              initial={reduce ? false : { y: 12, opacity: 0, scale: 0.96 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={barTransition}
+              className="fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-[var(--z-popover)] flex h-11 items-center gap-2 rounded-full border border-positive/40 bg-surface-overlay pr-4 pl-2 text-sm font-medium shadow-lg lg:sticky lg:right-auto lg:bottom-4 lg:self-end"
+            >
+              <span className="flex size-7 items-center justify-center rounded-full bg-positive-soft text-positive">
+                <svg viewBox="0 0 24 24" className="size-4" fill="none" aria-hidden="true">
+                  <motion.path
+                    d="M5 12.5l4.5 4.5L19 7.5"
+                    stroke="currentColor"
+                    strokeWidth={3}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    initial={reduce ? false : { pathLength: 0 }}
+                    animate={{ pathLength: 1 }}
+                    transition={{ duration: 0.4, delay: 0.1 }}
+                  />
+                </svg>
+              </span>
+              All changes saved
+            </motion.div>
+          ) : null}
           {isDirty ? (
             <motion.div
               key="save-bar"
               data-testid="save-bar"
-              initial={reduce ? false : { y: 24, opacity: 0 }}
+              initial={reduce ? false : { y: 8, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              exit={reduce ? { opacity: 0 } : { y: 24, opacity: 0 }}
+              exit={reduce ? { opacity: 0 } : { y: 8, opacity: 0 }}
               transition={barTransition}
               className={cn(
                 "z-[var(--z-popover)] border-hairline-strong bg-surface-overlay",
@@ -471,12 +550,28 @@ export function SettingsView({
             >
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 lg:min-h-10 lg:flex-nowrap">
                 <div className="min-w-0 flex-1 basis-40" aria-live="polite">
-                  <p className="text-sm font-medium">
+                  <p
+                    className={cn(
+                      "flex items-center gap-2 text-sm font-medium",
+                      (saveError || (errorCount > 0 && submitCount > 0)) && "text-negative",
+                    )}
+                  >
+                    {saveError || (errorCount > 0 && submitCount > 0) ? null : (
+                      <span
+                        aria-hidden="true"
+                        className="size-2 shrink-0 rounded-full bg-primary motion-safe:animate-pulse"
+                      />
+                    )}
                     {errorCount > 0 && submitCount > 0
                       ? `Fix ${errorCount} ${errorCount === 1 ? "field" : "fields"} to save.`
                       : saveError
                         ? saveError
                         : "You have unsaved changes"}
+                    {changedCount > 0 && !saveError ? (
+                      <span className="num text-caption rounded-full bg-neutral-soft px-2 py-0.5 text-muted-foreground">
+                        {changedCount}
+                      </span>
+                    ) : null}
                   </p>
                   {online ? null : (
                     <HelperText className="mt-0.5">

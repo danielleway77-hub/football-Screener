@@ -1,5 +1,11 @@
-import { PageSkeleton } from "@/components/states/Skeletons";
+import { HeaderSkeleton } from "@/components/states/Skeletons";
+import { RunsSkeleton } from "@/components/runs/RunsSkeleton";
 
 export default function Loading() {
-  return <PageSkeleton variant="table" />;
+  return (
+    <div className="container-wide space-y-6">
+      <HeaderSkeleton />
+      <RunsSkeleton />
+    </div>
+  );
 }
