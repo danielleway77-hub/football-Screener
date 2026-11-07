@@ -20,7 +20,7 @@ import { DayGroup } from "@/components/dashboard/DayGroup";
 import { MatchCard } from "@/components/match/MatchCard";
 import { toCardData } from "./to-card-data";
 import { Stagger, StaggerItem } from "@/components/motion/Stagger";
-import { EmptyState } from "@/components/states/EmptyState";
+import { DashboardEmpty, HintChip } from "@/components/dashboard/DashboardEmpty";
 import { Button } from "@/components/ui/button";
 import { groupByLocalDate } from "@/lib/day-groups";
 import { derivePanelState } from "@/lib/dashboard-state";
@@ -71,8 +71,12 @@ function Results({
   now,
   grouped,
   backHref,
+  day,
+  q,
 }: {
   backHref: string;
+  day: string;
+  q: string;
   grouped: boolean;
   matches: MatchRecord[];
   settings: SettingRecord;
@@ -86,14 +90,16 @@ function Results({
     if (!stats.usable && summary.total === 0) {
       const mode = settings.accessMode;
       return mode === "official_api" ? (
-        <EmptyState
+        <DashboardEmpty
           illustration={<RadarIllustration size={160} />}
           title="No matches yet"
           description="Run your first check to see matches that meet your rule."
           actions={<RunAction canPull variant="default" size="default" />}
-        />
+        >
+          <HintChip label="Your rule" value={`form above ${high}% vs below ${low}%`} />
+        </DashboardEmpty>
       ) : mode === "assisted_ingest" ? (
-        <EmptyState
+        <DashboardEmpty
           illustration={<PlugPulseIllustration size={160} />}
           title="Waiting for your first update"
           description="Open PrediGoal, click the Screener button, and your matches appear here."
@@ -102,9 +108,11 @@ function Results({
               <Link href="/import">How to update</Link>
             </Button>
           }
-        />
+        >
+          <HintChip label="Your rule" value={`form above ${high}% vs below ${low}%`} />
+        </DashboardEmpty>
       ) : (
-        <EmptyState
+        <DashboardEmpty
           illustration={<DocumentUploadIllustration size={160} />}
           title="Import your first batch"
           description="Paste or upload the matches file to get started."
@@ -113,13 +121,15 @@ function Results({
               <Link href="/import">Import data</Link>
             </Button>
           }
-        />
+        >
+          <HintChip label="Your rule" value={`form above ${high}% vs below ${low}%`} />
+        </DashboardEmpty>
       );
     }
     if (summary.total === 0) {
       const at = stats.lastUpdate ? formatInTimeZone(stats.lastUpdate, timezone, "HH:mm") : "";
       return (
-        <EmptyState
+        <DashboardEmpty
           illustration={<FunnelIllustration size={160} />}
           title="No matches qualify right now"
           description={`${stats.scanned} scanned at ${at}. None had one team above ${high}% and the other below ${low}%.`}
@@ -128,11 +138,15 @@ function Results({
               <Link href="/settings">Adjust thresholds</Link>
             </Button>
           }
-        />
+        >
+          <HintChip label="Scanned" value={String(stats.scanned)} />
+          <HintChip label="Qualified" value="0" />
+          <HintChip label="Your rule" value={`form above ${high}% vs below ${low}%`} />
+        </DashboardEmpty>
       );
     }
     return (
-      <EmptyState
+      <DashboardEmpty
         illustration={<FunnelSearchIllustration size={160} />}
         title="Nothing matches these filters"
         description="Try another day or clear the league search."
@@ -141,7 +155,11 @@ function Results({
             <Link href="/">Clear filters</Link>
           </Button>
         }
-      />
+      >
+        <HintChip label="Day" value={day} />
+        {q ? <HintChip label="League" value={q} /> : null}
+        <HintChip label="Qualifying in window" value={String(summary.total)} />
+      </DashboardEmpty>
     );
   }
 
@@ -279,6 +297,7 @@ export async function DashboardContent({ searchParams }: { searchParams: Search 
             <ResultsRegion>
               {matches ? (
                 <Results
+                  key={`${params.day}|${params.q}|${params.sort}`}
                   matches={matches}
                   settings={settings}
                   stats={stats}
@@ -286,6 +305,8 @@ export async function DashboardContent({ searchParams }: { searchParams: Search 
                   now={now}
                   grouped={grouped}
                   backHref={backHref}
+                  day={params.day}
+                  q={params.q}
                 />
               ) : (
                 <ResultsError />

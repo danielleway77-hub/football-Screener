@@ -96,7 +96,7 @@ export function MatchCard({ data, low, high, index = 0, className, href }: Match
         "surface-1 bg-grad-card @container relative flex flex-col rounded-lg transition-[transform,border-color,box-shadow] duration-200 ease-out",
         MATCH_CARD_MIN_HEIGHT_CLASS,
         data.qualifies && "glow-accent accent-border",
-        "hover:-translate-y-0.5 hover:border-border-strong hover:shadow-md active:scale-[0.995]",
+        "hover:-translate-y-1 hover:border-border-strong hover:shadow-[0_22px_44px_-22px_rgb(0_0_0/0.85)] active:translate-y-0 active:scale-[0.992] active:shadow-sm motion-reduce:hover:translate-y-0 motion-reduce:active:scale-100",
         "has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-primary",
         className,
       )}

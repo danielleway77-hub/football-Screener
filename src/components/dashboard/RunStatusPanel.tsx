@@ -55,6 +55,14 @@ export function RunStatusPanel(props: RunPanelProps) {
         </span>
       ) : null}
 
+      {state === "stale" || state === "failed" ? (
+        <span
+          aria-hidden="true"
+          data-testid="panel-rail"
+          className={`absolute inset-x-0 top-0 h-0.5 ${state === "stale" ? "bg-warning/70" : "bg-negative/70"}`}
+        />
+      ) : null}
+
       {run.timedOut ? (
         <ErrorState
           title="This is taking too long"
@@ -100,6 +108,12 @@ export function RunStatusPanel(props: RunPanelProps) {
             <p className="text-body-sm text-muted-foreground">
               <span className="num text-foreground">{scanned}</span> scanned ·{" "}
               <span className="num text-foreground">{qualified}</span> qualify
+            </p>
+          ) : null}
+
+          {state === "stale" ? (
+            <p data-testid="stale-hint" className="text-caption text-warning">
+              These results may be out of date. Update to refresh them.
             </p>
           ) : null}
 
