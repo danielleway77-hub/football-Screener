@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ErrorState } from "@/components/states/ErrorState";
 import { Button } from "@/components/ui/button";
 import { illustrationFor } from "@/components/illustrations";
+import { Reveal } from "@/components/motion/Reveal";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 
 type RouteErrorProps = {
   error: unknown;
@@ -26,6 +28,7 @@ function digestOf(error: unknown): string {
  * re-exports it). Friendly text, retry that works, a way home, and the digest in "Technical details".
  */
 export function RouteError({ error, retry }: RouteErrorProps) {
+  const online = useOnlineStatus();
   React.useEffect(() => {
     // Log the message for the developer console only; users never see it.
     console.error(
@@ -35,8 +38,10 @@ export function RouteError({ error, retry }: RouteErrorProps) {
   }, [error]);
 
   return (
-    <div className="container-wide">
+    <Reveal className="container-wide">
       <ErrorState
+        title={online ? undefined : "You're offline"}
+        message={online ? undefined : "Check your connection, then try again. Your data is safe."}
         code={digestOf(error)}
         illustration={illustrationFor("error")}
         onRetry={retry}
@@ -46,6 +51,6 @@ export function RouteError({ error, retry }: RouteErrorProps) {
           </Button>
         }
       />
-    </div>
+    </Reveal>
   );
 }

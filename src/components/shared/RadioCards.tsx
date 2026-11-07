@@ -69,8 +69,8 @@ export function RadioCards<T extends string>({
             <span
               aria-hidden="true"
               className={cn(
-                "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border-2",
-                selected ? "border-primary" : "border-border-control",
+                "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border",
+                selected ? "border-primary ring-1 ring-primary" : "border-border-control",
               )}
             >
               {selected ? <span className="size-2.5 rounded-full bg-primary" /> : null}

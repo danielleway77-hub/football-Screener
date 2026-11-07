@@ -37,14 +37,14 @@ export default function GlobalError({
             <button
               type="button"
               onClick={() => retry()}
-              className="inline-flex h-11 items-center justify-center rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground"
+              className="inline-flex h-11 items-center justify-center rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition-[filter,transform] duration-150 hover:brightness-110 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none active:scale-[0.98]"
             >
               Try again
             </button>
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- the router may be broken here */}
             <a
               href="/"
-              className="inline-flex h-11 items-center justify-center rounded-md px-5 text-sm font-medium text-muted-foreground hover:text-foreground"
+              className="inline-flex h-11 items-center justify-center rounded-md px-5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
             >
               Dashboard
             </a>

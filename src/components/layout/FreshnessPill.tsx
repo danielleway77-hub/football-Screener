@@ -59,12 +59,13 @@ export function FreshnessPill({
   const tone = pillTone(updatedMs, now, staleAfterHrs, running);
   const ago = updatedMs === null ? null : formatAgo(now - updatedMs);
   const text = running ? "Checking…" : ago === null ? "No data yet" : `Updated ${ago}`;
+  // WCAG 2.5.3 (label in name): the accessible name starts with the visible text.
   const label =
     exactLabel && !running
-      ? `Data last updated ${exactLabel}. View run history.`
+      ? `${text}. Data last updated ${exactLabel}. View run history.`
       : running
-        ? "A check is running. View run history."
-        : "No data yet. View run history.";
+        ? `${text}. A check is running. View run history.`
+        : `${text}. View run history.`;
 
   return (
     <Tooltip>

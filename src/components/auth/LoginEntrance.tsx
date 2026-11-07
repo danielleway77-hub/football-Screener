@@ -32,7 +32,20 @@ export function LoginEntrance({ children, className }: Props) {
     const timeout = new Promise<null>((resolve) =>
       setTimeout(() => resolve(null), LOGIN_IMPORT_TIMEOUT_MS),
     );
-    void Promise.race([import("gsap").then((m) => m.gsap), timeout]).then((gsap) => {
+    // Never touch the form's DOM before React has hydrated it (the Suspense boundary hydrates late).
+    const formReady = new Promise<void>((resolve) => {
+      const t0 = performance.now();
+      const tick = () => {
+        const f = root.querySelector("[data-testid='login-form']");
+        if (f?.getAttribute("data-hydrated") === "true" || performance.now() - t0 > 1500) resolve();
+        else requestAnimationFrame(tick);
+      };
+      tick();
+    });
+    void Promise.race([
+      Promise.all([import("gsap").then((m) => m.gsap), formReady]).then(([g]) => g),
+      timeout,
+    ]).then((gsap) => {
       if (cancelled) return;
       if (!gsap) {
         setPhase("skipped");
