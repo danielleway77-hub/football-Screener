@@ -88,13 +88,29 @@ export function ProbabilityGrid({
   className?: string;
 }) {
   const top = highest1x2(p.homeWin, p.draw, p.awayWin);
+  const allMissing =
+    p.homeWin === null &&
+    p.draw === null &&
+    p.awayWin === null &&
+    p.btts === null &&
+    p.over25 === null;
   return (
     <div
       role="group"
       aria-label="Probabilities"
       data-testid="probability-grid"
-      className={cn("flex flex-col gap-2", className)}
+      data-all-missing={allMissing || undefined}
+      className={cn("relative flex flex-col gap-2", allMissing && "[&>div]:opacity-55", className)}
     >
+      {allMissing ? (
+        <span
+          aria-hidden="true"
+          data-testid="prob-unavailable"
+          className="text-caption absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rounded-4xl border border-border-strong bg-surface-raised px-3 py-1 font-semibold whitespace-nowrap text-muted-foreground shadow-sm"
+        >
+          Probabilities unavailable
+        </span>
+      ) : null}
       <div className="grid grid-cols-3 gap-2">
         <StatTile label="Home win" value={p.homeWin} highest={top === "home"} />
         <StatTile label="Draw" value={p.draw} highest={top === "draw"} />
