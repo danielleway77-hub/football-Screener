@@ -4,7 +4,7 @@ import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, useAnimationControls } from "framer-motion";
-import { InfoIcon, TriangleAlertIcon, XCircleIcon } from "lucide-react";
+import { CheckIcon, InfoIcon, KeyRoundIcon, TriangleAlertIcon, XCircleIcon } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { PasswordInput } from "@/components/shared/PasswordInput";
 import { HelperText } from "@/components/shared/HelperText";
@@ -28,6 +28,9 @@ export function LoginForm() {
   const { reduce } = useMotionPrefs();
   const shake = useAnimationControls();
   const [error, setError] = React.useState<FormError | null>(null);
+  const [signedIn, setSignedIn] = React.useState(false);
+  const [capsLock, setCapsLock] = React.useState(false);
+  const expired = params.has("expired");
   const {
     register,
     handleSubmit,
@@ -35,6 +38,7 @@ export function LoginForm() {
     formState: { isSubmitting },
   } = useForm<LoginInput>({ resolver: zodResolver(loginSchema), defaultValues: { password: "" } });
 
+  const passwordField = register("password");
   const limited = error?.kind === "limited";
   const showError = error?.kind === "invalid" || error?.kind === "network";
   const message =
@@ -51,6 +55,7 @@ export function LoginForm() {
           body: JSON.stringify(values),
         });
         if (res.status === 204) {
+          setSignedIn(true);
           router.replace(sanitizeNext(params.get("next")));
           router.refresh();
           return;
@@ -75,7 +80,7 @@ export function LoginForm() {
     },
   );
 
-  const disabled = isSubmitting || limited;
+  const disabled = isSubmitting || limited || signedIn;
   const slow = useSlowRequest(isSubmitting);
 
   return (
@@ -89,6 +94,12 @@ export function LoginForm() {
       data-hydrated={hydrated ? "true" : "false"}
       className="space-y-5"
     >
+      {expired && !limited ? (
+        <Banner tone="warning" icon={KeyRoundIcon} className="rounded-md border">
+          Your session ended. Sign in again to continue.
+        </Banner>
+      ) : null}
+
       {limited ? (
         <Banner tone="warning" icon={TriangleAlertIcon} className="rounded-md border">
           Too many attempts. Try again in {error.minutes}{" "}
@@ -107,7 +118,12 @@ export function LoginForm() {
           disabled={disabled}
           aria-invalid={showError || undefined}
           aria-describedby={showError ? "password-error" : "password-help"}
-          {...register("password")}
+          {...passwordField}
+          onKeyUp={(e) => setCapsLock(e.getModifierState("CapsLock"))}
+          onBlur={(e) => {
+            setCapsLock(false);
+            void passwordField.onBlur(e);
+          }}
         />
         {showError ? (
           <p
@@ -118,7 +134,15 @@ export function LoginForm() {
             <XCircleIcon className="size-4 shrink-0" aria-hidden="true" />
             {message}
           </p>
-        ) : limited ? null : (
+        ) : limited ? null : capsLock ? (
+          <p
+            id="password-help"
+            className="text-caption mt-2 flex items-center gap-1.5 text-warning"
+          >
+            <TriangleAlertIcon className="size-3.5 shrink-0" aria-hidden="true" />
+            Caps Lock is on.
+          </p>
+        ) : (
           <p id="password-help" className="text-caption mt-2 text-faint">
             Enter the password you were given.
           </p>
@@ -133,7 +157,15 @@ export function LoginForm() {
           loading={isSubmitting}
           disabled={disabled || !online}
         >
-          {isSubmitting ? "Signing in…" : "Sign in"}
+          {signedIn ? (
+            <>
+              <CheckIcon aria-hidden="true" /> Signed in
+            </>
+          ) : isSubmitting ? (
+            "Signing in…"
+          ) : (
+            "Sign in"
+          )}
         </Button>
         <SlowHint active={slow} />
         {online ? null : <HelperText>You&apos;re offline. Reconnect to sign in.</HelperText>}

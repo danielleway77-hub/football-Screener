@@ -3,6 +3,8 @@ import { Suspense } from "react";
 import { LoginEntrance } from "@/components/auth/LoginEntrance";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { Logo } from "@/components/shared/Logo";
+import { LoginFormSkeleton } from "@/components/auth/LoginSkeleton";
+import { PitchBackdrop } from "@/components/auth/PitchBackdrop";
 
 export const metadata: Metadata = { title: "Sign in" };
 
@@ -16,6 +18,7 @@ export default function LoginPage() {
       <div data-login-glow aria-hidden="true" className="login-glow">
         <div className="login-glow-blob" />
       </div>
+      <PitchBackdrop />
       <div className="relative z-10 w-full max-w-[420px] space-y-8 accent-border max-md:before:hidden md:rounded-2xl md:bg-surface md:p-10">
         <div data-login-logo data-login-glyph className="w-fit">
           <Logo size={32} />
@@ -26,7 +29,7 @@ export default function LoginPage() {
             Private dashboard for your football screening.
           </p>
         </div>
-        <Suspense fallback={<div className="h-56" aria-hidden="true" />}>
+        <Suspense fallback={<LoginFormSkeleton />}>
           <LoginForm />
         </Suspense>
       </div>

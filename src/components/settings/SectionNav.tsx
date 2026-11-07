@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import { motion } from "framer-motion";
+import { useMotionPrefs } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 export type SectionLink = { id: string; label: string };
@@ -11,6 +13,7 @@ export type SectionLink = { id: string; label: string };
  * the last section wins. Clicks scroll smoothly unless the user prefers reduced motion.
  */
 export function SectionNav({ sections }: { sections: SectionLink[] }) {
+  const { reduce } = useMotionPrefs();
   const [current, setCurrent] = React.useState(sections[0]?.id ?? "");
 
   React.useEffect(() => {
@@ -71,12 +74,20 @@ export function SectionNav({ sections }: { sections: SectionLink[] }) {
                 aria-current={active ? "location" : undefined}
                 data-active={active}
                 className={cn(
-                  "flex min-h-11 items-center border-l-2 px-4 text-sm font-medium transition-colors",
-                  active
-                    ? "border-primary text-primary"
-                    : "border-transparent text-muted-foreground hover:text-foreground",
+                  "relative flex min-h-11 items-center border-l-2 border-transparent px-4 text-sm font-medium transition-colors",
+                  active ? "text-primary" : "text-muted-foreground hover:text-foreground",
                 )}
               >
+                {active ? (
+                  <motion.span
+                    layoutId="settings-nav-active"
+                    aria-hidden="true"
+                    transition={
+                      reduce ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 40 }
+                    }
+                    className="absolute inset-y-0 -left-0.5 w-0.5 bg-primary shadow-[0_0_10px_var(--primary)]"
+                  />
+                ) : null}
                 {section.label}
               </a>
             </li>
