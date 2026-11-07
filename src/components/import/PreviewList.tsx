@@ -1,6 +1,10 @@
+"use client";
+
 import { CheckIcon, XCircleIcon } from "lucide-react";
+import { motion } from "framer-motion";
 import { QualifiesChip } from "@/components/match/QualifiesChip";
 import type { PreviewRow } from "@/lib/import/model";
+import { DURATION, EASE_OUT, STAGGER_MAX_ITEMS, useMotionPrefs } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 /** Invalid rows first (so problems are never below the fold), then valid rows, each in file order. */
@@ -56,7 +60,7 @@ function Status({ row }: { row: PreviewRow }) {
     );
   }
   return (
-    <span className="inline-flex items-start gap-1.5 text-sm text-negative">
+    <span className="inline-flex items-start gap-1.5 rounded-md bg-negative-soft px-2 py-1 text-sm text-negative">
       <XCircleIcon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
       <span>{row.reason}</span>
     </span>
@@ -71,12 +75,26 @@ const Teams = ({ row }: { row: PreviewRow }) => (
 
 /** Table from 768px up, stacked cards below (no horizontal scroll at 360). */
 export function PreviewList({ rows }: { rows: PreviewRow[] }) {
+  const { reduce } = useMotionPrefs();
   const sorted = sortRows(rows);
+  // Rows only exist after the owner loaded data (never in the server HTML), so they may animate in.
+  const enter = (i: number) =>
+    reduce
+      ? {}
+      : {
+          initial: { opacity: 0, y: 6 },
+          animate: { opacity: 1, y: 0 },
+          transition: {
+            duration: DURATION.ui,
+            ease: EASE_OUT,
+            delay: Math.min(i, STAGGER_MAX_ITEMS) * 0.04,
+          },
+        };
   return (
     <div>
       <div
         data-testid="preview-table"
-        className="hidden max-h-[360px] overflow-auto rounded-md border border-hairline md:block"
+        className="hidden max-h-[360px] overflow-auto rounded-xl border border-hairline md:block"
       >
         <table className="w-full text-left text-sm">
           <thead className="sticky top-0 bg-surface-raised text-xs text-muted-foreground uppercase">
@@ -88,8 +106,14 @@ export function PreviewList({ rows }: { rows: PreviewRow[] }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-hairline">
-            {sorted.map((row) => (
-              <tr key={row.index} data-testid="preview-row" data-valid={row.valid}>
+            {sorted.map((row, i) => (
+              <motion.tr
+                key={row.index}
+                data-testid="preview-row"
+                data-valid={row.valid}
+                className={row.valid ? undefined : "bg-negative-soft/20"}
+                {...enter(i)}
+              >
                 <td className="num px-3 py-3 whitespace-nowrap text-muted-foreground">
                   {row.label}
                 </td>
@@ -100,18 +124,22 @@ export function PreviewList({ rows }: { rows: PreviewRow[] }) {
                 <td className="px-3 py-3">
                   <Status row={row} />
                 </td>
-              </tr>
+              </motion.tr>
             ))}
           </tbody>
         </table>
       </div>
       <ul data-testid="preview-cards" className="max-h-[360px] space-y-3 overflow-auto md:hidden">
-        {sorted.map((row) => (
-          <li
+        {sorted.map((row, i) => (
+          <motion.li
             key={row.index}
             data-testid="preview-card"
             data-valid={row.valid}
-            className="space-y-2 rounded-md border border-hairline bg-subtle/40 p-3"
+            className={cn(
+              "space-y-2 rounded-xl border p-3",
+              row.valid ? "border-hairline bg-subtle/40" : "border-negative/40 bg-negative-soft/20",
+            )}
+            {...enter(i)}
           >
             <div className="flex items-baseline justify-between gap-3">
               <span className="num text-xs text-muted-foreground">{row.label}</span>
@@ -121,7 +149,7 @@ export function PreviewList({ rows }: { rows: PreviewRow[] }) {
               <Teams row={row} />
             </p>
             <Status row={row} />
-          </li>
+          </motion.li>
         ))}
       </ul>
     </div>

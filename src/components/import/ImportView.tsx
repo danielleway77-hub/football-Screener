@@ -2,8 +2,9 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { animate, motion } from "framer-motion";
+import { WifiOffIcon, XCircleIcon } from "lucide-react";
 import { Callout } from "@/components/shared/Callout";
-import { HelperText } from "@/components/shared/HelperText";
 import { SegmentedControl } from "@/components/shared/SegmentedControl";
 import { SlowHint } from "@/components/states/SlowHint";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -28,9 +29,11 @@ import {
   downloadText,
   SAMPLE_PLACEHOLDER,
 } from "@/lib/import/samples";
+import { DURATION, EASE_OUT, useMotionPrefs } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 import { parsePageText } from "@/server/domain/parse-page-text";
 import { DropZone } from "./DropZone";
+import { ImportStepper } from "./ImportStepper";
 import { CountChips, PreviewList } from "./PreviewList";
 import { TextMatches } from "./TextMatches";
 
@@ -66,30 +69,131 @@ type ApiOk = {
 
 const scopeName = (s: "league" | "overall") => (s === "league" ? "League" : "Overall");
 
+/** Counts up to `value` once on mount (text is the final value for SSR, reduced motion and tests). */
+function CountNumber({ value, testId }: { value: number; testId: string }) {
+  const { reduce } = useMotionPrefs();
+  const ref = React.useRef<HTMLElement>(null);
+  React.useEffect(() => {
+    const el = ref.current;
+    if (reduce || !el || value < 2) return;
+    const controls = animate(0, value, {
+      duration: DURATION.countUp,
+      ease: EASE_OUT,
+      onUpdate: (v) => {
+        el.textContent = String(Math.round(v));
+      },
+    });
+    return () => {
+      controls.stop();
+      el.textContent = String(value);
+    };
+  }, [value, reduce]);
+  return (
+    <strong ref={ref} data-testid={testId} className="num">
+      {value}
+    </strong>
+  );
+}
+
+/** Ring + check that draws itself (static under reduced motion). */
+function ResultMark({ tone }: { tone: "positive" | "warning" | "negative" }) {
+  const { reduce } = useMotionPrefs();
+  const color =
+    tone === "positive" ? "text-positive" : tone === "warning" ? "text-warning" : "text-negative";
+  const draw = (delay: number) =>
+    reduce
+      ? {}
+      : {
+          initial: { pathLength: 0 },
+          animate: { pathLength: 1 },
+          transition: { duration: 0.5, ease: EASE_OUT, delay },
+        };
+  return (
+    <svg
+      viewBox="0 0 48 48"
+      className={cn("size-14 shrink-0", color)}
+      fill="none"
+      aria-hidden="true"
+    >
+      <motion.circle cx="24" cy="24" r="21" stroke="currentColor" strokeWidth="2" {...draw(0)} />
+      {tone === "positive" ? (
+        <motion.path
+          d="M15 25l6 6 12-13"
+          stroke="currentColor"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          {...draw(0.3)}
+        />
+      ) : (
+        <motion.path
+          d={tone === "warning" ? "M24 14v12M24 33v1" : "M17 17l14 14M31 17L17 31"}
+          stroke="currentColor"
+          strokeWidth="3"
+          strokeLinecap="round"
+          {...draw(0.3)}
+        />
+      )}
+    </svg>
+  );
+}
+
 function ResultCard({ outcome, onAgain }: { outcome: Outcome; onAgain: () => void }) {
+  const { reduce } = useMotionPrefs();
   const imported = Math.max(0, outcome.scanned - outcome.failed);
   const partial = outcome.failed > 0;
+  const tone = outcome.none ? "negative" : partial ? "warning" : "positive";
   return (
-    <div className="space-y-4" data-testid="import-result">
-      {outcome.none ? (
-        <Callout tone="negative" title="None of the matches could be imported.">
-          Fix the rows below and try again. Nothing was changed.
-        </Callout>
-      ) : partial ? (
-        <Callout tone="warning">
-          <strong data-testid="result-imported">{imported}</strong> imported,{" "}
-          <strong data-testid="result-skipped">{outcome.failed}</strong> skipped. See reasons below.
-        </Callout>
-      ) : (
-        <Callout tone="positive">
-          Imported <strong data-testid="result-imported">{imported}</strong> matches ·{" "}
-          <strong data-testid="result-qualified">{outcome.qualified}</strong> qualify.
-        </Callout>
-      )}
+    <motion.div
+      className="space-y-5 rounded-xl border border-hairline bg-surface-raised p-5 sm:p-6"
+      data-testid="import-result"
+      data-tone={tone}
+      initial={reduce ? false : { opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: DURATION.page, ease: EASE_OUT }}
+    >
+      <div className="flex items-center gap-4" role={outcome.none ? "alert" : "status"}>
+        <ResultMark tone={tone} />
+        <div className="min-w-0 space-y-1">
+          {outcome.none ? (
+            <>
+              <p className="text-h3">None of the matches could be imported.</p>
+              <p className="text-body-sm text-muted-foreground">
+                Fix the rows below and try again. Nothing was changed.
+              </p>
+            </>
+          ) : partial ? (
+            <>
+              <p className="text-h3">
+                <CountNumber value={imported} testId="result-imported" /> imported,{" "}
+                <CountNumber value={outcome.failed} testId="result-skipped" /> skipped. See reasons
+                below.
+              </p>
+              <p className="text-body-sm text-muted-foreground">
+                The valid matches are saved. Fix the skipped ones and import them again.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-h3">
+                Imported <CountNumber value={imported} testId="result-imported" /> matches ·{" "}
+                <CountNumber value={outcome.qualified} testId="result-qualified" /> qualify.
+              </p>
+              <p className="text-body-sm text-muted-foreground">
+                Your dashboard is up to date with this data.
+              </p>
+            </>
+          )}
+        </div>
+      </div>
       {outcome.reasons.length > 0 ? (
         <ul className="space-y-2 text-sm" data-testid="result-reasons">
           {outcome.reasons.map((r) => (
-            <li key={`${r.label}-${r.reason}`} className="flex gap-3">
+            <li
+              key={`${r.label}-${r.reason}`}
+              className="flex items-start gap-3 rounded-md border border-negative/30 bg-negative-soft/40 px-3 py-2"
+            >
+              <XCircleIcon className="mt-0.5 size-4 shrink-0 text-negative" aria-hidden="true" />
               <span className="num w-16 shrink-0 text-muted-foreground">{r.label}</span>
               <span className="text-negative">{r.reason}</span>
             </li>
@@ -106,7 +210,7 @@ function ResultCard({ outcome, onAgain }: { outcome: Outcome; onAgain: () => voi
           Import another
         </Button>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -181,6 +285,8 @@ export function ImportView({
   const [inputError, setInputError] = React.useState<string | null>(null);
   const [submitError, setSubmitError] = React.useState<string | null>(null);
   const [submitting, setSubmitting] = React.useState(false);
+  const [reading, setReading] = React.useState(false);
+  const [loadedFile, setLoadedFile] = React.useState<{ name: string; size: number } | null>(null);
   const [outcome, setOutcome] = React.useState<Outcome | null>(null);
   const inFlight = React.useRef(false);
   const slow = useSlowRequest(submitting);
@@ -222,6 +328,7 @@ export function ImportView({
   function reset() {
     setFileText("");
     setPageText("");
+    setLoadedFile(null);
     setEdits({});
     setInputError(null);
     setSubmitError(null);
@@ -233,10 +340,21 @@ export function ImportView({
     setOutcome(null);
     if (file.size > MAX_BYTES) {
       setFileText("");
+      setLoadedFile(null);
       setInputError(TOO_LARGE);
       return;
     }
-    setFileText(await file.text());
+    setReading(true);
+    try {
+      const text = await file.text();
+      setFileText(text);
+      setLoadedFile({ name: file.name, size: file.size });
+    } catch {
+      setLoadedFile(null);
+      setInputError("We couldn't read that file. Try another one.");
+    } finally {
+      setReading(false);
+    }
   }
 
   function onFileTextChange(value: string) {
@@ -246,6 +364,7 @@ export function ImportView({
       return;
     }
     setInputError(null);
+    setLoadedFile(null);
     setFileText(value);
   }
 
@@ -308,6 +427,8 @@ export function ImportView({
     }
   }
 
+  const step: 0 | 1 | 2 | 3 = outcome ? 3 : canSubmit || submitting ? 2 : preview ? 1 : 0;
+  const pasteBytes = new Blob([fileText]).size;
   const recommended = accessMode === "assisted_ingest" ? "helper" : "paste";
   const chip = (
     <span className="rounded-4xl border border-primary-border bg-primary-soft px-2 py-0.5 text-[0.6875rem] font-bold tracking-[0.06em] text-primary uppercase">
@@ -346,6 +467,7 @@ export function ImportView({
         </TabsContent>
 
         <TabsContent value="paste" className="space-y-6">
+          <ImportStepper current={step} />
           {outcome ? (
             <ResultCard outcome={outcome} onAgain={reset} />
           ) : (
@@ -369,6 +491,8 @@ export function ImportView({
                 <div className="space-y-4">
                   <DropZone
                     disabled={submitting}
+                    reading={reading}
+                    loaded={loadedFile}
                     onFile={readFile}
                     onSampleJson={() =>
                       downloadText(
@@ -409,9 +533,16 @@ export function ImportView({
                       disabled={submitting}
                       className="num field-sizing-fixed font-mono text-[13px]"
                     />
-                    <p className="text-caption mt-2 text-faint">
-                      JSON or CSV. Percentages like 80, 80% or 80,5% are fine. Times need a zone
-                      (for example 2026-11-08T19:00:00Z).
+                    <p className="text-caption mt-2 flex flex-wrap justify-between gap-x-4 text-faint">
+                      <span>
+                        JSON or CSV. Percentages like 80, 80% or 80,5% are fine. Times need a zone
+                        (for example 2026-11-08T19:00:00Z).
+                      </span>
+                      {fileText ? (
+                        <span className="num" data-testid="paste-size">
+                          {(pasteBytes / 1024).toFixed(1)} KB of 1024 KB
+                        </span>
+                      ) : null}
                     </p>
                   </div>
                 </div>
@@ -481,7 +612,10 @@ export function ImportView({
               ) : null}
 
               {preview && !preview.error ? (
-                <section
+                <motion.section
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: DURATION.page, ease: EASE_OUT }}
                   aria-labelledby="preview-title"
                   className="space-y-4"
                   data-testid="preview"
@@ -503,7 +637,7 @@ export function ImportView({
                       No valid matches yet. Fix the problems above to import.
                     </Callout>
                   ) : null}
-                </section>
+                </motion.section>
               ) : null}
 
               {submitError ? (
@@ -512,30 +646,73 @@ export function ImportView({
                 </Callout>
               ) : null}
 
-              <div>
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <Button
-                    type="button"
-                    size="lg"
-                    loading={submitting}
-                    disabled={!canSubmit}
-                    onClick={submit}
-                    className="max-sm:w-full"
+              <div
+                data-testid="action-bar"
+                className={cn(
+                  preview && !preview.error && "sticky bottom-3 z-10",
+                  "space-y-2 rounded-xl border border-hairline-strong bg-surface-raised/90 p-3 shadow-lg backdrop-blur-md",
+                )}
+              >
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <p
+                    className="text-body-sm min-w-0 flex-1 text-muted-foreground"
+                    aria-live="polite"
+                    data-testid="action-summary"
                   >
-                    Import {preview?.counts.valid ?? 0} matches
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="lg"
-                    onClick={reset}
-                    disabled={submitting || (!fileText && !pageText)}
-                    className="max-sm:w-full"
-                  >
-                    Clear
-                  </Button>
+                    {preview && !preview.error ? (
+                      <>
+                        <motion.strong
+                          key={preview.counts.valid}
+                          className="num inline-block text-foreground"
+                          initial={{ y: 6, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          transition={{ duration: DURATION.ui, ease: EASE_OUT }}
+                        >
+                          {preview.counts.valid}
+                        </motion.strong>{" "}
+                        ready to import
+                        {preview.counts.invalid > 0 ? (
+                          <span className="text-negative">
+                            {" "}
+                            · {preview.counts.invalid} need fixing
+                          </span>
+                        ) : null}
+                      </>
+                    ) : (
+                      "Add data above to see a preview."
+                    )}
+                  </p>
+                  <div className="flex gap-3">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="lg"
+                      onClick={reset}
+                      disabled={submitting || (!fileText && !pageText)}
+                    >
+                      Clear
+                    </Button>
+                    <Button
+                      type="button"
+                      size="lg"
+                      loading={submitting}
+                      disabled={!canSubmit}
+                      onClick={submit}
+                      className="max-sm:flex-1"
+                    >
+                      Import {preview?.counts.valid ?? 0} matches
+                    </Button>
+                  </div>
                 </div>
-                {online ? null : <HelperText>You&apos;re offline. Reconnect to import.</HelperText>}
+                {online ? null : (
+                  <p
+                    className="text-body-sm flex items-center gap-2 text-warning"
+                    data-testid="offline-note"
+                  >
+                    <WifiOffIcon className="size-4 shrink-0" aria-hidden="true" />
+                    You&apos;re offline. Reconnect to import.
+                  </p>
+                )}
                 <SlowHint active={slow} />
               </div>
             </>
