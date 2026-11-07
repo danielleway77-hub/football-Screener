@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import { resetData, seedBaseline } from "./helpers/dashboard-db";
+import { resetData, seedBaseline, withClient } from "./helpers/dashboard-db";
 
 // Step 16.1 keyboard-only checks (docs/TEST_CATALOG.md 16.1, TESTING_STANDARDS section 6.5): skip link, focus
 // order and visible focus, dialog focus traps, no keyboard traps, and the full owner walkthrough.
@@ -14,6 +14,13 @@ async function focused(page: Page) {
     const el = document.activeElement;
     if (!el || el === document.body || el === document.documentElement) return null;
     const cs = getComputedStyle(el);
+    // The ring may sit on the control or on a wrapper that reacts to :has(:focus-visible).
+    let ringed = false;
+    for (let n: Element | null = el, i = 0; n && i < 3; n = n.parentElement, i++) {
+      const c = getComputedStyle(n);
+      if ((c.outlineStyle !== "none" && parseFloat(c.outlineWidth) > 0) || c.boxShadow !== "none")
+        ringed = true;
+    }
     const r = el.getBoundingClientRect();
     const name =
       el.getAttribute("aria-label") ??
@@ -24,12 +31,21 @@ async function focused(page: Page) {
       name,
       href: el.getAttribute("href"),
       inDialog: !!el.closest("[role=dialog]"),
-      outline: cs.outlineStyle !== "none" && parseFloat(cs.outlineWidth) > 0,
+      outline: ringed,
       shadow: cs.boxShadow !== "none",
       borderChange: false,
       visible: r.width > 0 && r.height > 0,
       id: el.id,
     };
+  });
+}
+
+/** Puts the sequential-focus starting point at the top of the document (route focus may have moved it). */
+async function focusStart(page: Page) {
+  await page.evaluate(() => {
+    document.body.setAttribute("tabindex", "-1");
+    document.body.focus();
+    document.body.removeAttribute("tabindex");
   });
 }
 
@@ -44,17 +60,25 @@ async function tabUntil(
     const f = await focused(page);
     if (f && match(f)) return f;
   }
-  throw new Error(`focus never reached the target within ${limit} Tab presses`);
+  throw new Error(
+    `focus never reached the target within ${limit} Tab presses; last=${JSON.stringify(await focused(page))}`,
+  );
 }
 
 test.describe("keyboard", () => {
   test.beforeEach(async () => {
+    await withClient((c) => c.query('DELETE FROM "IngestToken"'));
     await seedBaseline();
   });
 
-  test("skip link is the first stop and moves focus into main", async ({ page }) => {
+  test("skip link is the first stop and moves focus into main", async ({ page }, info) => {
+    test.skip(
+      info.project.name === "mobile",
+      "hardware-keyboard flows run on desktop; mobile covers the menu dialog",
+    );
     await page.goto("/");
     await expect(page.getByTestId("navbar")).toHaveAttribute("data-hydrated", "true");
+    await focusStart(page);
     await page.keyboard.press("Tab");
     const first = await focused(page);
     expect(first?.name).toMatch(/skip to content/i);
@@ -68,7 +92,8 @@ test.describe("keyboard", () => {
   for (const url of ["/", "/runs", "/settings", "/import", "/matches/golden"]) {
     test(`${url}: every tab stop shows a focus indicator, in a sensible order, with no trap`, async ({
       page,
-    }) => {
+    }, info) => {
+      test.skip(info.project.name === "mobile", "hardware-keyboard flows run on desktop");
       test.setTimeout(120_000);
       await page.goto(url);
       await expect(page.locator("main").first()).toBeVisible();
@@ -76,6 +101,7 @@ test.describe("keyboard", () => {
       const seen: string[] = [];
       const bad: string[] = [];
       let wrapped = false;
+      await focusStart(page);
       for (let i = 0; i < 90; i++) {
         await page.keyboard.press("Tab");
         const f = await focused(page);
@@ -153,6 +179,7 @@ test.describe("owner walkthrough, keyboard only", () => {
     test.setTimeout(180_000);
     test.skip(info.project.name !== "desktop", "the menu variant is covered by the dialog test");
     await resetData();
+    await withClient((c) => c.query('DELETE FROM "IngestToken"')); // leftovers would fill the 5-token cap
     await seedBaseline();
     await page.context().setExtraHTTPHeaders({
       "x-forwarded-for": `2001:db8::${randomUUID().slice(0, 4)}:${randomUUID().slice(0, 4)}`,
@@ -201,7 +228,9 @@ test.describe("owner walkthrough, keyboard only", () => {
     await tabUntil(page, (f) => f.name === "Create token" && f.inDialog, 6);
     await page.keyboard.press("Enter");
     await expect(page.getByTestId("token-plaintext")).toBeVisible();
-    await tabUntil(page, (f) => f.name === "Done", 10);
+    await expect(page.getByRole("button", { name: "Done" })).toBeEnabled(); // enabled after a short delay
+    const cur = await focused(page);
+    if (cur?.name !== "Done") await tabUntil(page, (f) => f.name === "Done", 10); // dialogs may focus it already
     await page.keyboard.press("Enter");
     await expect(page.getByRole("dialog")).toBeHidden();
 
@@ -211,10 +240,11 @@ test.describe("owner walkthrough, keyboard only", () => {
     await expect(page.getByRole("dialog")).toContainText('Revoke "Keyboard token"?');
     await tabUntil(page, (f) => f.name === "Revoke" && f.inDialog, 8);
     await page.keyboard.press("Enter");
-    await expect(page.getByTestId("token-row")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Revoke Keyboard token" })).toHaveCount(0); // revoked rows keep no action
 
+    await expect(page.getByRole("dialog")).toBeHidden(); // revoke finished and its dialog closed
     // Log out.
-    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+    await focusStart(page);
     await tabUntil(page, (f) => /log out/i.test(f.name));
     await page.keyboard.press("Enter");
     await expect(page).toHaveURL(/\/login/);
