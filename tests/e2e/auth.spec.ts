@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
+import { SESSION_COOKIE } from "./helpers/cookie";
 
 // Step 6.1 (docs/TEST_CATALOG.md §6.1). Every test uses its own fake client IP (x-forwarded-for) so the
 // 5-failures-per-IP lockout of one test never affects another.
@@ -67,11 +68,12 @@ test.describe("signed out", () => {
     await page.getByRole("button", { name: "Sign in" }).click();
     await expect(page).toHaveURL((u) => u.pathname === "/");
     await expect(page.getByRole("heading", { level: 1, name: "Qualifying matches" })).toBeVisible();
-    const cookie = (await page.context().cookies()).find((c) => c.name === "session");
+    const cookie = (await page.context().cookies()).find((c) => c.name === SESSION_COOKIE);
     expect(cookie).toBeDefined();
     expect(cookie!.httpOnly).toBe(true);
     expect(cookie!.sameSite).toBe("Lax");
     expect(cookie!.path).toBe("/");
+    if (process.env.PW_PROD === "1") expect(cookie!.secure).toBe(true);
     await expect(page.evaluate(() => document.cookie)).resolves.not.toContain("session=");
   });
 
@@ -104,9 +106,15 @@ test.describe("signed out", () => {
   });
 
   test("a tampered session cookie is treated as logged out", async ({ page, baseURL }) => {
-    await page
-      .context()
-      .addCookies([{ name: "session", value: "eyJhbGciOiJIUzI1NiJ9.e30.bad", url: baseURL! }]);
+    await page.context().addCookies([
+      {
+        name: SESSION_COOKIE,
+        value: "eyJhbGciOiJIUzI1NiJ9.e30.bad",
+        domain: "localhost",
+        path: "/",
+        secure: SESSION_COOKIE.startsWith("__Host-"),
+      },
+    ]);
     await page.goto("/runs");
     await expect(page).toHaveURL(/\/login\?next=/);
   });
@@ -131,7 +139,7 @@ test.describe("signed out", () => {
     }));
     expect(doc.sw).toBeLessThanOrEqual(doc.cw);
     if ((page.viewportSize()?.width ?? 0) >= 768) {
-      const card = (await page.locator("main > div").first().boundingBox())!;
+      const card = (await page.locator("main .accent-border").first().boundingBox())!;
       expect(Math.round(card.width)).toBe(420);
     }
   });
@@ -179,7 +187,7 @@ test.describe("signed in", () => {
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     const out = await context.request.post("/api/auth/logout", { headers: { Origin: baseURL! } });
     expect(out.status()).toBe(204);
-    expect((await context.cookies()).find((c) => c.name === "session")).toBeUndefined();
+    expect((await context.cookies()).find((c) => c.name === SESSION_COOKIE)).toBeUndefined();
     await page.goto("/");
     await expect(page).toHaveURL(/\/login\?next=%2F$/);
     await context.close();

@@ -1,5 +1,11 @@
 import { existsSync, readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
+import seedDetail from "./seed-detail";
+
+// The specs share one isolated schema and others wipe it: restore the known detail matches first.
+test.beforeAll(async () => {
+  await seedDetail();
+});
 
 // A page wider than the screen makes phones zoom out and hides fixed/sticky bars. Guard every route.
 const ROUTES = [

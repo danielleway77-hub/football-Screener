@@ -1,5 +1,11 @@
 import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
+import seedDetail from "./seed-detail";
+
+// The specs share one isolated schema and others wipe it: restore the known detail matches first.
+test.beforeAll(async () => {
+  await seedDetail();
+});
 
 // The detail page needs a real match: ids come from the seeded isolated e2e schema (tests/e2e/seed-detail.ts).
 const goldenId = () =>
@@ -78,6 +84,10 @@ test("unknown URL shows the branded 404 linking home", async ({ page }) => {
 
 for (const path of ["/", "/runs", "/import", "/settings", "/matches/@golden"]) {
   test(`forced error on ${path} shows ErrorState and Retry recovers`, async ({ page }) => {
+    test.skip(
+      process.env.PW_PROD === "1",
+      "the ?__error test hooks are compiled out of production builds (covered in dev mode)",
+    );
     await page.goto(`${path.replace("@golden", goldenId())}?__error=1`);
     await expect(page.getByText("Something went wrong")).toBeVisible();
     await expect(page.getByRole("link", { name: "Dashboard" }).last()).toHaveAttribute("href", "/");

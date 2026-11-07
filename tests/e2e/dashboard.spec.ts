@@ -170,15 +170,16 @@ test.describe("dashboard with seeded data", () => {
       expect(panel.x).toBeGreaterThan(h1.x + 100);
     }
 
+    // Cards are grouped by day (one grid per group), so read the grid's column count instead of card positions.
     const columns = await page.evaluate(() => {
-      const xs = new Set(
-        Array.from(document.querySelectorAll('[data-testid="match-card"]')).map((el) =>
-          Math.round(el.getBoundingClientRect().x),
-        ),
-      );
-      return xs.size;
+      const card = document.querySelector('[data-testid="match-card"]')!;
+      for (let el = card.parentElement; el; el = el.parentElement) {
+        const cols = getComputedStyle(el).gridTemplateColumns;
+        if (getComputedStyle(el).display === "grid" && cols !== "none")
+          return cols.split(" ").length;
+      }
+      return 0;
     });
-    // 3 seeded cards: the number of distinct x positions equals min(3, columns).
     const expected = width < 768 ? 1 : width < 1280 ? 2 : 3;
     expect(columns).toBe(expected);
 
@@ -225,6 +226,10 @@ test.describe("dashboard with seeded data", () => {
   });
 
   test("500 shows ErrorState with Retry and keeps the header and run panel", async ({ page }) => {
+    test.skip(
+      process.env.PW_PROD === "1",
+      "the ?__error test hooks are compiled out of production builds (covered in dev mode)",
+    );
     await ready(page, "/?__error=results");
     await expect(page.getByText("Couldn't load matches")).toBeVisible();
     await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();

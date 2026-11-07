@@ -1,4 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
+import seedDetail from "./seed-detail";
+
+// The specs share one isolated schema and others wipe it: restore the known detail matches first.
+test.beforeAll(async () => {
+  await seedDetail();
+});
 import AxeBuilder from "@axe-core/playwright";
 
 // The specimen page is dev-only (404 in production builds).

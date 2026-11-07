@@ -1,7 +1,11 @@
 import { existsSync, readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { DETAIL_IDS_FILE, withE2eDb, XSS_NAME } from "./seed-detail";
+import seedDetail, { DETAIL_IDS_FILE, withE2eDb, XSS_NAME } from "./seed-detail";
+
+test.beforeAll(async () => {
+  await seedDetail(); // other specs wipe the shared schema
+});
 
 // Needs the ISOLATED e2e schema (see playwright.config.ts / seed-detail.ts): the matches are seeded there.
 test.skip(!existsSync(DETAIL_IDS_FILE), "isolated e2e database not available");
