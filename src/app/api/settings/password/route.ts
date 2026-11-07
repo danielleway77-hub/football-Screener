@@ -1,4 +1,4 @@
-import { AppError, RateLimitedError } from "@/server/errors";
+import { RateLimitedError } from "@/server/errors";
 import { checkLoginRateLimit, getClientIp } from "@/server/auth/rate-limit";
 import { createSession } from "@/server/auth/session";
 import { handle, noContent, parseJson, readLimitedText, requireOwner } from "@/server/http";
@@ -19,16 +19,11 @@ export function POST(request: Request) {
     if (!limit.allowed) {
       throw new RateLimitedError(limit.retryAfterSeconds);
     }
-    try {
-      const { sessionVersion } = await changePassword(body);
-      await loginAttempts.record(key, true, now);
-      await createSession(sessionVersion);
-      return noContent();
-    } catch (error) {
-      if (error instanceof AppError && error.fieldErrors?.currentPassword) {
-        await loginAttempts.record(key, false, now);
-      }
-      throw error;
-    }
+    // Count the attempt BEFORE verifying so parallel guesses cannot all slip under the limit.
+    await loginAttempts.record(key, false, now);
+    const { sessionVersion } = await changePassword(body);
+    await loginAttempts.record(key, true, now);
+    await createSession(sessionVersion);
+    return noContent();
   });
 }

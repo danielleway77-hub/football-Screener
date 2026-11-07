@@ -129,3 +129,14 @@ describe("parsePageText", () => {
     expect(source).not.toMatch(/\bfetch\s*\(|XMLHttpRequest|WebSocket|^import /m);
   });
 });
+
+describe("splitMatches separators (L4)", () => {
+  it("a --- separator splits, and runs in linear time on whitespace-heavy input", () => {
+    expect(
+      splitMatches("A vs B\nRECENT FORM\nA 80%\nB 7%\n---\nC vs D\nRECENT FORM\nC 1%\nD 90%"),
+    ).toHaveLength(2);
+    const started = Date.now();
+    splitMatches("x\n" + " ".repeat(50_000) + "\n" + "x");
+    expect(Date.now() - started).toBeLessThan(500);
+  });
+});

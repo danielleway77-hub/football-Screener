@@ -23,11 +23,27 @@ vi.mock("next/headers", () => ({
     },
   }),
 }));
+vi.mock("next/server", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/server")>()),
+  connection: async () => undefined, // outside a Next request scope in tests
+}));
 vi.mock("next/navigation", () => ({
   redirect: (u: string) => {
     throw new Error(`REDIRECT:${u}`);
   },
 }));
+
+const failure = vi.hoisted(() => ({ rescreen: false }));
+vi.mock("@/server/services/run-service", async (importOriginal) => {
+  const mod = await importOriginal<typeof import("@/server/services/run-service")>();
+  return {
+    ...mod,
+    rescreenAll: (...args: Parameters<typeof mod.rescreenAll>) => {
+      if (failure.rescreen) throw new Error("boom");
+      return mod.rescreenAll(...args);
+    },
+  };
+});
 
 setupTestDb();
 
@@ -318,5 +334,126 @@ describe("POST /api/settings/password", () => {
     expect(blocked.status).toBe(429);
     expect(blocked.headers.get("retry-after")).toBeTruthy();
     expect(await getDb().credential.count()).toBe(0);
+  });
+});
+
+describe("review hardening", () => {
+  it("M1: parallel token creates never exceed 5 active tokens", async () => {
+    await signIn();
+    const { POST } = await import("@/app/api/tokens/route");
+    const results = await Promise.all(
+      Array.from({ length: 8 }, (_, i) => POST(req("/api/tokens", { body: { label: `p${i}` } }))),
+    );
+    expect(results.filter((r) => r.status === 201)).toHaveLength(5);
+    expect(await getDb().ingestToken.count({ where: { revokedAt: null } })).toBe(5);
+  });
+
+  it("M2/M3: parallel saves are serialised and the merged low<high rule holds on the locked row", async () => {
+    await signIn();
+    const { PUT } = await import("@/app/api/settings/route");
+    const save = (body: unknown) => PUT(req("/api/settings", { method: "PUT", body }));
+    // Each alone is valid against 75/35, together they would cross (low 80 > high 60).
+    const [a, b] = await Promise.all([save({ highThreshold: 60 }), save({ lowThreshold: 50 })]);
+    const s = await settingsRepo.getSettings();
+    expect(s.lowThreshold).toBeLessThan(s.highThreshold);
+    expect([a.status, b.status].sort()).toEqual([200, 200]);
+    const bad = await save({ lowThreshold: 90 });
+    expect(bad.status).toBe(422);
+    expect((await settingsRepo.getSettings()).lowThreshold).toBeLessThan(s.highThreshold);
+  });
+
+  it("the init migration already carries the thresholds CHECK constraint", async () => {
+    await expect(
+      getDb().$executeRawUnsafe(
+        'UPDATE "Setting" SET "lowThreshold" = 90, "highThreshold" = 10 WHERE "id" = 1',
+      ),
+    ).rejects.toThrow();
+  });
+
+  it("L5: a crashing re-screen after a save says the settings were saved and offers the retry", async () => {
+    await seedStored();
+    await signIn();
+    failure.rescreen = true;
+    try {
+      const { PUT } = await import("@/app/api/settings/route");
+      const res = await PUT(
+        req("/api/settings", { method: "PUT", body: { highThreshold: 70, lowThreshold: 40 } }),
+      );
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.rescreen).toBeNull();
+      expect(body.rescreenSkipped).toMatch(/saved, but re-screening/);
+      expect(await settingsRepo.getSettings()).toMatchObject({ highThreshold: 70 });
+    } finally {
+      failure.rescreen = false;
+    }
+  });
+
+  it("L3: a password longer than 72 bytes is refused", async () => {
+    await signIn();
+    const { POST } = await import("@/app/api/settings/password/route");
+    const res = await POST(
+      req("/api/settings/password", {
+        body: { currentPassword: OLD_PASSWORD, newPassword: "é".repeat(40) },
+      }),
+    );
+    expect(res.status).toBe(422);
+    expect((await res.json()).error.fieldErrors.newPassword).toMatch(/72 bytes/);
+  });
+
+  it("L1: the password attempt is counted before it is verified", async () => {
+    await signIn();
+    const { POST } = await import("@/app/api/settings/password/route");
+    await POST(
+      req("/api/settings/password", {
+        body: { currentPassword: OLD_PASSWORD, newPassword: "brand-new-pass-1" },
+      }),
+    );
+    const rows = await getDb().loginAttempt.findMany({ where: { ip: { startsWith: "pw:" } } });
+    expect(rows.map((r) => r.success).sort()).toEqual([false, true]);
+  });
+
+  it("L8: missing Origin is 403 and oversized bodies are 413 on PUT, password and import; tokens and rescreen check Origin", async () => {
+    await signIn();
+    const noOrigin = (path: string, method: string, body?: unknown) =>
+      new Request(`${ORIGIN}${path}`, {
+        method,
+        headers: { "content-type": "application/json" },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+    const settings = await import("@/app/api/settings/route");
+    const pw = await import("@/app/api/settings/password/route");
+    const imp = await import("@/app/api/import/route");
+    const resc = await import("@/app/api/settings/rescreen/route");
+    const tok = await import("@/app/api/tokens/route");
+    const tokId = await import("@/app/api/tokens/[id]/route");
+    expect((await settings.PUT(noOrigin("/api/settings", "PUT", { windowDays: 1 }))).status).toBe(
+      403,
+    );
+    expect((await pw.POST(noOrigin("/api/settings/password", "POST", {}))).status).toBe(403);
+    expect((await imp.POST(noOrigin("/api/import", "POST", { matches: [] }))).status).toBe(403);
+    expect((await resc.POST(noOrigin("/api/settings/rescreen", "POST"))).status).toBe(403);
+    expect((await tok.POST(noOrigin("/api/tokens", "POST", { label: "x" }))).status).toBe(403);
+    const ctx = { params: Promise.resolve({ id: "x" }) } as Parameters<typeof tokId.DELETE>[1];
+    expect((await tokId.DELETE(noOrigin("/api/tokens/x", "DELETE"), ctx)).status).toBe(403);
+
+    const big = "x".repeat(5000);
+    expect(
+      (await settings.PUT(req("/api/settings", { method: "PUT", body: { timezone: big } }))).status,
+    ).toBe(413);
+    expect(
+      (await pw.POST(req("/api/settings/password", { body: { currentPassword: big } }))).status,
+    ).toBe(413);
+    const huge = "x".repeat(1024 * 1024 + 10);
+    expect((await imp.POST(req("/api/import", { body: { matches: [huge] } }))).status).toBe(413);
+  });
+
+  it("M4: a stale sessionVersion cookie is redirected by the session gate that wraps /settings and /import", async () => {
+    await signIn(1);
+    await settingsRepo.bumpSessionVersion();
+    const { requireSession } = await import("@/server/auth/guard");
+    await expect(requireSession()).rejects.toThrow("REDIRECT:/login?expired=1");
+    const layout = (await import("node:fs")).readFileSync("src/app/(app)/layout.tsx", "utf8");
+    expect(layout).toContain("await requireSession()");
   });
 });

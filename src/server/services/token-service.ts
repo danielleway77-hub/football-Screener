@@ -35,15 +35,12 @@ export async function createToken(
       label: "Label must be 1–40 characters.",
     });
   }
-  if ((await tokens.countActive()) >= MAX_ACTIVE_TOKENS) {
-    throw new AppError(
-      "VALIDATION_FAILED",
-      `You can have up to ${MAX_ACTIVE_TOKENS} active tokens. Revoke one first.`,
-      { label: `You can have up to ${MAX_ACTIVE_TOKENS} active tokens. Revoke one first.` },
-    );
-  }
   const token = TOKEN_PREFIX + randomBytes(32).toString("base64url");
-  const row = await tokens.create(clean, hashToken(token));
+  const row = await tokens.createIfBelowCap(clean, hashToken(token), MAX_ACTIVE_TOKENS);
+  if (!row) {
+    const message = `You can have up to ${MAX_ACTIVE_TOKENS} active tokens. Revoke one first.`;
+    throw new AppError("VALIDATION_FAILED", message, { label: message });
+  }
   return { id: row.id, label: row.label, token };
 }
 

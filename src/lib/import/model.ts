@@ -126,10 +126,12 @@ function intOrRaw(cell: string): number | string {
   return /^\d+$/.test(cell.trim()) ? Number(cell) : cell;
 }
 
+const k = (h: string) => h.toLowerCase().replace(/[^a-z0-9]/g, "");
+
 function itemsFromCsv(text: string): { items: unknown[]; labels: string[]; error: string | null } {
   const { rows } = parseCsv(text);
   if (rows.length === 0) return { items: [], labels: [], error: "The file has no rows." };
-  const header = rows[0]!.map((h) => ALIASES[h.toLowerCase().replace(/[^a-z0-9]/g, "")] ?? null);
+  const header = rows[0]!.map((h) => (Object.hasOwn(ALIASES, k(h)) ? ALIASES[k(h)] : null) ?? null);
   const missing = REQUIRED.filter((r) => !header.includes(r));
   if (missing.length > 0) {
     return {

@@ -37,3 +37,23 @@ describe("security headers", () => {
     expect(map(false)["Strict-Transport-Security"]).toBeUndefined();
   });
 });
+
+describe("next.config wiring", () => {
+  it("applies one header set to every path", async () => {
+    const { default: nextConfig } = await import("../../next.config");
+    const rules = await nextConfig.headers!();
+    expect(rules).toHaveLength(1);
+    expect(rules[0]!.source).toBe("/:path*");
+    const names = rules[0]!.headers.map((h) => h.key.toLowerCase());
+    for (const k of [
+      "x-content-type-options",
+      "x-frame-options",
+      "referrer-policy",
+      "permissions-policy",
+      "content-security-policy",
+      "cross-origin-opener-policy",
+    ]) {
+      expect(names.filter((n) => n === k)).toHaveLength(1);
+    }
+  });
+});
