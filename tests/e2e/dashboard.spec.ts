@@ -170,16 +170,16 @@ test.describe("dashboard with seeded data", () => {
       expect(panel.x).toBeGreaterThan(h1.x + 100);
     }
 
-    const columns = await page.evaluate(() => {
-      const xs = new Set(
-        Array.from(document.querySelectorAll('[data-testid="match-card"]')).map((el) =>
-          Math.round(el.getBoundingClientRect().x),
-        ),
-      );
-      return xs.size;
-    });
-    // 3 seeded cards: the number of distinct x positions equals min(3, columns).
-    const expected = width < 768 ? 1 : width < 1280 ? 2 : 3;
+    // Cards sit in one grid per day group (one card per day in this seed), so assert the grid's
+    // own column count, not the spread of card x positions.
+    const columns = await page.evaluate(
+      () =>
+        getComputedStyle(
+          document.querySelector('[data-testid="match-card"]')!.parentElement!.parentElement!,
+        ).gridTemplateColumns.split(" ").length,
+    );
+    // 1 column below 768, 2 below 1280, 3 from 1280, 4 from 1920.
+    const expected = width < 768 ? 1 : width < 1280 ? 2 : width >= 1920 ? 4 : 3;
     expect(columns).toBe(expected);
 
     for (const locator of [page.getByLabel("Filter by league"), page.getByRole("tab").first()]) {
