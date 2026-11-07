@@ -5,6 +5,7 @@ import { checkLoginRateLimit, getClientIp } from "@/server/auth/rate-limit";
 import { createSession } from "@/server/auth/session";
 import * as loginAttempts from "@/server/repositories/login-attempts";
 import { getSettings } from "@/server/repositories/settings";
+import { readLimitedText } from "@/server/http";
 import { loginSchema } from "@/lib/schemas/login";
 
 const MAX_BODY_BYTES = 1024;
@@ -21,8 +22,11 @@ export async function POST(request: Request) {
   if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
     return json(415, { error: { code: "UNSUPPORTED_MEDIA_TYPE", message: "Send JSON." } });
   }
-  const text = await request.text();
-  if (text.length > MAX_BODY_BYTES) {
+  let text: string;
+  try {
+    // Capped while streaming: an oversized body is never buffered in full.
+    text = await readLimitedText(request, MAX_BODY_BYTES);
+  } catch {
     return json(413, { error: { code: "PAYLOAD_TOO_LARGE", message: "Request too large." } });
   }
   let parsed: z.infer<typeof loginSchema>;

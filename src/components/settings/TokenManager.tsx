@@ -83,6 +83,9 @@ export function TokenManager({
     return () => clearTimeout(timer);
   }, [created]);
 
+  // Controlled dialog (no DialogTrigger): hand focus back to the button that opened it (WCAG 2.4.3).
+  const createButton = React.useRef<HTMLButtonElement>(null);
+
   function openCreate() {
     setLabel("");
     setLabelError(null);
@@ -149,6 +152,7 @@ export function TokenManager({
           type="button"
           variant="secondary"
           size="sm"
+          ref={createButton}
           onClick={openCreate}
           disabled={full || !online}
           className="max-sm:w-full"
@@ -215,6 +219,12 @@ export function TokenManager({
       >
         <DialogContent
           showCloseButton={!created}
+          onCloseAutoFocus={(e) => {
+            if (createButton.current) {
+              e.preventDefault();
+              createButton.current.focus();
+            }
+          }}
           onInteractOutside={(e) => created && e.preventDefault()}
           onEscapeKeyDown={(e) => created && !doneReady && e.preventDefault()}
         >
