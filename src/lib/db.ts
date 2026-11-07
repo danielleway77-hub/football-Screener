@@ -9,12 +9,46 @@ import { schemaOf, stripPrismaParams } from "@/lib/pg-url";
  */
 const globalForDb = globalThis as unknown as { __db?: PrismaClient; __dbUrl?: string };
 
+/**
+ * Pool limits (documented in docs/ARCHITECTURE.md "Database resilience"). Serverless-friendly: a small pool per
+ * instance because the Supabase/PgBouncer pooler multiplexes. Times are milliseconds.
+ */
+export const POOL = {
+  max: 5,
+  /** Idle clients are closed after 10 s so a warm lambda does not pin pooler slots. */
+  idleTimeoutMillis: 10_000,
+  /** Fail fast (instead of queueing forever) when no connection can be had. */
+  connectionTimeoutMillis: 5_000,
+  /** Client-side cap per query; works through any pooler (no startup parameter). */
+  query_timeout: 20_000,
+  /** Server-side cap, sent as a startup parameter: skipped for pooled URLs (PgBouncer may reject it). */
+  statement_timeout: 15_000,
+  keepAlive: true,
+} as const;
+
+/** True for Supabase/PgBouncer transaction pooler URLs (port 6543 or a "pooler" host). */
+export function isPooledUrl(connectionString: string): boolean {
+  try {
+    const u = new URL(connectionString);
+    return (
+      u.port === "6543" || /pooler|pgbouncer/i.test(u.hostname) || u.searchParams.has("pgbouncer")
+    );
+  } catch {
+    return false;
+  }
+}
+
+export function poolConfig(connectionString: string) {
+  const { statement_timeout, ...rest } = POOL;
+  return { ...rest, ...(isPooledUrl(connectionString) ? {} : { statement_timeout }) };
+}
+
 export function createDb(connectionString: string): PrismaClient {
   const schema = schemaOf(connectionString);
   const adapter = new PrismaPg(
     {
       connectionString: stripPrismaParams(connectionString),
-      max: 5,
+      ...poolConfig(connectionString),
       // Non-default schema (tests): also set the session search_path so raw SQL and Prisma agree.
       // Needs a DIRECT connection: the PgBouncer pooler ignores startup options.
       ...(schema !== "public" ? { options: `-c search_path=${schema}` } : {}),

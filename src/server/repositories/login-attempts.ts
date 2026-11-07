@@ -1,4 +1,5 @@
 import { getDb } from "@/lib/db";
+import { readQuery } from "@/lib/db-retry";
 
 export async function record(ip: string, success: boolean, at: Date): Promise<void> {
   await getDb().loginAttempt.create({ data: { ip, success, at } });
@@ -6,7 +7,9 @@ export async function record(ip: string, success: boolean, at: Date): Promise<vo
 
 /** Failed attempts from `ip` at or after `since`. */
 export async function countRecentFailures(ip: string, since: Date): Promise<number> {
-  return getDb().loginAttempt.count({ where: { ip, success: false, at: { gte: since } } });
+  return readQuery(() =>
+    getDb().loginAttempt.count({ where: { ip, success: false, at: { gte: since } } }),
+  );
 }
 
 /** Timestamps (ascending) of failed attempts from `ip` at or after `since`. */
@@ -21,7 +24,9 @@ export async function recentFailureTimes(ip: string, since: Date): Promise<Date[
 
 /** Failed attempts from any address at or after `since` (global backstop). */
 export async function countAllRecentFailures(since: Date): Promise<number> {
-  return getDb().loginAttempt.count({ where: { success: false, at: { gte: since } } });
+  return readQuery(() =>
+    getDb().loginAttempt.count({ where: { success: false, at: { gte: since } } }),
+  );
 }
 
 export async function purge(olderThan: Date): Promise<number> {

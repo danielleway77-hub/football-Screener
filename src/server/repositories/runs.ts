@@ -1,4 +1,5 @@
 import { Prisma } from "@/generated/prisma/client";
+import { readQuery } from "@/lib/db-retry";
 import { getDb } from "@/lib/db";
 import type { RunFinish, RunRecord, RunStatus, RunTrigger } from "./types";
 
@@ -75,12 +76,25 @@ export async function expireAbandoned(olderThanMinutes: number, now: Date): Prom
   return r.count;
 }
 
+/**
+ * Retention: deletes FINISHED runs that started before `date` (their RunMatch rows cascade). RUNNING rows are
+ * never touched. Idempotent: a second call with the same date deletes nothing. Returns the count.
+ */
+export async function deleteFinishedOlderThan(date: Date): Promise<number> {
+  const r = await getDb().screeningRun.deleteMany({
+    where: { startedAt: { lt: date }, status: { not: "RUNNING" } },
+  });
+  return r.count;
+}
+
 /** Most recent run that produced usable data (SUCCESS or PARTIAL). */
 export async function getLatestUsable(): Promise<RunRecord | null> {
-  return getDb().screeningRun.findFirst({
-    where: { status: { in: ["SUCCESS", "PARTIAL"] } },
-    orderBy: { startedAt: "desc" },
-  });
+  return readQuery(() =>
+    getDb().screeningRun.findFirst({
+      where: { status: { in: ["SUCCESS", "PARTIAL"] } },
+      orderBy: { startedAt: "desc" },
+    }),
+  );
 }
 
 export async function list(
@@ -114,11 +128,11 @@ export async function list(
 }
 
 export async function hasRunning(): Promise<boolean> {
-  return (await getDb().screeningRun.count({ where: { status: "RUNNING" } })) > 0;
+  return (await readQuery(() => getDb().screeningRun.count({ where: { status: "RUNNING" } }))) > 0;
 }
 
 export async function getById(id: string): Promise<RunRecord | null> {
-  return getDb().screeningRun.findUnique({ where: { id } });
+  return readQuery(() => getDb().screeningRun.findUnique({ where: { id } }));
 }
 
 /** A run with this trigger that finished at or after `since` (newest first), or null. */
@@ -139,7 +153,11 @@ export async function findFinishedSince(
 
 /** True when any run started inside [from, to). */
 export async function existsStartedBetween(from: Date, to: Date): Promise<boolean> {
-  return (await getDb().screeningRun.count({ where: { startedAt: { gte: from, lt: to } } })) > 0;
+  return (
+    (await readQuery(() =>
+      getDb().screeningRun.count({ where: { startedAt: { gte: from, lt: to } } }),
+    )) > 0
+  );
 }
 
 /** Newest run with this trigger that started at or after `since`, or null. */
@@ -175,5 +193,7 @@ export async function createFinished(input: {
 
 /** Most recent run started by the helper (INGEST) — for the Import page status line. */
 export async function getLatestByTrigger(trigger: RunTrigger): Promise<RunRecord | null> {
-  return getDb().screeningRun.findFirst({ where: { trigger }, orderBy: { startedAt: "desc" } });
+  return readQuery(() =>
+    getDb().screeningRun.findFirst({ where: { trigger }, orderBy: { startedAt: "desc" } }),
+  );
 }

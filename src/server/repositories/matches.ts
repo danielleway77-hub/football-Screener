@@ -1,4 +1,5 @@
 import { getDb } from "@/lib/db";
+import { readQuery } from "@/lib/db-retry";
 import type { MatchInput, MatchRecord } from "./types";
 
 const CHUNK = 100;
@@ -43,34 +44,38 @@ export type QualifyingQuery = {
 };
 
 export async function findQualifyingUpcoming(q: QualifyingQuery): Promise<MatchRecord[]> {
-  return getDb().match.findMany({
-    where: {
-      qualifies: true,
-      kickoffAt: { gte: q.from, lt: q.to },
-      ...(q.league
-        ? {
-            OR: [
-              { league: { contains: q.league, mode: "insensitive" as const } },
-              { country: { contains: q.league, mode: "insensitive" as const } },
-            ],
-          }
-        : {}),
-    },
-    orderBy:
-      q.sort === "gap"
-        ? [{ formGap: "desc" }, { kickoffAt: "asc" }, { id: "asc" }]
-        : [{ kickoffAt: "asc" }, { formGap: "desc" }, { id: "asc" }],
-    take: Math.min(Math.max(q.limit ?? 200, 1), 200),
-  });
+  return readQuery(() =>
+    getDb().match.findMany({
+      where: {
+        qualifies: true,
+        kickoffAt: { gte: q.from, lt: q.to },
+        ...(q.league
+          ? {
+              OR: [
+                { league: { contains: q.league, mode: "insensitive" as const } },
+                { country: { contains: q.league, mode: "insensitive" as const } },
+              ],
+            }
+          : {}),
+      },
+      orderBy:
+        q.sort === "gap"
+          ? [{ formGap: "desc" }, { kickoffAt: "asc" }, { id: "asc" }]
+          : [{ kickoffAt: "asc" }, { formGap: "desc" }, { id: "asc" }],
+      take: Math.min(Math.max(q.limit ?? 200, 1), 200),
+    }),
+  );
 }
 
 /** How many qualifying matches kick off in [from, to). One cheap COUNT per dashboard tab. */
 export async function countQualifying(from: Date, to: Date): Promise<number> {
-  return getDb().match.count({ where: { qualifies: true, kickoffAt: { gte: from, lt: to } } });
+  return readQuery(() =>
+    getDb().match.count({ where: { qualifies: true, kickoffAt: { gte: from, lt: to } } }),
+  );
 }
 
 export async function findById(id: string): Promise<MatchRecord | null> {
-  return getDb().match.findUnique({ where: { id } });
+  return readQuery(() => getDb().match.findUnique({ where: { id } }));
 }
 
 /**
@@ -112,7 +117,7 @@ export async function findNeighbors(
 }
 
 export async function countByRun(runId: string): Promise<number> {
-  return getDb().runMatch.count({ where: { runId } });
+  return readQuery(() => getDb().runMatch.count({ where: { runId } }));
 }
 
 /** Retention: delete matches whose kickoff is before `date` (RunMatch rows cascade). Returns the count. */
@@ -295,9 +300,9 @@ export async function rescreen(
 }
 
 export async function listAll(): Promise<MatchRecord[]> {
-  return getDb().match.findMany({ orderBy: { kickoffAt: "asc" } });
+  return readQuery(() => getDb().match.findMany({ orderBy: { kickoffAt: "asc" } }));
 }
 
 export async function countAll(): Promise<number> {
-  return getDb().match.count();
+  return readQuery(() => getDb().match.count());
 }
