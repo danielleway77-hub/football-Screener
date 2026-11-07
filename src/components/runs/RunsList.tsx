@@ -54,6 +54,52 @@ function StatusCell({ run }: { run: RunRow }) {
   );
 }
 
+const STRIP_COLOR: Record<RunRow["status"], string> = {
+  SUCCESS: "bg-positive",
+  PARTIAL: "bg-warning",
+  FAILED: "bg-negative",
+  RUNNING: "bg-primary animate-pulse motion-reduce:animate-none",
+  SKIPPED: "bg-hairline-strong",
+};
+
+/** Mini sparkline of this page's outcomes (oldest left, newest right) plus a one-line summary. */
+function OutcomeStrip({ rows }: { rows: RunRow[] }) {
+  const done = rows.filter((r) => r.status !== "RUNNING" && r.status !== "SKIPPED");
+  const ok = done.filter((r) => r.status === "SUCCESS").length;
+  const live = rows.some((r) => r.status === "RUNNING");
+  const ordered = [...rows].reverse();
+  const summary = live
+    ? "A run is in progress. This page updates by itself."
+    : done.length
+      ? `${ok} of ${done.length} recent runs finished cleanly.`
+      : "No finished runs on this page.";
+  return (
+    <div
+      data-testid="runs-outcomes"
+      className="surface-1 flex min-h-11 items-center gap-4 rounded-lg px-4 py-2"
+    >
+      <div
+        role="img"
+        aria-label={`Outcomes, oldest to newest: ${ordered.map((r) => r.status.toLowerCase()).join(", ")}`}
+        className="flex h-6 shrink-0 items-end gap-[3px] overflow-hidden"
+      >
+        {ordered.map((r) => (
+          <span
+            key={r.id}
+            title={r.status}
+            className={cn(
+              "w-1.5 rounded-full",
+              STRIP_COLOR[r.status],
+              r.status === "SUCCESS" ? "h-4" : r.status === "SKIPPED" ? "h-2" : "h-6",
+            )}
+          />
+        ))}
+      </div>
+      <p className="text-caption min-w-0 text-muted-foreground">{summary}</p>
+    </div>
+  );
+}
+
 type Props = {
   rows: RunRow[];
   timezone: string;
@@ -151,6 +197,8 @@ export function RunsList({ rows: serverRows, timezone, nowIso }: Props) {
         {announce}
       </p>
 
+      <OutcomeStrip rows={rows} />
+
       {showTable ? (
         <div
           data-testid="runs-table"
@@ -218,7 +266,10 @@ export function RunsList({ rows: serverRows, timezone, nowIso }: Props) {
                         open(run.id);
                       }
                     }}
-                    className="row-cv h-14 cursor-pointer border-b border-hairline transition-colors outline-none last:border-0 hover:bg-white/[0.03] focus-visible:bg-white/[0.03] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                    className={cn(
+                      "row-cv run-row run-rail h-14 cursor-pointer border-b border-hairline outline-none last:border-0 hover:bg-white/[0.04] focus-visible:bg-white/[0.04] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+                      run.status === "RUNNING" && "run-live",
+                    )}
                   >
                     <td className="px-4">
                       <div className="truncate font-medium">{label}</div>
@@ -236,9 +287,19 @@ export function RunsList({ rows: serverRows, timezone, nowIso }: Props) {
                       <StatusCell run={run} />
                     </td>
                     <td className="num px-2 text-right">{run.scanned}</td>
-                    <td className="num px-2 text-right">{run.qualified}</td>
                     <td
-                      className={cn("num px-2 text-right", run.failedCount > 0 && "text-negative")}
+                      className={cn(
+                        "num px-2 text-right",
+                        run.qualified > 0 ? "font-semibold text-primary" : "text-faint",
+                      )}
+                    >
+                      {run.qualified}
+                    </td>
+                    <td
+                      className={cn(
+                        "num px-2 text-right",
+                        run.failedCount > 0 ? "text-negative" : "text-faint",
+                      )}
                     >
                       {run.failedCount}
                     </td>
@@ -246,7 +307,7 @@ export function RunsList({ rows: serverRows, timezone, nowIso }: Props) {
                       {runDurationText(run, now)}
                     </td>
                     <td className="px-2 text-faint">
-                      <ChevronRightIcon className="ml-auto size-4" aria-hidden="true" />
+                      <ChevronRightIcon className="run-chevron ml-auto size-4" aria-hidden="true" />
                     </td>
                   </tr>
                 );
@@ -259,7 +320,15 @@ export function RunsList({ rows: serverRows, timezone, nowIso }: Props) {
       {showCards ? (
         <ul data-testid="runs-cards" className={cn("space-y-3", showTable && "md:hidden")}>
           {rows.map((run) => (
-            <li key={run.id} className="surface-1 rounded-lg p-4" data-testid="run-card">
+            <li
+              key={run.id}
+              className={cn(
+                "surface-1 run-rail run-card rounded-lg p-4 pl-5",
+                run.status === "RUNNING" && "run-live",
+              )}
+              data-status={run.status}
+              data-testid="run-card"
+            >
               <div className="flex items-center justify-between gap-3">
                 <StatusCell run={run} />
                 <span className="text-caption text-right text-muted-foreground">

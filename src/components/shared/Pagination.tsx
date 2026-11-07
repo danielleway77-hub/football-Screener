@@ -26,7 +26,7 @@ export function pageWindow(page: number, total: number): (number | "gap")[] {
 }
 
 const base =
-  "inline-flex items-center justify-center gap-1 rounded-md border text-sm font-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50";
+  "inline-flex items-center justify-center gap-1 rounded-md border text-sm font-medium transition-[color,background-color,border-color,transform] duration-150 outline-none focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-95 motion-reduce:active:scale-100";
 const idle = "border-border-control text-foreground hover:bg-white/5";
 const off = "pointer-events-none border-hairline text-faint";
 
@@ -86,6 +86,10 @@ export function Pagination({ page, totalPages, hrefFor, className }: PaginationP
         </span>
         <Step dir="next" target={next} hrefFor={hrefFor} sizeClass="h-11 min-w-28 px-3" />
       </div>
+      <p className="text-caption mb-2 hidden text-center text-muted-foreground md:block">
+        Page <span className="num text-foreground">{page}</span> of{" "}
+        <span className="num text-foreground">{totalPages}</span>
+      </p>
       <ul className="hidden items-center justify-center gap-2 md:flex">
         <li>
           <Step dir="prev" target={prev} hrefFor={hrefFor} sizeClass="h-10 px-3" />
@@ -104,7 +108,9 @@ export function Pagination({ page, totalPages, hrefFor, className }: PaginationP
                 className={cn(
                   base,
                   "num h-10 min-w-10 px-2",
-                  n === page ? "border-primary-border bg-primary-soft text-primary" : idle,
+                  n === page
+                    ? "border-primary-border bg-primary-soft text-primary shadow-[0_0_0_3px_rgba(200,245,46,0.08)]"
+                    : idle,
                 )}
               >
                 {n}
