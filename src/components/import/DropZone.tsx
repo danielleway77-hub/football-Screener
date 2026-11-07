@@ -61,7 +61,7 @@ export function DropZone({
         if (file && !disabled) onFile(file);
       }}
       className={cn(
-        "flex min-h-44 flex-col items-center justify-center gap-3 rounded-xl border-2 p-6 text-center transition-[background-color,border-color,box-shadow] duration-200",
+        "flex min-h-44 flex-col items-center justify-center gap-3 rounded-xl border p-6 text-center transition-[background-color,border-color,box-shadow] duration-200",
         over
           ? "border-solid border-primary-border bg-primary-soft ring-4 ring-primary/10"
           : loaded && !reading

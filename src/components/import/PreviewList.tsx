@@ -69,7 +69,8 @@ function Status({ row }: { row: PreviewRow }) {
 
 const Teams = ({ row }: { row: PreviewRow }) => (
   <>
-    {row.home ?? "Unavailable"} <span className="text-faint">vs</span> {row.away ?? "Unavailable"}
+    {row.home ?? "Unavailable"} <span className="text-muted-foreground">vs</span>{" "}
+    {row.away ?? "Unavailable"}
   </>
 );
 

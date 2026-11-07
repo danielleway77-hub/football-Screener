@@ -431,7 +431,7 @@ export function ImportView({
   const pasteBytes = new Blob([fileText]).size;
   const recommended = accessMode === "assisted_ingest" ? "helper" : "paste";
   const chip = (
-    <span className="rounded-4xl border border-primary-border bg-primary-soft px-2 py-0.5 text-[0.6875rem] font-bold tracking-[0.06em] text-primary uppercase">
+    <span className="rounded-4xl border border-primary-border bg-primary-soft px-2 py-0.5 text-xs font-bold tracking-[0.06em] text-primary uppercase">
       Recommended
     </span>
   );
@@ -484,7 +484,7 @@ export function ImportView({
                   { value: "file", label: "Data file" },
                   { value: "text", label: "Page text" },
                 ]}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto [&_button]:h-11"
               />
 
               {source === "file" ? (
@@ -518,7 +518,7 @@ export function ImportView({
                       <button
                         type="button"
                         onClick={() => onFileTextChange(buildSampleJson(new Date()))}
-                        className="inline-flex min-h-6 items-center text-sm text-primary underline-offset-2 hover:underline"
+                        className="inline-flex min-h-11 items-center rounded-md px-2 text-sm text-primary underline-offset-2 hover:underline"
                       >
                         Use sample JSON
                       </button>
