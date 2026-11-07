@@ -42,7 +42,7 @@ describe("next.config wiring", () => {
   it("applies one header set to every path", async () => {
     const { default: nextConfig } = await import("../../next.config");
     const rules = await nextConfig.headers!();
-    expect(rules).toHaveLength(1);
+    expect(rules.filter((r) => r.source === "/:path*")).toHaveLength(1); // one security set; the rest are static-asset cache rules
     expect(rules[0]!.source).toBe("/:path*");
     const names = rules[0]!.headers.map((h) => h.key.toLowerCase());
     for (const k of [
