@@ -174,20 +174,47 @@ type PageSkeletonProps = {
 export function PageSkeleton({ variant, className }: PageSkeletonProps) {
   return (
     <div className={cn("container-wide space-y-6", className)} data-variant={variant}>
-      {variant === "dashboard" ? null : <HeaderSkeleton />}
+      {variant === "dashboard" || variant === "detail" ? null : <HeaderSkeleton />}
       {variant === "dashboard" ? <DashboardSkeleton /> : null}
-      {variant === "detail" ? (
-        <>
-          <Skeleton className="h-11 w-48" />
-          <Skeleton className="h-[26rem] w-full rounded-xl lg:h-[22rem]" />
-          <div className="grid gap-4 lg:grid-cols-12 lg:gap-6">
-            <Skeleton className="h-[34rem] rounded-lg lg:col-span-7" />
-            <Skeleton className="h-[40rem] rounded-lg lg:col-span-5" />
-          </div>
-        </>
-      ) : null}
+      {variant === "detail" ? <DetailSkeleton /> : null}
       {variant === "table" ? <TableSkeleton /> : null}
       {variant === "form" ? <FormSkeleton /> : null}
     </div>
+  );
+}
+
+/** Match detail: back/pager row, hero (meta, two teams, duel track), form card and probability card. */
+function DetailSkeleton() {
+  return (
+    <SkeletonGroup label="Loading match…" className="space-y-6">
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-11 w-44" />
+        <Skeleton className="hidden h-10 w-48 md:block" />
+      </div>
+      <div className="surface-1 space-y-6 rounded-xl p-5 md:p-8">
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="ml-auto h-8 w-28 rounded-full" />
+        </div>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_auto_1fr] lg:gap-8">
+          <div className="flex items-center gap-4">
+            <Skeleton className="size-14 rounded-sm" />
+            <Skeleton className="h-7 w-48" />
+          </div>
+          <Skeleton className="mx-auto h-6 w-10 rounded-full" />
+          <div className="flex items-center gap-4">
+            <Skeleton className="size-14 rounded-sm" />
+            <Skeleton className="h-7 w-44" />
+          </div>
+        </div>
+        <Skeleton className="mx-auto h-24 w-full max-w-[640px]" />
+        <Skeleton className="h-5 w-72 max-w-full" />
+      </div>
+      <div className="grid gap-4 lg:grid-cols-12 lg:gap-6">
+        <Skeleton className="h-[34rem] rounded-lg lg:col-span-7" />
+        <Skeleton className="h-[40rem] rounded-lg lg:col-span-5" />
+      </div>
+    </SkeletonGroup>
   );
 }

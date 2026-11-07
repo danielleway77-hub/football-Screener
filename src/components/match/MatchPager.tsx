@@ -24,16 +24,22 @@ function Cell({
   const isPrev = direction === "previous";
   const content = isPrev ? (
     <>
-      <ChevronLeftIcon aria-hidden="true" />
+      <ChevronLeftIcon
+        aria-hidden="true"
+        className="transition-transform group-hover/pager:-translate-x-0.5 motion-reduce:transition-none"
+      />
       Previous
     </>
   ) : (
     <>
       Next
-      <ChevronRightIcon aria-hidden="true" />
+      <ChevronRightIcon
+        aria-hidden="true"
+        className="transition-transform group-hover/pager:translate-x-0.5 motion-reduce:transition-none"
+      />
     </>
   );
-  const common = "w-full border-border-control md:h-10 md:w-auto md:border-transparent";
+  const common = "group/pager w-full border-border-control md:h-10 md:w-auto md:border-transparent";
   return (
     <div className={cn("min-w-0", isPrev ? "md:text-right" : "md:text-right")}>
       {target ? (

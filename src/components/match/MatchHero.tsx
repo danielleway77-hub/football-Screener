@@ -50,15 +50,20 @@ function ConfidenceMeter({ level }: { level: "LOW" | "MEDIUM" | "HIGH" }) {
 function Team({ team, side }: { team: HeroTeam; side: "Home" | "Away" }) {
   return (
     <div className="flex min-w-0 items-center gap-4" data-testid={`hero-${side.toLowerCase()}`}>
-      <TeamLogo name={team.name} src={team.logoUrl} size={56} />
+      <TeamLogo
+        name={team.name}
+        src={team.logoUrl}
+        size={56}
+        className="shadow-lg ring-1 ring-border-strong"
+      />
       <div className="min-w-0">
+        <p className="text-overline text-faint">{side}</p>
         <h2
           className="text-h2 line-clamp-2 [overflow-wrap:anywhere]"
           title={team.name.length > 40 ? team.name : undefined}
         >
           {team.name}
         </h2>
-        <p className="text-caption text-faint">{side}</p>
       </div>
     </div>
   );
@@ -82,7 +87,13 @@ export function MatchHero({
     <section
       data-testid="match-hero"
       aria-label="Match"
-      className="surface-1 bg-grad-card rounded-xl p-5 accent-border md:p-8"
+      data-qualifies={qualifies || undefined}
+      className={cn(
+        "surface-1 bg-grad-card relative overflow-hidden rounded-xl p-5 accent-border md:p-8",
+        qualifies
+          ? "bg-[radial-gradient(60rem_22rem_at_50%_-8rem,var(--primary-soft),transparent_70%)]"
+          : "bg-[radial-gradient(60rem_22rem_at_50%_-8rem,var(--warning-soft),transparent_70%)]",
+      )}
     >
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
         {competition ? (
@@ -103,15 +114,18 @@ export function MatchHero({
         <Team team={home} side="Home" />
         <div aria-hidden="true" className="flex items-center gap-3 lg:justify-center">
           <span className="h-px flex-1 bg-border lg:hidden" />
-          <span className="text-caption text-faint">vs</span>
+          <span className="text-overline rounded-full border border-hairline bg-surface-raised px-3 py-1 text-faint">
+            vs
+          </span>
           <span className="h-px flex-1 bg-border lg:hidden" />
         </div>
         <Team team={away} side="Away" />
       </div>
 
+      <p className="text-overline mt-6 text-muted-foreground">Form duel</p>
       <div
         data-testid="form-duel-slot"
-        className="mt-5 flex flex-col gap-4 border-t border-border pt-4"
+        className="mt-2 flex flex-col gap-4 border-t border-border pt-4"
       >
         <FormDuel
           className="mx-auto"
