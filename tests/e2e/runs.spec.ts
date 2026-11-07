@@ -193,3 +193,12 @@ test("RUNNING row updates to SUCCESS without reload and polling stops", async ({
   await page.waitForTimeout(7000);
   expect(polls.length).toBe(after);
 });
+
+test("outcome strip and status rail reflect run statuses", async ({ page }) => {
+  await seed([{ status: "SUCCESS" }, { status: "FAILED", error: "x", failedCount: 1 }]);
+  await open(page);
+  await expect(page.getByTestId("runs-outcomes")).toContainText("1 of 2 recent runs");
+  await expect(
+    page.locator("[data-testid=run-row], [data-testid=run-card]").first(),
+  ).toHaveAttribute("data-status", "SUCCESS");
+});
