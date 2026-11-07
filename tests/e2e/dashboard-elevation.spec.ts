@@ -22,7 +22,8 @@ test.describe("dashboard elevation", () => {
     );
   });
 
-  test("freshness dot breathes only when motion is allowed", async ({ page }) => {
+  test("freshness dot breathes only when motion is allowed", async ({ page, isMobile }) => {
+    test.skip(isMobile, "the pill lives in the desktop navbar");
     await page.goto("/");
     const ring = page.getByTestId("freshness-pill").locator(".live-ring");
     await expect(ring).toHaveCount(1);
