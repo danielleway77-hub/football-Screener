@@ -2,6 +2,7 @@ import { InfoIcon, PieChartIcon } from "lucide-react";
 import { AnimatedBar } from "@/components/motion/AnimatedBar";
 import { cn } from "@/lib/utils";
 import { derived, highest1x2, pairLeader } from "./logic";
+import { ScorePop } from "./ScorePop";
 import { PctCount } from "./PctCount";
 import { TeamLogo } from "./TeamLogo";
 import { formatPct } from "@/lib/format";
@@ -62,7 +63,7 @@ function BarRow({
     >
       <div className="flex items-center gap-2.5">
         {logo ?? <span aria-hidden="true" className="size-7 shrink-0" />}
-        <span className="min-w-0 flex-1 truncate text-[0.9375rem] font-semibold tracking-[0.04em] uppercase">
+        <span className="line-clamp-2 min-w-0 flex-1 text-[0.9375rem] leading-tight font-semibold tracking-[0.04em] [overflow-wrap:anywhere] uppercase">
           {label}
         </span>
         {missing ? (
@@ -205,6 +206,7 @@ export function ProbabilityPanel({
 }: ProbabilityPanelProps) {
   const top = highest1x2(p.homeWin, p.draw, p.awayWin);
   const hasScore = predictedHome !== null && predictedAway !== null;
+  const noneAtAll = Object.values(p).every((v) => v === null) && !hasScore;
   return (
     <div
       role="group"
@@ -218,6 +220,17 @@ export function ProbabilityPanel({
         <AiChip />
       </div>
 
+      {noneAtAll ? (
+        <p
+          data-testid="no-probabilities"
+          className="flex items-start gap-2 rounded-md border border-dashed border-border-strong bg-surface-raised px-3 py-3 text-sm text-muted-foreground"
+        >
+          <InfoIcon className="mt-0.5 size-4 shrink-0 text-info" aria-hidden="true" />
+          The data source sent no probabilities or predicted score for this match. The form verdict
+          does not depend on them.
+        </p>
+      ) : null}
+
       {hasScore ? (
         <div
           data-testid="predicted-score-tile"
@@ -227,11 +240,13 @@ export function ProbabilityPanel({
             Predicted score <AiChip />
           </p>
           <p className="text-stat-xl mt-3">
-            <span role="img" aria-label={`Predicted score ${predictedHome} ${predictedAway}`}>
-              <span className="text-primary">{predictedHome}</span>
-              <span className="px-3 text-faint">–</span>
-              <span className="text-primary">{predictedAway}</span>
-            </span>
+            <ScorePop>
+              <span role="img" aria-label={`Predicted score ${predictedHome} ${predictedAway}`}>
+                <span className="text-primary">{predictedHome}</span>
+                <span className="px-3 text-faint">–</span>
+                <span className="text-primary">{predictedAway}</span>
+              </span>
+            </ScorePop>
           </p>
           <p className="mt-3 flex items-center justify-center gap-2 text-xs text-muted-foreground">
             <TeamLogo name={home.name} src={home.logoUrl} size={28} />
