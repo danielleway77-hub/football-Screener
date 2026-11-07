@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { timingSafeEqual } from "node:crypto";
 import { localDayRange } from "@/server/domain/window";
 import { AppError } from "@/server/errors";
@@ -32,7 +33,7 @@ async function runCleanup(now: Date): Promise<Cleaned> {
     const c = await cleanup(now);
     return { matches: c.matches, attempts: c.attempts, rateLimits: c.limits };
   } catch (error) {
-    console.error("Cleanup failed", { name: (error as Error).name });
+    logger.error("Cleanup failed", { name: (error as Error).name });
     return { matches: 0, attempts: 0, rateLimits: 0 };
   }
 }
@@ -77,7 +78,7 @@ export async function runDaily(opts: { now?: () => Date } = {}): Promise<DailyRe
     }
   } catch (e) {
     error = e instanceof AppError ? e.message : "The daily update failed unexpectedly.";
-    console.error("Daily cron failed", { name: e instanceof Error ? e.name : "unknown" });
+    logger.error("Daily cron failed", { name: e instanceof Error ? e.name : "unknown" });
     status = "FAILED";
     // A started run is already FAILED; otherwise record one so the failure is visible on the Runs page.
     const started = await runs.findStartedSince("CRON", t0).catch(() => null);

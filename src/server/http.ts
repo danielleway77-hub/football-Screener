@@ -1,3 +1,6 @@
+import { headers as nextHeaders } from "next/headers";
+import { logger, withRequestId } from "@/lib/logger";
+import { REQUEST_ID_HEADER, resolveRequestId } from "@/lib/request-id";
 import { hasValidSession } from "@/server/auth/guard";
 import { isSameOrigin } from "@/server/auth/origin";
 import { AppError, RateLimitedError, toErrorBody } from "@/server/errors";
@@ -14,23 +17,54 @@ export function noContent(headers: Record<string, string> = {}): Response {
   return new Response(null, { status: 204, headers: { ...NO_STORE, ...headers } });
 }
 
-export function errorResponse(error: AppError, headers: Record<string, string> = {}): Response {
-  return json(toErrorBody(error), error.status, headers);
+export function errorResponse(
+  error: AppError,
+  headers: Record<string, string> = {},
+  requestId?: string,
+): Response {
+  const body = toErrorBody(error);
+  return json(requestId ? { error: { ...body.error, requestId } } : body, error.status, headers);
 }
 
-/** Runs a handler and maps failures to the standard error body. Never leaks messages or stack traces of unknown errors. */
-export async function handle(run: () => Promise<Response>, headers: Record<string, string> = {}) {
+/** The id the proxy stamped on the forwarded request (or a fresh one when called outside a request). */
+async function requestIdFromContext(): Promise<string> {
   try {
-    return await run();
-  } catch (error) {
-    if (error instanceof AppError) {
-      const retry: Record<string, string> =
-        error instanceof RateLimitedError ? { "Retry-After": String(error.retryAfterSeconds) } : {};
-      return errorResponse(error, { ...headers, ...retry });
-    }
-    console.error("Unhandled API error", { name: error instanceof Error ? error.name : "unknown" });
-    return errorResponse(new AppError("INTERNAL", "Something went wrong. Try again."), headers);
+    return resolveRequestId((await nextHeaders()).get(REQUEST_ID_HEADER));
+  } catch {
+    return resolveRequestId(null);
   }
+}
+
+/**
+ * Runs a handler and maps failures to the standard error body. Never leaks messages or stack traces of
+ * unknown errors. Every response carries `x-request-id`; error bodies and log lines carry the same id.
+ */
+export async function handle(run: () => Promise<Response>, headers: Record<string, string> = {}) {
+  const requestId = await requestIdFromContext();
+  const withId = { ...headers, [REQUEST_ID_HEADER]: requestId };
+  return withRequestId(requestId, async () => {
+    try {
+      const response = await run();
+      response.headers.set(REQUEST_ID_HEADER, requestId);
+      return response;
+    } catch (error) {
+      if (error instanceof AppError) {
+        const retry: Record<string, string> =
+          error instanceof RateLimitedError
+            ? { "Retry-After": String(error.retryAfterSeconds) }
+            : {};
+        return errorResponse(error, { ...withId, ...retry }, requestId);
+      }
+      logger.error("Unhandled API error", {
+        name: error instanceof Error ? error.name : "unknown",
+      });
+      return errorResponse(
+        new AppError("INTERNAL", "Something went wrong. Try again."),
+        withId,
+        requestId,
+      );
+    }
+  });
 }
 
 /**

@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { REQUEST_ID_HEADER, resolveRequestId } from "@/lib/request-id";
 import { sanitizeNext } from "@/lib/next-param";
 import { sessionCookieName, verifySessionToken } from "@/server/auth/jwt";
 
@@ -19,7 +20,18 @@ function isPublic(pathname: string): boolean {
   );
 }
 
+/** Stamps the request id on the response (and, via `next`, on the forwarded request for route handlers). */
+function stamp(response: NextResponse, id: string): NextResponse {
+  response.headers.set(REQUEST_ID_HEADER, id);
+  return response;
+}
+
 export async function proxy(request: NextRequest) {
+  const id = resolveRequestId(request.headers.get(REQUEST_ID_HEADER));
+  const forwarded = new Headers(request.headers);
+  forwarded.set(REQUEST_ID_HEADER, id);
+  const next = () => stamp(NextResponse.next({ request: { headers: forwarded } }), id);
+  const redirect = (url: URL) => stamp(NextResponse.redirect(url), id);
   const { pathname, search } = request.nextUrl;
   const token = request.cookies.get(sessionCookieName(process.env.NODE_ENV))?.value;
   const valid = (await verifySessionToken(token, process.env.SESSION_SECRET ?? "")) !== null;
@@ -27,23 +39,25 @@ export async function proxy(request: NextRequest) {
   if (pathname === "/login") {
     // Already signed in: skip the form. `?expired=1` is set when the version no longer matches.
     if (valid && !request.nextUrl.searchParams.has("expired")) {
-      return NextResponse.redirect(new URL("/", request.url));
+      return redirect(new URL("/", request.url));
     }
-    return NextResponse.next();
+    return next();
   }
 
-  if (isPublic(pathname) || valid) return NextResponse.next();
+  if (isPublic(pathname) || valid) return next();
 
   if (pathname.startsWith("/api/")) {
-    return NextResponse.json(
-      { error: { code: "UNAUTHORIZED", message: "Sign in required." } },
-      { status: 401 },
+    return stamp(
+      NextResponse.json(
+        { error: { code: "UNAUTHORIZED", message: "Sign in required.", requestId: id } },
+        { status: 401 },
+      ),
+      id,
     );
   }
   const login = new URL("/login", request.url);
-  const next = sanitizeNext(pathname + search);
-  login.searchParams.set("next", next);
-  return NextResponse.redirect(login);
+  login.searchParams.set("next", sanitizeNext(pathname + search));
+  return redirect(login);
 }
 
 export const config = {

@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { json } from "@/server/http";
 import { isValidCronAuth, runDaily } from "@/server/services/cron-service";
 
@@ -10,7 +11,7 @@ export const maxDuration = 60;
  */
 export async function GET(request: Request) {
   if (!isValidCronAuth(request.headers.get("authorization"), process.env.CRON_SECRET)) {
-    console.warn("Cron request rejected: missing or wrong credentials");
+    logger.warn("Cron request rejected: missing or wrong credentials");
     return json({ error: { code: "UNAUTHORIZED", message: "Unauthorized." } }, 401);
   }
   try {
@@ -18,7 +19,7 @@ export async function GET(request: Request) {
     // A FAILED run answers 500 so Vercel's cron log and `pnpm run:daily` show the failure.
     return json(result, result.status === "FAILED" ? 500 : 200);
   } catch (error) {
-    console.error("Daily cron crashed", { name: error instanceof Error ? error.name : "unknown" });
+    logger.error("Daily cron crashed", { name: error instanceof Error ? error.name : "unknown" });
     return json(
       { error: { code: "INTERNAL", message: "The daily job failed. See the logs." } },
       500,

@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { validateThresholds } from "@/server/domain/screening";
 import { settingsUpdateSchema, type SettingsUpdate } from "@/lib/schemas/settings";
 import { AppError } from "@/server/errors";
@@ -99,7 +100,7 @@ export async function saveSettings(input: unknown): Promise<{
     } catch (error) {
       if (error instanceof AppError) rescreenSkipped = error.message;
       else {
-        console.error("Re-screen after save failed", { name: (error as Error).name });
+        logger.error("Re-screen after save failed", { name: (error as Error).name });
         rescreenSkipped = "Settings were saved, but re-screening the stored matches failed.";
       }
     }

@@ -1,3 +1,4 @@
+import { logger } from "@/lib/logger";
 import { normalizePayload, PayloadError } from "@/server/domain/normalize";
 import { checkFormScope, evaluateMatch } from "@/server/domain/screening";
 import type { InvalidItem, RawMatchInput } from "@/server/domain/types";
@@ -61,7 +62,7 @@ async function finishRun(runId: string, result: Parameters<typeof runs.finish>[1
   try {
     await runs.finish(runId, result);
   } catch (error) {
-    console.error("Could not write the run result", { runId, name: (error as Error).name });
+    logger.error("Could not write the run result", { runId, name: (error as Error).name });
     throw error;
   }
 }
@@ -189,7 +190,7 @@ async function executeRun(opts: {
     // Anything unexpected: the transaction already rolled back, earlier data is untouched.
     const known = error instanceof AppError;
     const cancelled = error instanceof Error && error.message === matches.RUN_NOT_RUNNING;
-    console.error("Run failed", { runId, code: known ? error.code : (error as Error).name });
+    logger.error("Run failed", { runId, code: known ? error.code : (error as Error).name });
     const message = known
       ? error.message
       : cancelled
