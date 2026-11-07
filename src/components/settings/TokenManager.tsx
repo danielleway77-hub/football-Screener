@@ -3,7 +3,9 @@
 import * as React from "react";
 import { formatInTimeZone } from "date-fns-tz";
 import { AlertTriangleIcon, KeyRoundIcon } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
+import { useMotionPrefs } from "@/lib/motion";
 import { Callout } from "@/components/shared/Callout";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { CopyButton } from "@/components/shared/CopyButton";
@@ -64,6 +66,7 @@ export function TokenManager({
   timezone: string;
 }) {
   const online = useOnlineStatus();
+  const { reduce } = useMotionPrefs();
   const [tokens, setTokens] = React.useState(initialTokens);
   const [createOpen, setCreateOpen] = React.useState(false);
   const [label, setLabel] = React.useState("");
@@ -155,7 +158,7 @@ export function TokenManager({
           ref={createButton}
           onClick={openCreate}
           disabled={full || !online}
-          className="max-sm:w-full"
+          className="max-sm:min-h-11 max-sm:w-full"
         >
           Create token
         </Button>
@@ -176,35 +179,52 @@ export function TokenManager({
           className="py-6"
         />
       ) : (
-        <ul className="divide-y divide-hairline rounded-md border border-hairline">
-          {tokens.map((token) => (
-            <li
-              key={token.id}
-              data-testid="token-row"
-              className="flex min-h-16 flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3"
-            >
-              <div className="min-w-0 flex-1 basis-48">
-                <p className="text-body truncate font-semibold">{token.label}</p>
-                <p className="text-caption text-faint">
-                  Created {day(token.createdAt, timezone)} · Last used{" "}
-                  {token.lastUsedAt ? stamp(token.lastUsedAt, timezone) : "never"}
-                </p>
-              </div>
-              <TokenStatus revoked={Boolean(token.revokedAt)} />
-              {token.revokedAt ? null : (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  disabled={!online}
-                  onClick={() => setRevoking(token)}
-                  aria-label={`Revoke ${token.label}`}
+        <ul className="divide-y divide-hairline overflow-hidden rounded-md border border-hairline">
+          <AnimatePresence initial={false}>
+            {tokens.map((token) => (
+              <motion.li
+                key={token.id}
+                layout={reduce ? false : "position"}
+                initial={reduce ? false : { opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+                data-testid="token-row"
+                className="flex min-h-16 flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3 transition-colors hover:bg-subtle"
+              >
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "flex size-9 shrink-0 items-center justify-center rounded-md border",
+                    token.revokedAt
+                      ? "border-hairline bg-neutral-soft text-faint"
+                      : "border-primary-border bg-primary-soft text-primary",
+                  )}
                 >
-                  Revoke
-                </Button>
-              )}
-            </li>
-          ))}
+                  <KeyRoundIcon className="size-4" />
+                </span>
+                <div className="min-w-0 flex-1 basis-40">
+                  <p className="text-body truncate font-semibold">{token.label}</p>
+                  <p className="text-caption text-faint">
+                    Created {day(token.createdAt, timezone)} · Last used{" "}
+                    {token.lastUsedAt ? stamp(token.lastUsedAt, timezone) : "never"}
+                  </p>
+                </div>
+                <TokenStatus revoked={Boolean(token.revokedAt)} />
+                {token.revokedAt ? null : (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={!online}
+                    onClick={() => setRevoking(token)}
+                    aria-label={`Revoke ${token.label}`}
+                  >
+                    Revoke
+                  </Button>
+                )}
+              </motion.li>
+            ))}
+          </AnimatePresence>
         </ul>
       )}
 
@@ -237,12 +257,15 @@ export function TokenManager({
                 </DialogDescription>
               </DialogHeader>
               <div className="flex flex-col gap-3 rounded-md bg-subtle p-3 sm:flex-row sm:items-center">
-                <code
+                <motion.code
                   data-testid="token-plaintext"
+                  initial={reduce ? false : { opacity: 0, filter: "blur(6px)" }}
+                  animate={{ opacity: 1, filter: "blur(0px)" }}
+                  transition={{ duration: 0.5, delay: 0.15 }}
                   className="num min-w-0 flex-1 text-sm break-all text-foreground"
                 >
                   {created.token}
-                </code>
+                </motion.code>
                 <CopyButton
                   value={created.token}
                   label="Copy token"
