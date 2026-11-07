@@ -210,7 +210,6 @@ export function RunsList({ rows: serverRows, timezone, nowIso }: Props) {
                     tabIndex={0}
                     data-testid="run-row"
                     data-status={run.status}
-                    aria-label={`View details for run started ${label}`}
                     onClick={() => open(run.id)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
