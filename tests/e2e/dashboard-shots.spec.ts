@@ -1,12 +1,19 @@
 import { mkdirSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
-import { resetData, seedBaseline, seedRun, setSettings } from "./helpers/dashboard-db";
+import {
+  baselineMatches,
+  resetData,
+  seedMatches,
+  seedBaseline,
+  seedRun,
+  setSettings,
+} from "./helpers/dashboard-db";
 
 // Dashboard UI-elevation screenshots. Skipped unless SHOTS_DIR is set:
 //   SHOTS_DIR=docs/reference/ui-dashboard/after PW_PORT=3022 npx playwright test tests/e2e/dashboard-shots.spec.ts --project=desktop --workers=1
 const dir = process.env.SHOTS_DIR;
 test.skip(!dir, "set SHOTS_DIR to capture review screenshots");
-test.setTimeout(300_000);
+test.setTimeout(900_000);
 
 const SIZES = [360, 768, 1280, 1920];
 const HEIGHT: Record<number, number> = { 360: 800, 768: 1024, 1280: 800, 1920: 1080 };
@@ -38,10 +45,9 @@ test("capture dashboard states", async ({ page }) => {
   await seedBaseline();
   await seedRun({ status: "FAILED", finishedHoursAgo: 0.2, error: "Provider timed out" });
   await shoot(page, "failed", "/", [360, 1280]);
-  await seedBaseline();
-  await setSettings({ staleAfterHrs: 1 });
   await resetData();
-  await seedBaseline();
   await setSettings({ staleAfterHrs: 1 });
+  await seedMatches(baselineMatches());
+  await seedRun({ finishedHoursAgo: 3 });
   await shoot(page, "stale", "/", [360, 1280]);
 });
