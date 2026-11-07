@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-// @ts-expect-error plain .mjs script without types
 import { scanRepo, scanText } from "../../scripts/secret-scan.mjs";
 
 // Step 16.1: the repository must contain no secrets; the scanner itself must really detect them.
