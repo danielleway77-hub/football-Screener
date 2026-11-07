@@ -137,7 +137,7 @@ export function DualThresholdSlider({
                 aria-label={label}
                 data-testid={label.startsWith("Poor") ? "low-thumb" : "high-thumb"}
                 className={cn(
-                  "relative block size-7 cursor-grab rounded-full border-[3px] border-canvas bg-primary shadow-md transition-[box-shadow,transform] duration-150 outline-none motion-reduce:transition-none",
+                  "relative block size-7 cursor-grab rounded-full bg-primary shadow-[0_0_0_3px_var(--canvas),var(--shadow-md,0_2px_6px_rgb(0_0_0/0.4))] transition-[box-shadow,transform] duration-150 outline-none motion-reduce:transition-none",
                   "hover:scale-110 active:scale-125 active:cursor-grabbing motion-reduce:hover:scale-100 motion-reduce:active:scale-100",
                   "after:absolute after:-inset-2 after:content-['']",
                   "hover:ring-3 hover:ring-ring/40 focus-visible:ring-3 focus-visible:ring-ring/60",

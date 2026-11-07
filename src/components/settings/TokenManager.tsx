@@ -154,7 +154,7 @@ export function TokenManager({
           size="sm"
           onClick={openCreate}
           disabled={full || !online}
-          className="max-sm:w-full"
+          className="max-sm:min-h-11 max-sm:w-full"
         >
           Create token
         </Button>

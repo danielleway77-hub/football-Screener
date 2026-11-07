@@ -537,9 +537,9 @@ export function SettingsView({
             <motion.div
               key="save-bar"
               data-testid="save-bar"
-              initial={reduce ? false : { y: 24, opacity: 0 }}
+              initial={reduce ? false : { y: 8, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              exit={reduce ? { opacity: 0 } : { y: 24, opacity: 0 }}
+              exit={reduce ? { opacity: 0 } : { y: 8, opacity: 0 }}
               transition={barTransition}
               className={cn(
                 "z-[var(--z-popover)] border-hairline-strong bg-surface-overlay",
