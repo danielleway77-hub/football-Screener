@@ -293,3 +293,15 @@ test.describe("match detail", () => {
     expect(results.violations.map((v) => `${v.id}: ${v.nodes[0]?.target}`)).toEqual([]);
   });
 });
+
+test.describe("match detail elevation", () => {
+  test("no-probabilities note shows when the source sent none", async ({ page }) => {
+    await open(page, "away-strong");
+    await expect(page.getByTestId("no-probabilities")).toBeVisible();
+  });
+  test("sticky bar appears after the hero scrolls away", async ({ page }) => {
+    await open(page, "golden");
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await expect(page.getByTestId("match-sticky")).toHaveAttribute("data-visible", "true");
+  });
+});

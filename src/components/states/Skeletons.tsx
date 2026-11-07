@@ -187,7 +187,7 @@ export function PageSkeleton({ variant, className }: PageSkeletonProps) {
 function DetailSkeleton() {
   return (
     <SkeletonGroup label="Loading match…" className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div data-testid="header-skeleton" className="flex items-center justify-between">
         <Skeleton className="h-11 w-44" />
         <Skeleton className="hidden h-10 w-48 md:block" />
       </div>
