@@ -109,7 +109,7 @@ export function Pagination({ page, totalPages, hrefFor, className }: PaginationP
                   base,
                   "num h-10 min-w-10 px-2",
                   n === page
-                    ? "border-primary-border bg-primary-soft text-primary shadow-[0_0_0_3px_rgba(200,245,46,0.08)]"
+                    ? "border-primary-border bg-primary-soft text-primary shadow-[0_0_0_3px_var(--primary-soft)]"
                     : idle,
                 )}
               >
