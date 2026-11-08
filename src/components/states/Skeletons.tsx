@@ -156,6 +156,11 @@ export function DashboardSkeleton() {
         </div>
       </div>
       <Skeleton className="mt-3 h-[17px] w-32" />
+      <div className="mt-4 flex items-center gap-3">
+        <Skeleton className="h-6 w-40" />
+        <Skeleton className="h-5 w-7 rounded-full" />
+        <span aria-hidden="true" className="h-px flex-1 bg-hairline" />
+      </div>
       <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 xl:gap-6 3xl:grid-cols-4">
         {Array.from({ length: 3 }, (_, i) => (
           <MatchCardSkeleton key={i} />

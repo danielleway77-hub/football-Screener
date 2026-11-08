@@ -80,7 +80,10 @@ export function FreshnessPill({
             className,
           )}
         >
-          <span aria-hidden="true" className={cn("size-2 shrink-0 rounded-full", DOT[tone])} />
+          <span aria-hidden="true" className="relative inline-flex size-2 shrink-0">
+            {tone === "positive" ? <span className="live-ring" /> : null}
+            <span className={cn("relative size-2 rounded-full", DOT[tone])} />
+          </span>
           <span aria-hidden="true">
             {text.split(/(\d+)/).map((part, i) =>
               i % 2 ? (

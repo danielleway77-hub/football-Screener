@@ -9,6 +9,8 @@ type EmptyStateProps = {
   description?: string;
   /** Primary and secondary actions (buttons/links). */
   actions?: React.ReactNode;
+  /** Optional extra block under the description (e.g. a rule chip). Additive. */
+  children?: React.ReactNode;
   className?: string;
 };
 
@@ -19,6 +21,7 @@ export function EmptyState({
   title,
   description,
   actions,
+  children,
   className,
 }: EmptyStateProps) {
   return (
@@ -40,6 +43,7 @@ export function EmptyState({
       {description ? (
         <p className="text-body-sm mt-2 text-muted-foreground">{description}</p>
       ) : null}
+      {children ? <div className="mt-4 flex flex-wrap justify-center gap-2">{children}</div> : null}
       {actions ? (
         <div className="mt-6 flex w-full flex-col items-center gap-3 sm:w-auto sm:flex-row">
           {actions}
