@@ -48,7 +48,7 @@ Honest scorecard on branch `prod-standards`. PASS = implemented and evidenced; P
 |---|---|---|
 | CI workflow file | PARTIAL | `.github/workflows/ci.yml` (format, typegen, lint, tsc, unit tests under UTC and Asia/Karachi, build with generated throw-away secrets, secret scan, advisory audit; integration and e2e by manual dispatch, secret names only). Written, **never run** (not pushed, not enabled); YAML not validated by GitHub. |
 | Dependabot | PASS (file only) | `.github/dependabot.yml` weekly npm, monthly actions, framework majors ignored |
-| Runbooks | PASS | RUNBOOK, DEPLOYMENT_RUNBOOK (log and request id section added) |
+| Runbooks | PASS | RUNBOOK (retention, section 10 logs and request ids), DEPLOYMENT_RUNBOOK |
 | Real deployment, Lighthouse, cross-browser | TODO | deliberately skipped (manual step) |
 
 ## Testing
