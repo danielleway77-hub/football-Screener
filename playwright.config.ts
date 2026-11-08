@@ -1,4 +1,5 @@
 import { existsSync } from "node:fs";
+import bcrypt from "bcryptjs";
 import { defineConfig, devices } from "@playwright/test";
 
 if (existsSync(".env.test.local")) process.loadEnvFile(".env.test.local");
@@ -14,7 +15,12 @@ function isolatedDbEnv(): Record<string, string> {
       "e2e needs DIRECT_URL_TEST (in .env.test.local) with schema=test or test_<name>",
     );
   }
-  return { DATABASE_URL: url };
+  // The server must accept the e2e password whatever APP_PASSWORD_HASH .env.local holds for the developer.
+  const pw = process.env.E2E_PASSWORD;
+  return {
+    DATABASE_URL: url,
+    ...(pw ? { APP_PASSWORD_HASH: bcrypt.hashSync(pw, 10).replaceAll("$", "\\$") } : {}),
+  };
 }
 
 const PORT = Number(process.env.PW_PORT ?? 3000);
