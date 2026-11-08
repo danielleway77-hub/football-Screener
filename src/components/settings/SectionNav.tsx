@@ -74,7 +74,7 @@ export function SectionNav({ sections }: { sections: SectionLink[] }) {
                 aria-current={active ? "location" : undefined}
                 data-active={active}
                 className={cn(
-                  "relative flex min-h-11 items-center border-l-2 border-transparent px-4 text-sm font-medium transition-colors",
+                  "relative flex min-h-11 items-center border-l border-transparent px-4 text-sm font-medium transition-colors",
                   active ? "text-primary" : "text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -85,7 +85,7 @@ export function SectionNav({ sections }: { sections: SectionLink[] }) {
                     transition={
                       reduce ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 40 }
                     }
-                    className="absolute inset-y-0 -left-0.5 w-0.5 bg-primary shadow-[0_0_10px_var(--primary)]"
+                    className="absolute inset-y-0 -left-px w-0.5 bg-primary shadow-[0_0_10px_var(--primary)]"
                   />
                 ) : null}
                 {section.label}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import { HistoryIcon } from "lucide-react";
 import { RunsError } from "@/components/runs/RunsError";
 import { AppErrorBoundary } from "@/components/states/AppErrorBoundary";
@@ -40,6 +41,7 @@ export function toRunRow(r: RunRecord): RunRow {
 export async function RunsContent({ searchParams }: { searchParams: Search }) {
   const raw = await searchParams;
   const params = parseRunsParams(raw);
+  await connection(); // request-time work: the clock below must not be read while prerendering
   const now = new Date();
 
   let data;

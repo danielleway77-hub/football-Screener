@@ -443,16 +443,16 @@ export function ImportView({
       className="max-w-[880px]"
     >
       <Tabs value={tab} onValueChange={setTab} className="gap-6">
-        <TabsList className="grid h-auto w-full grid-cols-2 p-1 sm:inline-flex sm:w-fit">
+        <TabsList className="grid h-auto w-full grid-cols-2 p-1 md:inline-flex md:w-fit">
           <TabsTrigger
             value="helper"
-            className="min-h-11 flex-1 flex-col gap-1 px-3 py-1.5 sm:flex-none sm:flex-row sm:gap-2 sm:px-4"
+            className="min-h-11 flex-1 flex-col gap-1 px-3 py-1.5 md:flex-none md:flex-row md:gap-2 md:px-4"
           >
             Assisted helper {recommended === "helper" ? chip : null}
           </TabsTrigger>
           <TabsTrigger
             value="paste"
-            className="min-h-11 flex-1 flex-col gap-1 px-3 py-1.5 sm:flex-none sm:flex-row sm:gap-2 sm:px-4"
+            className="min-h-11 flex-1 flex-col gap-1 px-3 py-1.5 md:flex-none md:flex-row md:gap-2 md:px-4"
           >
             Paste / upload {recommended === "paste" ? chip : null}
           </TabsTrigger>
@@ -682,7 +682,7 @@ export function ImportView({
                       "Add data above to see a preview."
                     )}
                   </p>
-                  <div className="flex gap-3">
+                  <div className="flex flex-wrap gap-3">
                     <Button
                       type="button"
                       variant="ghost"

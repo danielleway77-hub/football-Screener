@@ -190,6 +190,10 @@ test.describe("slow, timeout, 500", () => {
   test("500 on data load (forced route error) shows ErrorState with a working Try again", async ({
     page,
   }) => {
+    test.skip(
+      process.env.PW_PROD === "1",
+      "the ?__error test hooks are compiled out of production builds (covered in dev mode)",
+    );
     await page.goto("/runs?__error=1");
     const error = page.getByTestId("error-state");
     await expect(error).toBeVisible();

@@ -97,6 +97,10 @@ test("empty state when there are no runs", async ({ page }) => {
 });
 
 test("forced list error shows ErrorState with Retry", async ({ page }) => {
+  test.skip(
+    process.env.PW_PROD === "1",
+    "the ?__error test hooks are compiled out of production builds (covered in dev mode)",
+  );
   await page.goto("/runs?__error=list");
   await expect(page.getByTestId("error-state")).toBeVisible();
   await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();

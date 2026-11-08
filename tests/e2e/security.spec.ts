@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
+import { SESSION_COOKIE } from "./helpers/cookie";
 import { resetData, seedBaseline, seedMatches, seedRun } from "./helpers/dashboard-db";
 
 // Step 16.1 (docs/TEST_CATALOG.md section 16.1, TESTING_STANDARDS 5b): headers, unauthenticated access,
@@ -163,7 +164,15 @@ test.describe("signed out", () => {
     ];
     for (const value of cookies) {
       await context.clearCookies();
-      await context.addCookies([{ name: "session", value, url: baseURL! }]);
+      await context.addCookies([
+        {
+          name: SESSION_COOKIE,
+          value,
+          domain: "localhost",
+          path: "/",
+          secure: SESSION_COOKIE.startsWith("__Host-"),
+        },
+      ]);
       await page.goto("/runs");
       await expect(page).toHaveURL(/\/login\?next=%2Fruns/);
       const res = await page.request.get("/api/tokens");
@@ -172,6 +181,7 @@ test.describe("signed out", () => {
   });
 
   test("open-redirect next values never leave the site after login", async ({ page, baseURL }) => {
+    test.slow(); // eight real logins in a row (bcrypt cost 12 + remote DB writes)
     const evil = [
       "//evil.example",
       "https://evil.example",

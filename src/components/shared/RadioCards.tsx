@@ -64,7 +64,7 @@ export function RadioCards<T extends string>({
               value={option.value}
               checked={selected}
               onChange={() => onChange(option.value)}
-              className="peer sr-only"
+              className="peer absolute inset-0 size-full cursor-pointer appearance-none rounded-md border border-transparent opacity-0 disabled:cursor-not-allowed"
             />
             <span
               aria-hidden="true"

@@ -170,15 +170,16 @@ test.describe("dashboard with seeded data", () => {
       expect(panel.x).toBeGreaterThan(h1.x + 100);
     }
 
-    // Cards sit in one grid per day group (one card per day in this seed), so assert the grid's
-    // own column count, not the spread of card x positions.
-    const columns = await page.evaluate(
-      () =>
-        getComputedStyle(
-          document.querySelector('[data-testid="match-card"]')!.parentElement!.parentElement!,
-        ).gridTemplateColumns.split(" ").length,
-    );
-    // 1 column below 768, 2 below 1280, 3 from 1280, 4 from 1920.
+    // Cards are grouped by day (one grid per group), so read the grid's column count instead of card positions.
+    const columns = await page.evaluate(() => {
+      const card = document.querySelector('[data-testid="match-card"]')!;
+      for (let el = card.parentElement; el; el = el.parentElement) {
+        const cols = getComputedStyle(el).gridTemplateColumns;
+        if (getComputedStyle(el).display === "grid" && cols !== "none")
+          return cols.split(" ").length;
+      }
+      return 0;
+    });
     const expected = width < 768 ? 1 : width < 1280 ? 2 : width >= 1920 ? 4 : 3;
     expect(columns).toBe(expected);
 
@@ -225,6 +226,10 @@ test.describe("dashboard with seeded data", () => {
   });
 
   test("500 shows ErrorState with Retry and keeps the header and run panel", async ({ page }) => {
+    test.skip(
+      process.env.PW_PROD === "1",
+      "the ?__error test hooks are compiled out of production builds (covered in dev mode)",
+    );
     await ready(page, "/?__error=results");
     await expect(page.getByText("Couldn't load matches")).toBeVisible();
     await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
