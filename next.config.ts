@@ -24,6 +24,8 @@ const nextConfig: NextConfig = {
     ];
   },
   turbopack: {
+    // Watch only this project (sibling folders under the parent must not trigger recompiles).
+    root: process.cwd(),
     rules: {
       "*.css": {
         loaders: ["@tailwindcss/turbopack"],

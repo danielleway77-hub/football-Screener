@@ -101,7 +101,10 @@ export function LoginEntrance({ children, className }: Props) {
         if (lines.length > 0) {
           tl.fromTo(
             lines,
-            { attr: { pathLength: 1 }, strokeDasharray: 1, strokeDashoffset: 1 },
+            {
+              strokeDasharray: (_i: number, el: SVGGeometryElement) => el.getTotalLength(),
+              strokeDashoffset: (_i: number, el: SVGGeometryElement) => el.getTotalLength(),
+            },
             { strokeDashoffset: 0, duration: T.glyph.duration, ease: T.glyph.ease },
             T.glyph.at,
           );
