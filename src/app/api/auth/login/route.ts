@@ -53,8 +53,10 @@ export async function POST(request: Request) {
     );
   }
 
+  // Record the attempt as a failure BEFORE the slow bcrypt check, so parallel guesses all count toward the limit.
+  const attemptId = await loginAttempts.recordPendingFailure(ip, now);
   const ok = await verifyPassword(parsed.password);
-  await loginAttempts.record(ip, ok, now);
+  if (ok) await loginAttempts.markSuccess(attemptId);
   // Opportunistic cleanup of old attempts (1 in 20 requests).
   if (Math.random() < 0.05) {
     await loginAttempts.purge(new Date(now.getTime() - 30 * 24 * 60 * 60_000)).catch(() => 0);

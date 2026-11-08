@@ -140,3 +140,12 @@ describe("splitMatches separators (L4)", () => {
     expect(Date.now() - started).toBeLessThan(500);
   });
 });
+
+describe("parsePageText team names with digits", () => {
+  it("does not read the number inside 'Schalke 04' as the win probability", () => {
+    const text =
+      "Schalke 04 vs Mainz 05\nWIN Schalke 04 60%\nWIN Mainz 05 25%\nDRAW 15%\nRECENT FORM\nSchalke 04 80%\nMainz 05 20%";
+    const [m] = parsePageText(text).matches;
+    expect(m).toMatchObject({ homeWin: 60, awayWin: 25, draw: 15, homeForm: 80, awayForm: 20 });
+  });
+});

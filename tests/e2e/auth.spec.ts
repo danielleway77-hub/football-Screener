@@ -105,7 +105,7 @@ test.describe("signed out", () => {
     expect(none.status()).toBe(403);
   });
 
-  test("a tampered session cookie is treated as logged out", async ({ page, baseURL }) => {
+  test("a tampered session cookie is treated as logged out", async ({ page }) => {
     await page.context().addCookies([
       {
         name: SESSION_COOKIE,

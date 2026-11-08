@@ -126,6 +126,8 @@ function SearchBox() {
   const { params, navigate } = useDashboardNav();
   const [value, setValue] = React.useState(params.q);
   const [seenQ, setSeenQ] = React.useState(params.q);
+  // The last query THIS box pushed to the URL: its echo must not overwrite newer typing.
+  const [sentQ, setSentQ] = React.useState(params.q);
   const [expanded, setExpanded] = React.useState(params.q !== "");
   const inputRef = React.useRef<HTMLInputElement>(null);
   const openRef = React.useRef<HTMLButtonElement>(null);
@@ -134,12 +136,16 @@ function SearchBox() {
   // Back/forward or "Clear filters" rewrites the box.
   if (seenQ !== params.q) {
     setSeenQ(params.q);
-    setValue(params.q);
+    if (params.q !== sentQ) setValue(params.q);
   }
 
   React.useEffect(() => {
     if (value.trim() === params.q) return;
-    const timer = setTimeout(() => navigate({ q: value.trim().slice(0, 60) }), DEBOUNCE_MS);
+    const timer = setTimeout(() => {
+      const next = value.trim().slice(0, 60);
+      setSentQ(next);
+      navigate({ q: next });
+    }, DEBOUNCE_MS);
     return () => clearTimeout(timer);
   }, [value, params.q, navigate]);
 
@@ -219,6 +225,7 @@ function SearchBox() {
               aria-label="Clear league filter"
               onClick={() => {
                 setValue("");
+                setSentQ("");
                 navigate({ q: "" });
                 inputRef.current?.focus();
               }}

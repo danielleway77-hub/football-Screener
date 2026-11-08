@@ -150,7 +150,6 @@ test.describe("signed out", () => {
   test("tampered, garbage and expired session cookies are treated as signed out", async ({
     page,
     context,
-    baseURL,
   }) => {
     const cookies = [
       "garbage",

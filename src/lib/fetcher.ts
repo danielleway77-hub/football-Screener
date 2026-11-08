@@ -125,7 +125,13 @@ async function toError(res: Response): Promise<AppClientError> {
     if (body?.error) {
       code = body.error.code ?? code;
       message = body.error.message;
-      fieldErrors = body.error.fieldErrors;
+      // The server sends `{ field: "message" }`; accept `{ field: ["message"] }` too.
+      const raw = body.error.fieldErrors as Record<string, string | string[]> | undefined;
+      if (raw && typeof raw === "object") {
+        fieldErrors = Object.fromEntries(
+          Object.entries(raw).map(([k, v]) => [k, Array.isArray(v) ? v : [String(v)]]),
+        );
+      }
     }
   } catch {
     // Non-JSON error body: fall back to the status code.

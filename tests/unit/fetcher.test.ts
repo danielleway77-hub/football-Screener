@@ -126,6 +126,27 @@ describe("fetchJson", () => {
     expect(error.fieldErrors).toEqual({ low: ["Must be below high."] });
   });
 
+  it("normalises the server's string field errors to string[] (real API shape)", async () => {
+    server.use(
+      http.put(`${BASE}/api/x`, () =>
+        HttpResponse.json(
+          {
+            error: {
+              code: "VALIDATION_FAILED",
+              message: "Some settings are not valid.",
+              fieldErrors: { lowThreshold: "The lower threshold must be below the upper one." },
+            },
+          },
+          { status: 422 },
+        ),
+      ),
+    );
+    const error = await failure(fetchJson(`${BASE}/api/x`, { method: "PUT", body: {} }));
+    expect(error.fieldErrors?.lowThreshold?.[0]).toBe(
+      "The lower threshold must be below the upper one.",
+    );
+  });
+
   it("calls the unauthorized handler on 401", async () => {
     const handler = vi.fn();
     const previous = setUnauthorizedHandler(handler);

@@ -97,9 +97,18 @@ function parseChunk(chunk: string): ParsedPageMatch {
   }
 
   // WIN <team> 76%  — PrediGoal lists home first, then away, then DRAW.
-  const wins = [
-    ...flat.matchAll(new RegExp(String.raw`\bWIN\s+([^%\d]{2,60}?)\s*[:\-]?\s*${NUM}\s*%?`, "gi")),
+  // Team names may contain digits ("Schalke 04"): prefer values that carry a "%", else accept bare numbers.
+  const winsWithPct = [
+    ...flat.matchAll(new RegExp(String.raw`\bWIN\s+([^%]{2,60}?)\s*[:\-]?\s*${NUM}\s*%`, "gi")),
   ];
+  const wins =
+    winsWithPct.length >= 2
+      ? winsWithPct
+      : [
+          ...flat.matchAll(
+            new RegExp(String.raw`\bWIN\s+([^%\d]{2,60}?)\s*[:\-]?\s*${NUM}\s*%?`, "gi"),
+          ),
+        ];
   const winHome = wins[0];
   const winAway = wins[1];
   if (!home && winHome) home = tidyName(winHome[1]!);

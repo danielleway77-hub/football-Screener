@@ -302,7 +302,7 @@ export function TokenManager({
                 <Input
                   id="token-label"
                   value={label}
-                  maxLength={60}
+                  maxLength={40}
                   autoComplete="off"
                   placeholder="Home laptop"
                   onChange={(e) => setLabel(e.target.value)}

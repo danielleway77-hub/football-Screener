@@ -30,5 +30,8 @@ describe("settings preview helpers", () => {
     expect(passwordStrength("")).toBe(0);
     expect(passwordStrength("Ab1!")).toBeLessThanOrEqual(1);
     expect(passwordStrength("correct horse battery Staple 9!")).toBe(4);
+    // digits count as a character class (regression: the digit regex was /d/)
+    expect(passwordStrength("Abcdefghijklmno1")).toBe(4);
+    expect(passwordStrength("Abcdefghijklmnop")).toBeLessThan(4);
   });
 });

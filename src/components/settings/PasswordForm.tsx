@@ -25,7 +25,7 @@ export function passwordStrength(pw: string): number {
   let score = 0;
   if (pw.length >= MIN_PASSWORD_LENGTH) score++;
   if (pw.length >= MIN_PASSWORD_LENGTH + 6) score++;
-  const classes = [/[a-z]/, /[A-Z]/, /d/, /[^A-Za-z0-9]/].filter((r) => r.test(pw)).length;
+  const classes = [/[a-z]/, /[A-Z]/, /\d/, /[^A-Za-z0-9]/].filter((r) => r.test(pw)).length;
   if (classes >= 3) score++;
   if (classes >= 3 && pw.length >= MIN_PASSWORD_LENGTH + 6) score++;
   return pw.length < MIN_PASSWORD_LENGTH ? Math.min(score, 1) : Math.max(1, score);
