@@ -36,7 +36,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4 # version comes from "packageManager" in package.json
+      - uses: pnpm/action-setup@v6 # version comes from "packageManager" in package.json
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -81,7 +81,7 @@ jobs:
     continue-on-error: true # advisory: a new advisory must not block unrelated work; review the log
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -96,7 +96,7 @@ jobs:
     needs: quality
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -118,7 +118,7 @@ jobs:
     needs: quality
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
