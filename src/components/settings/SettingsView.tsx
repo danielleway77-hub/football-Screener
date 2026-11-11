@@ -263,11 +263,16 @@ export function SettingsView({
     <div
       data-testid="settings-view"
       data-hydrated={hydrated ? "true" : "false"}
-      className="grid gap-8 lg:grid-cols-[220px_minmax(0,720px)]"
+      className="grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)]"
     >
       <SectionNav sections={SECTIONS} />
 
-      <div className={cn("flex min-w-0 flex-col gap-4 md:gap-6", isDirty && "max-lg:pb-28")}>
+      <div
+        className={cn(
+          "mx-auto flex w-full min-w-0 max-w-[720px] flex-col gap-4 md:gap-6",
+          isDirty && "max-lg:pb-28",
+        )}
+      >
         <form id="settings-form" onSubmit={onSubmit} noValidate className="contents">
           <Section
             id="screening"

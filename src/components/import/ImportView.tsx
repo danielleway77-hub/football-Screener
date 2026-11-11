@@ -440,7 +440,7 @@ export function ImportView({
     <div
       data-testid="import-view"
       data-hydrated={hydrated ? "true" : "false"}
-      className="max-w-[880px]"
+      className="mx-auto w-full max-w-[880px]"
     >
       <Tabs value={tab} onValueChange={setTab} className="gap-6">
         <TabsList className="grid h-auto w-full grid-cols-2 p-1 md:inline-flex md:w-fit">

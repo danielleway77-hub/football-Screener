@@ -24,6 +24,7 @@
     "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
     "token:create": "tsx scripts/create-token.ts",
+    "db:seed:demo": "tsx scripts/seed-demo.ts",
     "db:seed:dev": "cross-env SEED_FIXTURES=1 tsx prisma/seed.ts",
     "hash-password": "tsx scripts/hash-password.ts",
     "run:daily": "tsx scripts/run-daily.ts",
